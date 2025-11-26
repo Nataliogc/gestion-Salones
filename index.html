@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Cloud V18 - Final</title>
+    <title>Gestor Cloud V28 - Presupuesto Fijo</title>
     
     <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -30,6 +30,7 @@
         .dot-morning { background: #fff3cd; border-color: #ffc107; }
         .dot-afternoon { background: #d1ecf1; border-color: #17a2b8; }
         .dot-canceled { background: #e2e6ea; border-color: #999; text-decoration: line-through; }
+        .dot-restaurante { background: #e3f2fd; border-color: #2196f3; }
 
         /* BARRA SUPERIOR */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -77,28 +78,41 @@
         .evt-am { background: #fff3cd; color: #856404; border-left: 3px solid #ffc107; height:50%; display:flex; align-items:center; justify-content:center; border-bottom:1px dotted #ccc; }
         .evt-pm { background: #d1ecf1; color: #0c5460; border-left: 3px solid #17a2b8; height:50%; display:flex; align-items:center; justify-content:center; }
         .evt-anulado { background: #f1f1f1; color: #aaa; text-decoration: line-through; }
+        
+        .evt-restaurante-container { 
+            display: flex; flex-direction: column; height: 100%; overflow-y: auto; 
+            font-size: 9px; padding: 2px; align-items: flex-start;
+        }
+        .evt-rest-item {
+            background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 3px; color: #1565c0;
+            width: 95%; margin-bottom: 2px; padding: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         /* MODALES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 550px; max-height: 95vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 600px; max-height: 95vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
         .form-row { display: flex; gap: 15px; }
         .form-group { margin-bottom: 15px; flex: 1; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 12px; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 13px; }
         
+        .section-box { background: #f8f9fa; padding: 15px; border: 1px solid #e9ecef; border-radius: 6px; margin-bottom: 15px; }
+        .section-title { font-weight: bold; color: #007bff; margin-bottom: 10px; display: block; border-bottom: 2px solid #e9ecef; padding-bottom: 5px; font-size: 12px; text-transform: uppercase;}
+
         .btn-save { background: #007bff; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-close { background: #eee; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
         .btn-anular { background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .btn-presupuesto { background: #6f42c1; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-
+        .btn-presupuesto { background: #6f42c1; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .btn-orden { background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #ccc; margin-right: 5px; }
         .status-online { background: #28a745; box-shadow: 0 0 5px #28a745; }
     </style>
 </head>
 <body>
 
-    <!-- BOTONES DE FILTRO DE HOTEL -->
+    <!-- BOTONES DE FILTRO -->
     <div class="filter-buttons">
         <button class="btn-filter active" id="btnTodos" onclick="filtrarHotel('todos')">🏢 Ver Todos</button>
         <button class="btn-filter" id="btnGuadiana" onclick="filtrarHotel('Guadiana')">🏨 Hotel Guadiana</button>
@@ -121,7 +135,7 @@
         </div>
         <div style="display:flex; gap:10px;">
             <button class="btn-action" onclick="abrirNuevoEventoBtn()">➕ Nuevo Evento</button>
-            <button class="btn-print" onclick="generarOrdenSemana()">🖨️ Orden de Servicio</button>
+            <button class="btn-print" onclick="generarOrdenSemana()">🖨️ Resumen Semanal</button>
         </div>
     </div>
 
@@ -129,73 +143,91 @@
         <span style="margin-right:15px"><span class="dot dot-full"></span>Día Completo</span>
         <span style="margin-right:15px"><span class="dot dot-morning"></span>Mañana</span>
         <span style="margin-right:15px"><span class="dot dot-afternoon"></span>Tarde</span>
+        <span style="margin-right:15px; color:#2196f3;">🟦 Reserva Restaurante</span>
         <span><span class="dot dot-canceled"></span>Anulado</span>
     </div>
 
-    <!-- HOTEL GUADIANA -->
+    <!-- HOTELES -->
     <div class="hotel-section" id="secGuadiana">
         <div class="hotel-header header-guadiana">
-            <!-- RUTA AL LOGO EN TU CARPETA GITHUB -->
             <img src="Img/logo-guadiana.svg" alt="Logo Guadiana" class="hotel-logo">
             Hotel Guadiana
         </div>
-        <div class="table-wrapper">
-            <table id="tablaGuadiana">
-                <thead id="headGuadiana"></thead>
-                <tbody id="bodyGuadiana"></tbody>
-            </table>
-        </div>
+        <div class="table-wrapper"><table id="tablaGuadiana"><thead id="headGuadiana"></thead><tbody id="bodyGuadiana"></tbody></table></div>
     </div>
 
-    <!-- CUMBRIA SPA -->
     <div class="hotel-section" id="secCumbria">
         <div class="hotel-header header-cumbria">
-            <!-- RUTA AL LOGO EN TU CARPETA GITHUB -->
             <img src="Img/logo-cumbria.svg" alt="Logo Cumbria" class="hotel-logo">
             Cumbria Spa & Hotel
         </div>
-        <div class="table-wrapper">
-            <table id="tablaCumbria">
-                <thead id="headCumbria"></thead>
-                <tbody id="bodyCumbria"></tbody>
-            </table>
-        </div>
+        <div class="table-wrapper"><table id="tablaCumbria"><thead id="headCumbria"></thead><tbody id="bodyCumbria"></tbody></table></div>
     </div>
 
-    <!-- MODALES (Iguales que V16) -->
+    <!-- MODAL FICHA -->
     <div class="modal-overlay" id="modalFicha">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
                 <h3 id="tituloFicha" style="margin:0; color:#333;">Evento</h3>
-                <button id="btnPresupuesto" class="btn-presupuesto" onclick="imprimirPresupuesto()">📄 Imprimir Presupuesto</button>
+                <div style="display:flex; gap:10px;">
+                    <button id="btnOrden" class="btn-orden" onclick="imprimirOrdenServicio()">🖨️ Orden Servicio</button>
+                    <button id="btnPresupuesto" class="btn-presupuesto" onclick="imprimirPresupuesto()">📄 Presupuesto</button>
+                </div>
             </div>
             <div id="avisoAnulado" style="display:none; background:#ffebee; color:#c62828; padding:10px; margin-bottom:15px; border-radius:4px; text-align:center; font-weight:bold;">⚠️ EVENTO ANULADO</div>
             <input type="hidden" id="keyOriginal"> 
+            
+            <!-- DATOS OCULTOS PERSISTENTES -->
+            <input type="hidden" id="fechaEventoReal">
+            <input type="hidden" id="refPresupuesto"> <!-- AQUÍ GUARDAMOS LA REFERENCIA -->
+            <input type="hidden" id="fechaPresupuesto"> <!-- AQUÍ GUARDAMOS LA FECHA PRESUPUESTO -->
+
             <div id="bloqueFechasManual" style="display:none; background:#e3f2fd; padding:15px; border-radius:5px; margin-bottom:15px;">
                 <div class="form-row">
                     <div class="form-group"><label>Desde:</label><input type="date" id="inputFechaInicio"></div>
                     <div class="form-group"><label>Hasta:</label><input type="date" id="inputFechaFin"></div>
                 </div>
-                <div class="form-group"><label>Hotel / Salón:</label><select id="inputSalonManual" style="width:100%"></select></div>
+                <div class="form-group"><label>Hotel / Salón:</label><select id="inputSalonManual" style="width:100%" onchange="cambiarTipoFormulario()"></select></div>
             </div>
-            <div class="form-group"><label>Cliente/Evento:</label><input type="text" id="inputNombre" placeholder="Ej. Boda García"></div>
+
+            <div class="form-group"><label>Cliente / Nombre:</label><input type="text" id="inputNombre" placeholder="Ej. Mesa García / Boda López"></div>
+            
             <div class="form-row">
                 <div class="form-group"><label>Email:</label><input type="text" id="inputEmail"></div>
                 <div class="form-group"><label>Teléfono:</label><input type="text" id="inputTelefono"></div>
             </div>
+
             <div class="form-row">
-                <div class="form-group"><label>Turno:</label><select id="inputTurno"><option value="completo">🟢 Día Completo</option><option value="manana">🟡 Mañana</option><option value="tarde">🔵 Tarde</option></select></div>
-                <div class="form-group"><label>Pax:</label><input type="number" id="inputPax"></div>
+                <div class="form-group"><label>Turno:</label><select id="inputTurno"><option value="completo">🟢 Día Completo</option><option value="manana">🟡 Almuerzo / Mañana</option><option value="tarde">🔵 Cena / Tarde</option></select></div>
+                <div class="form-group"><label>Pax Adultos:</label><input type="number" id="inputPax" placeholder="0"></div>
+                <div class="form-group"><label>Pax Niños:</label><input type="number" id="inputPaxNinos" placeholder="0"></div>
             </div>
-            <div class="section-box">
-                <span class="section-title" style="color:#007bff; font-weight:bold; display:block; border-bottom:1px solid #ddd; margin-bottom:10px;">Presupuesto</span>
-                <div class="form-row">
-                    <div class="form-group"><label>Alquiler Salón (€):</label><input type="number" id="inputPrecioSalon"></div>
-                    <div class="form-group"><label>Servicios (€):</label><input type="number" id="inputPrecioMenu"></div>
+
+            <div class="section-box" id="bloqueEconomico">
+                <span class="section-title">Datos Económicos</span>
+                <div class="form-row" style="margin-bottom:10px;">
+                    <div class="form-group" style="flex:2;"><label>Alquiler Salón (€):</label><input type="number" id="inputPrecioSalon" placeholder="0.00"></div>
+                    <div class="form-group" style="flex:2;"><label>Extras (€):</label><input type="number" id="inputPrecioOtros" placeholder="AV, DJ..."></div>
+                </div>
+                <div style="border-top:1px dashed #ccc; padding-top:10px; margin-top:5px;">
+                    <label style="font-size:11px; color:#007bff; margin-bottom:8px; display:block;">PRECIOS UNITARIOS</label>
+                    <div class="form-row">
+                        <div class="form-group"><label>Menú Adulto:</label><input type="number" id="inputPrecioMenu" placeholder="€/pax"></div>
+                        <div class="form-group"><label>Menú Niño:</label><input type="number" id="inputPrecioMenuNinos" placeholder="€/niño"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Cóctel:</label><input type="number" id="inputPrecioCoctel" placeholder="€/pax"></div>
+                        <div class="form-group"><label>Coffee:</label><input type="number" id="inputPrecioCoffee" placeholder="€/pax"></div>
+                    </div>
                 </div>
             </div>
-            <div class="form-group"><label>Montaje:</label><select id="inputMontaje"><option value="Banquete">Banquete</option><option value="Cóctel">Cóctel</option><option value="Escuela">Escuela</option><option value="Teatro">Teatro</option><option value="Imperial / U">Imperial / U</option><option value="Reunión">Reunión</option><option value="Restaurante">Restaurante</option></select></div>
-            <div class="form-group"><label>Notas:</label><textarea id="inputNotas" rows="3"></textarea></div>
+
+            <div id="bloqueSalon">
+                <div class="form-group"><label>Montaje:</label><select id="inputMontaje"><option value="Banquete">Banquete</option><option value="Cóctel">Cóctel</option><option value="Escuela">Escuela</option><option value="Teatro">Teatro</option><option value="Imperial / U">Imperial / U</option><option value="Reunión">Reunión</option></select></div>
+            </div>
+
+            <div class="form-group"><label>Notas / Alergias:</label><textarea id="inputNotas" rows="3"></textarea></div>
+            
             <div class="modal-footer">
                 <button id="btnAnular" class="btn-anular" onclick="accionAnular()">🚫 Anular</button>
                 <div>
@@ -215,9 +247,7 @@
     </div>
 
 <script>
-    // ============================================
-    // 1. CONFIGURACIÓN FIREBASE
-    // ============================================
+    // CONFIGURACIÓN FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyBAK0sGUYpV8KHy1KwIdNRLtHlq5LT3Vwg",
       authDomain: "gestionsalones-bba4b.firebaseapp.com",
@@ -230,7 +260,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // SALONES
+    // DATOS
     const salonesGuadiana = [
         {id: 'g_alarcos', nombre: 'P. Alarcos', pax: 800},
         {id: 'g_toledo', nombre: 'P. Toledo', pax: 160},
@@ -238,7 +268,7 @@
         {id: 'g_carmen', nombre: 'P. Carmen', pax: 120},
         {id: 'g_santamaria', nombre: 'P. Sta. María', pax: 80},
         {id: 'g_ciruela', nombre: 'P. Ciruela', pax: 20},
-        {id: 'g_restaurante', nombre: 'Restaurante G.', pax: 'Rest.'},
+        {id: 'g_restaurante', nombre: 'Restaurante G.', pax: 'Rest.', isRestaurante: true},
         {id: 'g_desp1', nombre: 'Despacho 1', pax: 10},
         {id: 'g_desp2', nombre: 'Despacho 2', pax: 10},
         {id: 'g_desp5', nombre: 'Despacho 5', pax: 10},
@@ -254,7 +284,7 @@
         {id: 'c_marte', nombre: 'Marte', pax: 90},
         {id: 'c_jupiter', nombre: 'Júpiter', pax: 70},
         {id: 'c_tierra', nombre: 'La Tierra', pax: 70},
-        {id: 'c_restaurante', nombre: 'Restaurante C.', pax: 'Rest.'} 
+        {id: 'c_restaurante', nombre: 'Restaurante C.', pax: 'Rest.', isRestaurante: true} 
     ];
 
     const todosSalones = [...salonesGuadiana.map(s => ({...s, hotel: 'Guadiana'})), ...salonesCumbria.map(s => ({...s, hotel: 'Cumbria'}))];
@@ -265,7 +295,6 @@
         document.getElementById('statusIndicator').className = "status-dot status-online";
         document.getElementById('statusText').innerText = "Conectado";
         document.getElementById('statusText').style.color = "#28a745";
-        
         reservas = {}; 
         snapshot.forEach((doc) => { reservas[doc.id] = doc.data(); });
         generarCalendarios();
@@ -284,26 +313,19 @@
         return `${dia}-${mes}-${anio}`;
     }
 
-    // FILTRADO DE HOTELES
     function filtrarHotel(tipo) {
-        // Actualizar botones
         document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-        
         let secG = document.getElementById('secGuadiana');
         let secC = document.getElementById('secCumbria');
-
         if (tipo === 'todos') {
             document.getElementById('btnTodos').classList.add('active');
-            secG.style.display = 'block';
-            secC.style.display = 'block';
+            secG.style.display = 'block'; secC.style.display = 'block';
         } else if (tipo === 'Guadiana') {
             document.getElementById('btnGuadiana').classList.add('active');
-            secG.style.display = 'block';
-            secC.style.display = 'none';
+            secG.style.display = 'block'; secC.style.display = 'none';
         } else {
             document.getElementById('btnCumbria').classList.add('active');
-            secG.style.display = 'none';
-            secC.style.display = 'block';
+            secG.style.display = 'none'; secC.style.display = 'block';
         }
     }
 
@@ -311,7 +333,6 @@
         const fechaInput = document.getElementById('fechaVista').value;
         const fechaBase = fechaInput ? new Date(fechaInput) : new Date();
         const verAnulados = document.getElementById('checkVerAnulados').checked;
-
         renderTablaPlanning(salonesGuadiana, 'headGuadiana', 'bodyGuadiana', fechaBase, verAnulados, 30);
         renderTablaPlanning(salonesCumbria, 'headCumbria', 'bodyCumbria', fechaBase, verAnulados, 30);
     }
@@ -323,14 +344,10 @@
         thead.innerHTML = "";
         let trH = document.createElement('tr');
         trH.innerHTML = `<th style="z-index:40;">SALÓN / FECHA</th>`; 
-        
         for (let i = 0; i < diasVista; i++) {
-            let f = new Date(fechaInicio);
-            f.setDate(fechaInicio.getDate() + i);
-            let dia = f.getDate().toString().padStart(2,'0');
-            let mes = (f.getMonth()+1).toString().padStart(2,'0');
-            let diaSemana = f.getDay();
-            let color = (diaSemana === 0 || diaSemana === 6) ? '#e74c3c' : '#495057';
+            let f = new Date(fechaInicio); f.setDate(fechaInicio.getDate() + i);
+            let dia = f.getDate().toString().padStart(2,'0'); let mes = (f.getMonth()+1).toString().padStart(2,'0');
+            let color = (f.getDay() === 0 || f.getDay() === 6) ? '#e74c3c' : '#495057';
             trH.innerHTML += `<th style="color:${color}">${dia}/${mes}</th>`;
         }
         thead.appendChild(trH);
@@ -343,27 +360,44 @@
             tr.appendChild(tdSalon);
 
             for (let i = 0; i < diasVista; i++) {
-                let f = new Date(fechaInicio);
-                f.setDate(fechaInicio.getDate() + i);
+                let f = new Date(fechaInicio); f.setDate(fechaInicio.getDate() + i);
                 let fid = getFechaId(f);
                 let td = document.createElement('td');
                 let baseKey = `${fid}_${s.id}`;
-                let evtFull = reservas[baseKey + '_FULL'];
-                let evtAM = reservas[baseKey + '_AM'];
-                let evtPM = reservas[baseKey + '_PM'];
 
-                if (evtFull && (evtFull.estado !== 'anulado' || verAnulados)) {
-                    td.innerHTML = `<div class="sub-evento ${evtFull.estado==='anulado'?'evt-anulado':'evt-full'}" title="${evtFull.nombre}">${evtFull.nombre}</div>`;
-                    td.onclick = () => abrirFichaExistente(baseKey + '_FULL');
+                if (s.isRestaurante) {
+                    let htmlContent = "";
+                    let contadorReservas = 0;
+                    Object.keys(reservas).forEach(key => {
+                        if(key.startsWith(baseKey) && reservas[key].estado !== 'anulado') {
+                            let r = reservas[key];
+                            htmlContent += `<div class="evt-rest-item" title="${r.nombre} (${r.pax}p)">${r.turno==='manana'?'☀️':'🌙'} ${r.nombre}</div>`;
+                            contadorReservas++;
+                        }
+                    });
+                    if(contadorReservas > 0) {
+                        td.innerHTML = `<div class="evt-restaurante-container">${htmlContent}</div>`;
+                    }
+                    td.onclick = () => abrirGestorRestaurante(baseKey, s.id, fid);
                 } 
-                else if ((evtAM && (evtAM.estado !== 'anulado' || verAnulados)) || (evtPM && (evtPM.estado !== 'anulado' || verAnulados))) {
-                    let hAM="", hPM="";
-                    if(evtAM && (evtAM.estado!=='anulado' || verAnulados)) hAM = `<div class="sub-evento ${evtAM.estado==='anulado'?'evt-anulado':'evt-am'}">${evtAM.nombre}</div>`;
-                    if(evtPM && (evtPM.estado!=='anulado' || verAnulados)) hPM = `<div class="sub-evento ${evtPM.estado==='anulado'?'evt-anulado':'evt-pm'}">${evtPM.nombre}</div>`;
-                    td.innerHTML = `<div class="split-cell"><div class="split-top">${hAM}</div><div class="split-bottom">${hPM}</div></div>`;
-                    td.onclick = () => gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados);
-                } else {
-                    td.onclick = () => abrirNuevoPrellenado(fid, s.id); 
+                else {
+                    let evtFull = reservas[baseKey + '_FULL'];
+                    let evtAM = reservas[baseKey + '_AM'];
+                    let evtPM = reservas[baseKey + '_PM'];
+
+                    if (evtFull && (evtFull.estado !== 'anulado' || verAnulados)) {
+                        td.innerHTML = `<div class="sub-evento ${evtFull.estado==='anulado'?'evt-anulado':'evt-full'}" title="${evtFull.nombre}">${evtFull.nombre}</div>`;
+                        td.onclick = () => abrirFichaExistente(baseKey + '_FULL', fid);
+                    } 
+                    else if ((evtAM && (evtAM.estado !== 'anulado' || verAnulados)) || (evtPM && (evtPM.estado !== 'anulado' || verAnulados))) {
+                        let hAM="", hPM="";
+                        if(evtAM && (evtAM.estado!=='anulado' || verAnulados)) hAM = `<div class="sub-evento ${evtAM.estado==='anulado'?'evt-anulado':'evt-am'}">${evtAM.nombre}</div>`;
+                        if(evtPM && (evtPM.estado!=='anulado' || verAnulados)) hPM = `<div class="sub-evento ${evtPM.estado==='anulado'?'evt-anulado':'evt-pm'}">${evtPM.nombre}</div>`;
+                        td.innerHTML = `<div class="split-cell"><div class="split-top">${hAM}</div><div class="split-bottom">${hPM}</div></div>`;
+                        td.onclick = () => gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados, fid);
+                    } else {
+                        td.onclick = () => abrirNuevoPrellenado(fid, s.id); 
+                    }
                 }
                 tr.appendChild(td);
             }
@@ -379,40 +413,100 @@
     salonesCumbria.forEach(s => { let o=document.createElement('option'); o.value=s.id; o.text=s.nombre; groupC.appendChild(o); });
     selManual.appendChild(groupG); selManual.appendChild(groupC);
 
+    function cambiarTipoFormulario() {
+        let salonId = document.getElementById('inputSalonManual').value;
+        let esRest = salonId.includes('restaurante');
+        let bloqueSalon = document.getElementById('bloqueSalon');
+        if(esRest) {
+            bloqueSalon.style.display = 'none'; 
+            document.getElementById('inputPrecioSalon').disabled = true;
+        } else {
+            bloqueSalon.style.display = 'block';
+            document.getElementById('inputPrecioSalon').disabled = false;
+        }
+    }
+
+    function abrirGestorRestaurante(baseKey, salonID, fechaID) {
+        let mesas = [];
+        Object.keys(reservas).forEach(key => {
+            if(key.startsWith(baseKey) && reservas[key].estado !== 'anulado') {
+                mesas.push({id: key, ...reservas[key]});
+            }
+        });
+
+        if (mesas.length === 0) {
+            abrirNuevoPrellenado(fechaID, salonID);
+        } else {
+            let modalSel = document.getElementById('modalSelector');
+            let lista = document.getElementById('listaEventosCell');
+            lista.innerHTML = `<h4>Mesas para el ${fechaID}</h4>`;
+            mesas.forEach(m => {
+                lista.innerHTML += `<button style="width:100%; padding:8px; margin-bottom:5px; text-align:left; border:1px solid #ddd; background:#f1f8ff; cursor:pointer;" onclick="document.getElementById('modalSelector').style.display='none'; abrirFichaExistente('${m.id}', '${fechaID}')">
+                    <strong>${m.nombre}</strong> (${m.turno}) - ${m.pax} pax
+                </button>`;
+            });
+            lista.innerHTML += `<hr><button style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modalSelector').style.display='none'; abrirNuevoPrellenado('${fechaID}', '${salonID}')">➕ Añadir Nueva Mesa</button>`;
+            modalSel.style.display = 'flex';
+        }
+    }
+
     function abrirNuevoEventoBtn() {
-        prepararModal("NUEVO");
+        prepararModal("NUEVO", null);
         document.getElementById('bloqueFechasManual').style.display = 'block';
         document.getElementById('inputFechaInicio').valueAsDate = new Date();
         document.getElementById('inputFechaFin').valueAsDate = new Date();
         document.getElementById('modalFicha').style.display = 'flex';
+        cambiarTipoFormulario();
     }
 
     function abrirNuevoPrellenado(fechaID, salonID) {
         let parts = fechaID.split('-');
         let isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        prepararModal("NUEVO");
+        prepararModal("NUEVO", fechaID);
         document.getElementById('bloqueFechasManual').style.display = 'block';
         document.getElementById('inputFechaInicio').value = isoDate;
         document.getElementById('inputFechaFin').value = isoDate;
         document.getElementById('inputSalonManual').value = salonID;
         document.getElementById('modalFicha').style.display = 'flex';
+        cambiarTipoFormulario();
     }
 
-    function abrirFichaExistente(key) {
+    function abrirFichaExistente(key, fechaID) {
         let datos = reservas[key];
         if(!datos) return;
-        prepararModal(key);
+        
+        if(!fechaID) {
+            let parts = key.split('_');
+            fechaID = parts[0];
+        }
+
+        prepararModal(key, fechaID);
         document.getElementById('bloqueFechasManual').style.display = 'none'; 
+        
         document.getElementById('inputNombre').value = datos.nombre || "";
         document.getElementById('inputEmail').value = datos.email || "";
         document.getElementById('inputTelefono').value = datos.telefono || "";
         document.getElementById('inputPax').value = datos.pax || "";
+        document.getElementById('inputPaxNinos').value = datos.paxNinos || "";
+        
         document.getElementById('inputPrecioSalon').value = datos.precioSalon || "";
         document.getElementById('inputPrecioMenu').value = datos.precioMenu || "";
+        document.getElementById('inputPrecioMenuNinos').value = datos.precioMenuNinos || "";
+        document.getElementById('inputPrecioCoctel').value = datos.precioCoctel || "";
+        document.getElementById('inputPrecioCoffee').value = datos.precioCoffee || "";
+        document.getElementById('inputPrecioOtros').value = datos.precioOtros || "";
+
         document.getElementById('inputMontaje').value = datos.montaje || "Banquete";
         document.getElementById('inputNotas').value = datos.notas || "";
         document.getElementById('inputTurno').value = datos.turno || "completo";
+        
+        // RECUPERAR REF y FECHA SI EXISTEN
+        document.getElementById('refPresupuesto').value = datos.refPresupuesto || "";
+        document.getElementById('fechaPresupuesto').value = datos.fechaPresupuesto || "";
+
         document.getElementById('btnPresupuesto').style.display = 'block';
+        document.getElementById('btnOrden').style.display = 'block';
+
         if(datos.estado === 'anulado') {
             document.getElementById('avisoAnulado').style.display = 'block';
             document.getElementById('btnAnular').innerText = "♻️ Recuperar";
@@ -420,28 +514,36 @@
         document.getElementById('modalFicha').style.display = 'flex';
     }
 
-    function prepararModal(key) {
+    function prepararModal(key, fechaID) {
         document.getElementById('keyOriginal').value = key;
+        if (fechaID) {
+            document.getElementById('fechaEventoReal').value = fechaID; 
+        } else {
+            document.getElementById('fechaEventoReal').value = ""; 
+        }
+
         document.getElementById('tituloFicha').innerText = key === "NUEVO" ? "Nuevo Evento" : "Editar Evento";
         document.getElementById('avisoAnulado').style.display = 'none';
         document.getElementById('btnAnular').innerText = "🚫 Anular";
         document.getElementById('btnAnular').style.display = key === "NUEVO" ? 'none' : 'block';
         document.getElementById('btnPresupuesto').style.display = 'none'; 
-        let inputs = ['inputNombre','inputEmail','inputTelefono','inputPax','inputPrecioSalon','inputPrecioMenu','inputNotas'];
+        document.getElementById('btnOrden').style.display = 'none';
+        
+        let inputs = ['inputNombre','inputEmail','inputTelefono','inputPax','inputPaxNinos','inputPrecioSalon','inputPrecioMenu','inputPrecioMenuNinos','inputPrecioCoctel','inputPrecioCoffee','inputPrecioOtros','inputNotas','refPresupuesto','fechaPresupuesto'];
         inputs.forEach(id => document.getElementById(id).value = "");
         document.getElementById('inputTurno').value = "completo";
     }
 
-    function gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados) {
+    function gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados, fechaID) {
         let am = evtAM && (evtAM.estado!=='anulado' || verAnulados);
         let pm = evtPM && (evtPM.estado!=='anulado' || verAnulados);
-        if(am && !pm) return abrirFichaExistente(baseKey+'_AM');
-        if(!am && pm) return abrirFichaExistente(baseKey+'_PM');
+        if(am && !pm) return abrirFichaExistente(baseKey+'_AM', fechaID);
+        if(!am && pm) return abrirFichaExistente(baseKey+'_PM', fechaID);
         
         let lista = document.getElementById('listaEventosCell');
         lista.innerHTML = "";
-        if(am) lista.innerHTML += `<button style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #ddd; background:#fff; cursor:pointer;" onclick="document.getElementById('modalSelector').style.display='none'; abrirFichaExistente('${baseKey}_AM')">🟡 Mañana: ${evtAM.nombre}</button>`;
-        if(pm) lista.innerHTML += `<button style="width:100%; padding:10px; border:1px solid #ddd; background:#fff; cursor:pointer;" onclick="document.getElementById('modalSelector').style.display='none'; abrirFichaExistente('${baseKey}_PM')">🔵 Tarde: ${evtPM.nombre}</button>`;
+        if(am) lista.innerHTML += `<button style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #ddd; background:#fff; cursor:pointer;" onclick="document.getElementById('modalSelector').style.display='none'; abrirFichaExistente('${baseKey}_AM', '${fechaID}')">🟡 Mañana: ${evtAM.nombre}</button>`;
+        if(pm) lista.innerHTML += `<button style="width:100%; padding:10px; border:1px solid #ddd; background:#fff; cursor:pointer;" onclick="document.getElementById('modalSelector').style.display='none'; abrirFichaExistente('${baseKey}_PM', '${fechaID}')">🔵 Tarde: ${evtPM.nombre}</button>`;
         document.getElementById('modalSelector').style.display = 'flex';
     }
 
@@ -455,36 +557,58 @@
             email: document.getElementById('inputEmail').value,
             telefono: document.getElementById('inputTelefono').value,
             pax: document.getElementById('inputPax').value,
-            precioSalon: document.getElementById('inputPrecioSalon').value,
-            precioMenu: document.getElementById('inputPrecioMenu').value,
+            paxNinos: document.getElementById('inputPaxNinos').value,
             montaje: document.getElementById('inputMontaje').value,
             notas: document.getElementById('inputNotas').value,
             turno: document.getElementById('inputTurno').value,
+            precioSalon: document.getElementById('inputPrecioSalon').value,
+            precioMenu: document.getElementById('inputPrecioMenu').value,
+            precioMenuNinos: document.getElementById('inputPrecioMenuNinos').value,
+            precioCoctel: document.getElementById('inputPrecioCoctel').value,
+            precioCoffee: document.getElementById('inputPrecioCoffee').value,
+            precioOtros: document.getElementById('inputPrecioOtros').value,
+            // MANTENER REFERENCIA SI EXISTE
+            refPresupuesto: document.getElementById('refPresupuesto').value,
+            fechaPresupuesto: document.getElementById('fechaPresupuesto').value,
             estado: 'activo'
         };
 
         let batch = db.batch();
+        let salonSel = document.getElementById('inputSalonManual').value;
+        let esRestaurante = salonSel.includes('restaurante');
 
         if(key !== "NUEVO") {
             batch.delete(db.collection("eventos").doc(key));
-            let baseKey = key.substring(0, key.lastIndexOf('_'));
-            let sufijo = data.turno === 'completo' ? '_FULL' : (data.turno === 'manana' ? '_AM' : '_PM');
-            if(!validarConflicto(baseKey, data.turno)) return;
-            batch.set(db.collection("eventos").doc(baseKey + sufijo), data);
+            let nuevoID = key; 
+            if (!esRestaurante) {
+                let baseKey = key.substring(0, key.lastIndexOf('_'));
+                let sufijo = data.turno === 'completo' ? '_FULL' : (data.turno === 'manana' ? '_AM' : '_PM');
+                if(!validarConflicto(baseKey, data.turno)) return;
+                nuevoID = baseKey + sufijo;
+            }
+            batch.set(db.collection("eventos").doc(nuevoID), data);
         } else {
             let f1 = new Date(document.getElementById('inputFechaInicio').value);
             let f2 = new Date(document.getElementById('inputFechaFin').value);
-            let salon = document.getElementById('inputSalonManual').value;
             if(f2 < f1) return alert("Error en fechas");
 
             let cursor = new Date(f1);
             while(cursor <= f2) {
                 let fid = getFechaId(cursor);
-                let baseKey = `${fid}_${salon}`;
-                if(validarConflicto(baseKey, data.turno, true)) {
-                    let sufijo = data.turno === 'completo' ? '_FULL' : (data.turno === 'manana' ? '_AM' : '_PM');
-                    batch.set(db.collection("eventos").doc(baseKey + sufijo), data);
+                let baseKey = `${fid}_${salonSel}`;
+                let nuevoID = "";
+
+                if (esRestaurante) {
+                    nuevoID = `${baseKey}_${Math.random().toString(36).substr(2, 9)}`;
+                } else {
+                    if(validarConflicto(baseKey, data.turno, true)) {
+                        let sufijo = data.turno === 'completo' ? '_FULL' : (data.turno === 'manana' ? '_AM' : '_PM');
+                        nuevoID = baseKey + sufijo;
+                    } else {
+                        nuevoID = null; 
+                    }
                 }
+                if (nuevoID) batch.set(db.collection("eventos").doc(nuevoID), data);
                 cursor.setDate(cursor.getDate() + 1);
             }
         }
@@ -500,7 +624,7 @@
         if(turno === 'completo' && (full || am || pm)) conflict = true;
         if(turno === 'manana' && (full || am)) conflict = true;
         if(turno === 'tarde' && (full || pm)) conflict = true;
-        if(conflict && !silent) return confirm("Conflicto de horario. ¿Sobrescribir?");
+        if(conflict && !silent) return confirm("Conflicto. ¿Sobrescribir?");
         if(conflict && silent) return false; 
         return true;
     }
@@ -513,10 +637,79 @@
     }
 
     function imprimirPresupuesto() {
-        let nombre = document.getElementById('inputNombre').value;
-        let total = (parseFloat(document.getElementById('inputPrecioSalon').value)||0) + (parseFloat(document.getElementById('inputPrecioMenu').value)||0);
+        let nombre = document.getElementById('inputNombre').value || "Cliente";
+        let email = document.getElementById('inputEmail').value || "-";
+        let telefono = document.getElementById('inputTelefono').value || "-";
+        let pax = parseInt(document.getElementById('inputPax').value) || 0;
+        
+        let pSalon = parseFloat(document.getElementById('inputPrecioSalon').value) || 0;
+        let pMenu = parseFloat(document.getElementById('inputPrecioMenu').value) || 0;
+        let pCoctel = parseFloat(document.getElementById('inputPrecioCoctel').value) || 0;
+        let pCoffee = parseFloat(document.getElementById('inputPrecioCoffee').value) || 0;
+        let pOtros = parseFloat(document.getElementById('inputPrecioOtros').value) || 0;
+        let paxNinos = parseInt(document.getElementById('inputPaxNinos').value) || 0;
+        let pMenuNinos = parseFloat(document.getElementById('inputPrecioMenuNinos').value) || 0;
+
+        let totalMenu = pMenu * pax;
+        let totalMenuNinos = pMenuNinos * paxNinos;
+        let totalCoctel = pCoctel * (pax + paxNinos); 
+        let totalCoffee = pCoffee * (pax + paxNinos);
+        let total = pSalon + totalMenu + totalMenuNinos + totalCoctel + totalCoffee + pOtros;
+        
+        let fechaIdRaw = document.getElementById('fechaEventoReal').value; 
+        if (!fechaIdRaw && document.getElementById('keyOriginal').value === "NUEVO") {
+             let fInput = document.getElementById('inputFechaInicio').value; 
+             if(fInput) { let parts = fInput.split('-'); fechaIdRaw = `${parts[2]}-${parts[1]}-${parts[0]}`; }
+        }
+        let fechaEvento = fechaIdRaw ? fechaIdRaw.replace(/-/g, '/') : "A determinar";
+        
+        // GENERAR O RECUPERAR REFERENCIA FIJA
+        let ref = document.getElementById('refPresupuesto').value;
+        let fechaEmision = document.getElementById('fechaPresupuesto').value;
+
+        if (!ref) {
+            ref = "PRE-" + Math.floor(Math.random() * 10000);
+            fechaEmision = new Date().toLocaleDateString('es-ES');
+            
+            // GUARDAR EN PANTALLA Y EN BD (Si estamos editando)
+            document.getElementById('refPresupuesto').value = ref;
+            document.getElementById('fechaPresupuesto').value = fechaEmision;
+            
+            let key = document.getElementById('keyOriginal').value;
+            if (key !== "NUEVO") {
+                db.collection("eventos").doc(key).update({
+                    refPresupuesto: ref,
+                    fechaPresupuesto: fechaEmision
+                });
+            }
+        }
+
+        let key = document.getElementById('keyOriginal').value;
+        let esGuadiana = true; 
+        if (key === "NUEVO") {
+            let salonSel = document.getElementById('inputSalonManual').value;
+            if (salonSel.startsWith('c_')) esGuadiana = false;
+        } else {
+            if (key.includes('_c_')) esGuadiana = false;
+        }
+
+        let logoUrl = esGuadiana ? "Img/logo-guadiana.svg" : "Img/logo-cumbria.svg";
+        let nombreHotel = esGuadiana ? "Sercotel Guadiana ****" : "Cumbria Spa & Hotel ***";
+        let direccion = esGuadiana ? "c/ Guadiana 36<br>13002 Ciudad Real (España)" : "Ctra. de Toledo 26, 1<br>3005 Ciudad Real (España)";
+        let telefonoHotel = esGuadiana ? "(+34) 926 33 33 13" : "(+34) 926 25 04 04";
+        let baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + "/";
+
+        let filasTabla = "";
+        if(pSalon > 0) filasTabla += `<tr><td><strong>Alquiler Salón</strong></td><td class="col-right">1</td><td class="col-right">${pSalon.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${pSalon.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+        if(pMenu > 0) filasTabla += `<tr><td><strong>Menú Adultos</strong></td><td class="col-right">${pax}</td><td class="col-right">${pMenu.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${totalMenu.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+        if(pMenuNinos > 0) filasTabla += `<tr><td><strong>Menú Infantil</strong></td><td class="col-right">${paxNinos}</td><td class="col-right">${pMenuNinos.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${totalMenuNinos.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+        if(pCoctel > 0) filasTabla += `<tr><td><strong>Servicio de Cóctel</strong></td><td class="col-right">${pax + paxNinos}</td><td class="col-right">${pCoctel.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${totalCoctel.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+        if(pCoffee > 0) filasTabla += `<tr><td><strong>Coffee Break</strong></td><td class="col-right">${pax + paxNinos}</td><td class="col-right">${pCoffee.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${totalCoffee.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+        if(pOtros > 0) filasTabla += `<tr><td><strong>Otros Servicios / Extras</strong></td><td class="col-right">1</td><td class="col-right">${pOtros.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td><td class="col-right">${pOtros.toLocaleString('es-ES',{minimumFractionDigits:2})} €</td></tr>`;
+
+        let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Presupuesto</title><base href="${baseUrl}"><style>@page { size: A4; margin: 10mm; } body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.4; } .header-container { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; } .logo-box img { height: 70px; max-width: 200px; object-fit: contain; } .company-details { text-align: right; font-size: 11px; color: #555; } .company-details h4 { margin: 0 0 5px 0; color: #2c3e50; font-size: 13px; text-transform: uppercase; } .invoice-title { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; } .invoice-meta { font-size: 12px; color: #777; margin-bottom: 30px; border-left: 3px solid #2c3e50; padding-left: 10px; } .client-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 30px; display: flex; justify-content: space-between; } .client-box h3 { margin-top: 0; color: #2c3e50; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px;} table { width: 100%; border-collapse: collapse; margin-bottom: 30px; } th { background: #2c3e50; color: white; text-align: left; padding: 10px; font-size: 11px; text-transform: uppercase; } td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; } .col-right { text-align: right; } .total-section { display: flex; justify-content: flex-end; } .total-table { width: 40%; background: #f9f9f9; border-radius: 5px; padding: 10px; } .total-table td { border: none; padding: 5px 10px; } .total-row { font-size: 16px; font-weight: bold; color: #2c3e50; border-top: 2px solid #ddd !important; } .footer { margin-top: 50px; padding-top: 15px; border-top: 1px solid #eee; text-align: center; font-size: 10px; color: #aaa; } </style></head><body><div class="header-container"><div class="logo-box"><img src="${logoUrl}" alt="Logo Hotel" onerror="this.style.display='none'"></div><div class="company-details"><h4>${nombreHotel}</h4>${direccion}<br>Tel.: ${telefonoHotel}</div></div><div class="invoice-title">PRESUPUESTO</div><div class="invoice-meta" style="display:flex; justify-content:space-between;"><div><strong>Referencia:</strong> ${ref}<br><strong>Fecha Emisión:</strong> ${fechaEmision}</div><div style="text-align:right;"><strong>FECHA EVENTO:</strong> <span style="font-size:14px; color:#007bff;">${fechaEvento}</span></div></div><div class="client-box"><div style="flex:1"><h3>Datos del Cliente</h3><strong>Nombre:</strong> ${nombre}<br><strong>Email:</strong> ${email}<br><strong>Teléfono:</strong> ${telefono}</div><div style="flex:1; text-align:right;"><h3>Detalles Evento</h3><strong>Adultos:</strong> ${pax}<br><strong>Niños:</strong> ${paxNinos}</div></div><table><thead><tr><th width="50%">Concepto</th><th width="15%" class="col-right">Cantidad</th><th width="15%" class="col-right">Precio Unit.</th><th width="20%" class="col-right">Total</th></tr></thead><tbody>${filasTabla}</tbody></table><div class="total-section"><table class="total-table"><tr><td class="total-row">TOTAL (IVA Incluido):</td><td class="total-row col-right">${total.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</td></tr></table></div><div class="footer"><p>Este presupuesto tiene una validez de 15 días a partir de la fecha de emisión.</p><p>Para confirmar la reserva, se ruega firmar este documento o contactar con el departamento comercial.</p></div><script>setTimeout(() => window.print(), 500);<\/script></body></html>`;
         let w = window.open('', '_blank');
-        w.document.write(`<html><body><h1>Presupuesto: ${nombre}</h1><p>Total: ${total}€</p><script>window.print()<\/script></body></html>`);
+        w.document.write(html);
         w.document.close();
     }
 
@@ -525,7 +718,6 @@
         if(!f) f = new Date().toISOString().split('T')[0];
         let inicio = new Date(f);
         let html = `<html><body><h2>Orden Semanal ${inicio.toLocaleDateString()}</h2><ul>`;
-        
         for(let i=0; i<7; i++){
             let cursor = new Date(inicio); cursor.setDate(inicio.getDate()+i);
             let fid = getFechaId(cursor);
@@ -534,6 +726,13 @@
                     let ev = reservas[fid+'_'+s.id+suf];
                     if(ev && ev.estado!=='anulado') html += `<li>${cursor.toLocaleDateString()} - ${s.nombre}: ${ev.nombre} (${ev.pax} pax)</li>`;
                 });
+                if(s.isRestaurante) {
+                    Object.keys(reservas).forEach(k => {
+                        if(k.startsWith(`${fid}_${s.id}_`) && reservas[k].estado !== 'anulado') {
+                            html += `<li>${cursor.toLocaleDateString()} - ${s.nombre}: ${reservas[k].nombre} (${reservas[k].pax} pax)</li>`;
+                        }
+                    });
+                }
             });
         }
         html += `</ul><script>window.print()<\/script></body></html>`;
