@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Cloud V11 - Guadiana & Cumbria</title>
+    
+    <!-- CARGAR FIREBASE (VERSIÓN COMPATIBLE CON NAVEGADOR) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ESTILOS GENERALES */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; font-size: 13px; }
+        h1 { text-align: center; color: #333; margin: 5px 0; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 20px; }
+        
+        /* LEYENDA */
+        .legend-bar { text-align: center; margin-bottom: 15px; }
+        .dot { height: 10px; width: 10px; display: inline-block; border-radius: 50%; margin-right: 5px; border: 1px solid #ccc; }
+        .dot-full { background: #d4edda; border-color: #28a745; }
+        .dot-morning { background: #fff3cd; border-color: #ffc107; }
+        .dot-afternoon { background: #d1ecf1; border-color: #17a2b8; }
+        .dot-canceled { background: #e2e6ea; border-color: #999; text-decoration: line-through; }
+
+        /* BOTONERA */
+        .top-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); gap: 15px; }
+        .filter-group { display: flex; align-items: center; gap: 10px; }
+        .filter-group label { font-weight: bold; color: #555; }
+        select, input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-new { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-print { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-new:hover { background-color: #218838; } 
+        .btn-print:hover { background-color: #0056b3; }
+
+        /* TABLA */
+        .table-container { overflow-x: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; background: white; margin-bottom: 50px; border: 1px solid #ddd; }
+        table { border-collapse: collapse; width: 100%; min-width: 1000px; table-layout: fixed;}
+        
+        thead tr th { padding: 10px; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        .header-guadiana { background-color: #c0392b; }
+        .header-cumbria { background-color: #2980b9; }
+        .header-sub { background-color: #ecf0f1 !important; color: #333 !important; font-size: 11px; border-bottom: 2px solid #ddd; height: 40px; vertical-align: bottom;}
+        
+        th, td { border: 1px solid #dee2e6; text-align: center; vertical-align: top; padding: 0; }
+        
+        td { height: 50px; font-size: 11px; cursor: pointer; transition: 0.2s; position: relative; background: #fff; }
+        td:first-child { background-color: #f8f9fa; font-weight: bold; position: sticky; left: 0; z-index: 10; border-right: 2px solid #ccc; width: 80px; vertical-align: middle; padding: 5px;}
+        
+        .sub-evento { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 2px; box-sizing: border-box; }
+        .split-cell { display: flex; flex-direction: column; height: 100%; }
+        .split-top { height: 50%; border-bottom: 1px dotted #999; }
+        .split-bottom { height: 50%; }
+
+        .evt-full { background-color: #d4edda; color: #155724; border: 2px solid #fff; }
+        .evt-am { background-color: #fff3cd; color: #856404; }
+        .evt-pm { background-color: #d1ecf1; color: #0c5460; }
+        .evt-anulado { background: #e2e6ea; color: #999; text-decoration: line-through; opacity: 0.7; }
+
+        /* MODALES */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 95vh; overflow-y: auto; }
+        
+        .selector-menu button { width: 100%; padding: 15px; margin: 5px 0; text-align: left; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
+        
+        .form-row { display: flex; gap: 15px; }
+        .form-group { margin-bottom: 12px; flex: 1; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #555; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        #bloqueFechasManual { background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #90caf9; display: none; }
+        
+        .section-box { background: #f8f9fa; padding: 10px; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 15px; }
+        .section-title { font-weight: bold; color: #007bff; margin-bottom: 8px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 3px;}
+
+        .btn-save { background-color: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-anular { background-color: #ffc107; color: #333; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+        
+        /* ESTADO CONEXIÓN */
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #ccc; margin-right: 5px; vertical-align: middle;}
+        .status-online { background: #28a745; box-shadow: 0 0 8px #28a745; }
+        .status-error { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
+    </style>
+</head>
+<body>
+
+    <h1>Gestor de Eventos V11 (En la Nube)</h1>
+    <p class="subtitle">
+        <span id="statusIndicator" class="status-dot"></span> 
+        <span id="statusText">Conectando con Google Cloud...</span>
+    </p>
+
+    <div class="legend-bar">
+        <span style="margin-right:10px"><span class="dot dot-full"></span>Día Completo</span>
+        <span style="margin-right:10px"><span class="dot dot-morning"></span>Mañana</span>
+        <span style="margin-right:10px"><span class="dot dot-afternoon"></span>Tarde</span>
+        <span><span class="dot dot-canceled"></span>Anulado</span>
+    </div>
+
+    <!-- BARRA DE HERRAMIENTAS -->
+    <div class="top-bar">
+        <div class="filter-group">
+            <div style="display:flex; flex-direction:column;">
+                <label>Ver desde:</label>
+                <input type="date" id="fechaVista" onchange="generarCalendario()">
+            </div>
+            <div style="display:flex; flex-direction:column;">
+                <label>Filtrar Hotel:</label>
+                <select id="filtroHotel" onchange="generarCalendario()">
+                    <option value="todos">Todos los Hoteles</option>
+                    <option value="Guadiana">Solo Hotel Guadiana</option>
+                    <option value="Cumbria">Solo Cumbria Spa</option>
+                </select>
+            </div>
+            <label style="cursor: pointer; user-select: none; margin-top:18px;">
+                <input type="checkbox" id="checkVerAnulados" onchange="generarCalendario()"> 👁️ Anulados
+            </label>
+        </div>
+        <div class="filter-group">
+            <button class="btn-new" onclick="abrirNuevoEventoBtn()">➕ Nuevo Evento</button>
+            <button class="btn-print" onclick="generarOrdenSemana()">🖨️ Imprimir Semanal</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="planningTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- MODAL SELECTOR -->
+    <div class="modal-overlay" id="modalSelector">
+        <div class="modal-content" style="width: 300px;">
+            <h3 style="margin-top:0">Selecciona Turno</h3>
+            <div id="listaEventosCell" class="selector-menu"></div>
+            <div style="margin-top:10px; text-align:right;">
+                <button onclick="document.getElementById('modalSelector').style.display='none'" style="padding:5px 10px;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FICHA -->
+    <div class="modal-overlay" id="modalFicha">
+        <div class="modal-content">
+            <h3 id="tituloFicha" style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">Evento</h3>
+            <div id="avisoAnulado" style="display:none; background:#ffebee; color:#c62828; padding:10px; margin-bottom:10px; border-radius:4px; text-align:center; font-weight:bold;">⚠️ EVENTO ANULADO</div>
+
+            <input type="hidden" id="keyOriginal"> 
+
+            <div id="bloqueFechasManual">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Desde (Fecha):</label>
+                        <input type="date" id="inputFechaInicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Hasta (Incluida):</label>
+                        <input type="date" id="inputFechaFin">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Espacio / Salón:</label>
+                    <select id="inputSalonManual"></select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre del Evento / Cliente:</label>
+                <input type="text" id="inputNombre" placeholder="Ej. Boda García">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Jornada / Turno:</label>
+                    <select id="inputTurno">
+                        <option value="completo">🟢 Día Completo</option>
+                        <option value="manana">🟡 Mañana (Media)</option>
+                        <option value="tarde">🔵 Tarde (Media)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nº Pax:</label>
+                    <input type="number" id="inputPax">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input type="text" id="inputTelefono">
+                </div>
+            </div>
+
+            <div class="section-box">
+                <span class="section-title">Costes y Facturación</span>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio SALÓN (Día):</label>
+                        <input type="number" id="inputPrecioSalon" placeholder="€ Alquiler">
+                    </div>
+                    <div class="form-group">
+                        <label>Coste SERVICIOS (Comida/Extras):</label>
+                        <input type="number" id="inputPrecioMenu" placeholder="€ Servicios">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Montaje:</label>
+                <select id="inputMontaje">
+                    <option value="Banquete">Banquete</option>
+                    <option value="Cóctel">Cóctel</option>
+                    <option value="Escuela">Escuela</option>
+                    <option value="Teatro">Teatro</option>
+                    <option value="Imperial / U">Imperial / U</option>
+                    <option value="Restaurante">Restaurante</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Notas:</label>
+                <textarea id="inputNotas" rows="2"></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+                <button id="btnAnular" class="btn-anular" onclick="accionAnular()">🚫 Anular</button>
+                <div>
+                    <button onclick="document.getElementById('modalFicha').style.display='none'" style="margin-right:10px; padding:10px; cursor:pointer;">Cancelar</button>
+                    <button id="btnGuardar" class="btn-save" onclick="guardarFicha()">💾 Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // =======================================================
+    // CONFIGURACIÓN DE FIREBASE (TUS CLAVES REALES)
+    // =======================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBAK0sGUYpV8KHy1KwIdNRLtHlq5LT3Vwg",
+        authDomain: "gestionsalones-bba4b.firebaseapp.com",
+        projectId: "gestionsalones-bba4b",
+        storageBucket: "gestionsalones-bba4b.firebasestorage.app",
+        messagingSenderId: "860164285474",
+        appId: "1:860164285474:web:ff995e88093e5aa5eb167b"
+    };
+
+    // INICIALIZAR CONEXIÓN
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // =======================================================
+    // LÓGICA DEL PROGRAMA
+    // =======================================================
+
+    const todosSalones = [
+        {id: 'g_alarcos', nombre: 'P. Alarcos', hotel: 'Guadiana', pax: 800},
+        {id: 'g_toledo', nombre: 'P. Toledo', hotel: 'Guadiana', pax: 160},
+        {id: 'g_calatrava', nombre: 'P. Calatrava', hotel: 'Guadiana', pax: 135},
+        {id: 'g_granada', nombre: 'P. Granada', hotel: 'Guadiana', pax: 135},
+        {id: 'g_carmen', nombre: 'P. Carmen', hotel: 'Guadiana', pax: 120},
+        {id: 'g_santamaria', nombre: 'P. Sta. María', hotel: 'Guadiana', pax: 80},
+        {id: 'g_ciruela', nombre: 'P. Ciruela', hotel: 'Guadiana', pax: 20},
+        {id: 'c_mercurio', nombre: 'Mercurio', hotel: 'Cumbria', pax: 90},
+        {id: 'c_venus', nombre: 'Venus', hotel: 'Cumbria', pax: 90},
+        {id: 'c_marte', nombre: 'Marte', hotel: 'Cumbria', pax: 90},
+        {id: 'c_jupiter', nombre: 'Júpiter', hotel: 'Cumbria', pax: 70},
+        {id: 'c_tierra', nombre: 'La Tierra', hotel: 'Cumbria', pax: 70},
+        {id: 'c_restaurante', nombre: 'Restaurante', hotel: 'Cumbria', pax: 'Rest.'} 
+    ];
+
+    let reservas = {}; 
+
+    // ESCUCHAR DATOS DE LA NUBE
+    db.collection("eventos").onSnapshot((snapshot) => {
+        document.getElementById('statusIndicator').className = "status-dot status-online";
+        document.getElementById('statusText').innerText = "Conectado. Sincronización automática activada.";
+        document.getElementById('statusText').style.color = "#28a745";
+        document.getElementById('statusText').style.fontWeight = "bold";
+        
+        reservas = {}; // Limpiar y recargar
+        snapshot.forEach((doc) => {
+            reservas[doc.id] = doc.data();
+        });
+        generarCalendario();
+    }, (error) => {
+        console.error("Error conectando:", error);
+        document.getElementById('statusIndicator').className = "status-dot status-error";
+        document.getElementById('statusText').innerText = "Error de conexión. Revisa tu internet.";
+    });
+
+    document.getElementById('fechaVista').valueAsDate = new Date();
+
+    function generarCalendario() {
+        const thead = document.getElementById('tableHead');
+        const tbody = document.getElementById('tableBody');
+        const filtroHotel = document.getElementById('filtroHotel').value; 
+        const verAnulados = document.getElementById('checkVerAnulados').checked;
+        
+        let salonesVisibles = todosSalones.filter(s => filtroHotel === 'todos' || s.hotel === filtroHotel);
+        
+        thead.innerHTML = "";
+        let trH1 = document.createElement('tr');
+        trH1.innerHTML = `<th style="background:#333">FECHA</th>`;
+
+        if (filtroHotel === 'todos' || filtroHotel === 'Guadiana') {
+            let colSpanG = todosSalones.filter(s => s.hotel === 'Guadiana').length;
+            if(colSpanG > 0) trH1.innerHTML += `<th class="header-guadiana" colspan="${colSpanG}">HOTEL GUADIANA</th>`;
+        }
+        if (filtroHotel === 'todos' || filtroHotel === 'Cumbria') {
+            let colSpanC = todosSalones.filter(s => s.hotel === 'Cumbria').length;
+            if(colSpanC > 0) trH1.innerHTML += `<th class="header-cumbria" colspan="${colSpanC}">CUMBRIA SPA & HOTEL</th>`;
+        }
+        thead.appendChild(trH1);
+
+        let trH2 = document.createElement('tr');
+        trH2.innerHTML = `<th class="header-sub">Día</th>`;
+        salonesVisibles.forEach(s => {
+            trH2.innerHTML += `<th class="header-sub">${s.nombre}<br><small>${s.pax}</small></th>`;
+        });
+        thead.appendChild(trH2);
+
+        tbody.innerHTML = '';
+        let fechaInicioInput = document.getElementById('fechaVista').value;
+        let fechaInicio = fechaInicioInput ? new Date(fechaInicioInput) : new Date();
+
+        for (let i = 0; i < 365; i++) {
+            let fecha = new Date(fechaInicio);
+            fecha.setDate(fechaInicio.getDate() + i);
+            let diaStr = fecha.getDate().toString().padStart(2, '0');
+            let mesStr = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            let anio = fecha.getFullYear();
+            let fechaStr = `${diaStr}/${mesStr}/${anio}`;
+            
+            let tr = document.createElement('tr');
+            let tdFecha = document.createElement('td');
+            tdFecha.innerText = fechaStr;
+            if (fecha.getDay() === 0 || fecha.getDay() === 6) tdFecha.style.color = "red";
+            tr.appendChild(tdFecha);
+
+            salonesVisibles.forEach(s => {
+                let baseKey = `${fechaStr}_${s.id}`;
+                let evtFull = reservas[baseKey + '_FULL'];
+                let evtAM   = reservas[baseKey + '_AM'];
+                let evtPM   = reservas[baseKey + '_PM'];
+                let td = document.createElement('td');
+                
+                if (evtFull && (evtFull.estado !== 'anulado' || verAnulados)) {
+                    td.innerHTML = crearHtmlEvento(evtFull, 'evt-full');
+                    td.onclick = () => abrirFichaExistente(baseKey + '_FULL');
+                } 
+                else if ((evtAM && (evtAM.estado !== 'anulado' || verAnulados)) || (evtPM && (evtPM.estado !== 'anulado' || verAnulados))) {
+                    let htmlAM = "", htmlPM = "";
+                    if (evtAM && (evtAM.estado !== 'anulado' || verAnulados)) htmlAM = crearHtmlEvento(evtAM, 'evt-am', "Mañana");
+                    if (evtPM && (evtPM.estado !== 'anulado' || verAnulados)) htmlPM = crearHtmlEvento(evtPM, 'evt-pm', "Tarde");
+                    td.innerHTML = `<div class="split-cell"><div class="split-top">${htmlAM}</div><div class="split-bottom">${htmlPM}</div></div>`;
+                    td.onclick = () => gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados);
+                } else {
+                    td.innerHTML = "";
+                    td.onclick = () => abrirNuevoPrellenado(fechaStr, s.id); 
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        }
+    }
+
+    function crearHtmlEvento(evt, claseCss, prefijo = "") {
+        let clase = evt.estado === 'anulado' ? 'evt-anulado' : claseCss;
+        let pSalon = parseFloat(evt.precioSalon) || 0;
+        let pMenu = parseFloat(evt.precioMenu) || 0;
+        let total = pSalon + pMenu;
+        let tooltip = `${prefijo ? prefijo + ': ' : ''}${evt.nombre}\nSalón: ${pSalon}€ | Serv: ${pMenu}€\nTOTAL: ${total}€`;
+        return `<div class="sub-evento ${clase}" title="${tooltip}">${evt.nombre}</div>`;
+    }
+
+    function rellenarSelectorSalonesManual() {
+        const selManual = document.getElementById('inputSalonManual');
+        selManual.innerHTML = "";
+        const filtro = document.getElementById('filtroHotel').value;
+        const visibles = todosSalones.filter(s => filtro === 'todos' || s.hotel === filtro);
+        visibles.forEach(s => {
+            let opt = document.createElement('option');
+            opt.value = s.id;
+            opt.innerText = `${s.hotel} - ${s.nombre}`;
+            selManual.appendChild(opt);
+        });
+    }
+
+    function abrirNuevoPrellenado(fechaStr, salonID) {
+        let parts = fechaStr.split('/');
+        let isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        prepararModalNuevo();
+        rellenarSelectorSalonesManual();
+        document.getElementById('inputFechaInicio').value = isoDate;
+        document.getElementById('inputFechaFin').value = isoDate;
+        document.getElementById('inputSalonManual').value = salonID;
+        document.getElementById('modalFicha').style.display = 'flex';
+    }
+
+    function abrirNuevoEventoBtn() {
+        prepararModalNuevo();
+        rellenarSelectorSalonesManual();
+        let fechaHoy = document.getElementById('fechaVista').value || new Date().toISOString().split('T')[0];
+        document.getElementById('inputFechaInicio').value = fechaHoy;
+        document.getElementById('inputFechaFin').value = fechaHoy;
+        document.getElementById('modalFicha').style.display = 'flex';
+    }
+
+    function prepararModalNuevo() {
+        document.getElementById('keyOriginal').value = "NUEVO";
+        document.getElementById('tituloFicha').innerText = "Crear Nuevo Evento";
+        document.getElementById('bloqueFechasManual').style.display = 'block';
+        document.getElementById('avisoAnulado').style.display = 'none';
+        document.getElementById('btnAnular').style.display = 'none';
+        document.getElementById('inputNombre').value = "";
+        document.getElementById('inputPax').value = "";
+        document.getElementById('inputPrecioMenu').value = "";
+        document.getElementById('inputPrecioSalon').value = "";
+        document.getElementById('inputTelefono').value = "";
+        document.getElementById('inputNotas').value = "";
+        document.getElementById('inputTurno').value = "completo";
+    }
+
+    function abrirFichaExistente(fullKey) {
+        let datos = reservas[fullKey];
+        if(!datos) return;
+        document.getElementById('keyOriginal').value = fullKey;
+        document.getElementById('tituloFicha').innerText = "Editar Evento";
+        document.getElementById('bloqueFechasManual').style.display = 'none';
+        document.getElementById('btnAnular').style.display = 'block';
+        document.getElementById('inputNombre').value = datos.nombre || "";
+        document.getElementById('inputPax').value = datos.pax || "";
+        document.getElementById('inputPrecioMenu').value = datos.precioMenu || ""; 
+        document.getElementById('inputPrecioSalon').value = datos.precioSalon || ""; 
+        document.getElementById('inputTelefono').value = datos.telefono || "";
+        document.getElementById('inputMontaje').value = datos.montaje || "Banquete";
+        document.getElementById('inputNotas').value = datos.notas || "";
+        document.getElementById('inputTurno').value = datos.turno || "completo";
+        
+        if(datos.estado === 'anulado') {
+            document.getElementById('avisoAnulado').style.display = 'block';
+            document.getElementById('btnAnular').innerText = "♻️ Recuperar";
+        } else {
+            document.getElementById('avisoAnulado').style.display = 'none';
+            document.getElementById('btnAnular').innerText = "🚫 Anular";
+        }
+        document.getElementById('modalFicha').style.display = 'flex';
+    }
+
+    function gestionarClickSplit(baseKey, evtAM, evtPM, verAnulados) {
+        let amVisible = evtAM && (evtAM.estado !== 'anulado' || verAnulados);
+        let pmVisible = evtPM && (evtPM.estado !== 'anulado' || verAnulados);
+        if (amVisible && !pmVisible) return abrirFichaExistente(baseKey + '_AM');
+        if (!amVisible && pmVisible) return abrirFichaExistente(baseKey + '_PM');
+        let modalSel = document.getElementById('modalSelector');
+        let lista = document.getElementById('listaEventosCell');
+        lista.innerHTML = "";
+        if (amVisible) {
+            let btn = document.createElement('button');
+            btn.innerHTML = `🟡 <b>Mañana:</b> ${evtAM.nombre}`;
+            btn.onclick = () => { modalSel.style.display='none'; abrirFichaExistente(baseKey + '_AM'); };
+            lista.appendChild(btn);
+        }
+        if (pmVisible) {
+            let btn = document.createElement('button');
+            btn.innerHTML = `🔵 <b>Tarde:</b> ${evtPM.nombre}`;
+            btn.onclick = () => { modalSel.style.display='none'; abrirFichaExistente(baseKey + '_PM'); };
+            lista.appendChild(btn);
+        }
+        modalSel.style.display = 'flex';
+    }
+
+    // GUARDAR EN NUBE
+    function guardarFicha() {
+        let keyOriginal = document.getElementById('keyOriginal').value;
+        let turno = document.getElementById('inputTurno').value;
+        let nombre = document.getElementById('inputNombre').value;
+
+        if (!nombre.trim()) { alert("Nombre obligatorio"); return; }
+
+        let nuevoEvento = {
+            nombre: nombre,
+            pax: document.getElementById('inputPax').value,
+            precioMenu: document.getElementById('inputPrecioMenu').value,
+            precioSalon: document.getElementById('inputPrecioSalon').value,
+            telefono: document.getElementById('inputTelefono').value,
+            montaje: document.getElementById('inputMontaje').value,
+            notas: document.getElementById('inputNotas').value,
+            turno: turno,
+            estado: 'activo'
+        };
+
+        // Editar
+        if (keyOriginal !== "NUEVO") {
+            db.collection("eventos").doc(keyOriginal).delete(); // Borrar viejo por si cambia turno
+            let baseKey = keyOriginal.substring(0, keyOriginal.lastIndexOf('_'));
+            let nuevaKeySuffix = baseKey + (turno === 'completo' ? '_FULL' : (turno === 'manana' ? '_AM' : '_PM'));
+
+            if (!validarConflicto(baseKey, turno)) return; 
+            
+            db.collection("eventos").doc(nuevaKeySuffix).set(nuevoEvento)
+                .then(() => document.getElementById('modalFicha').style.display = 'none');
+            return;
+        }
+
+        // Nuevo (Rango)
+        let fInicio = new Date(document.getElementById('inputFechaInicio').value);
+        let fFin = new Date(document.getElementById('inputFechaFin').value);
+        let salon = document.getElementById('inputSalonManual').value;
+        if (fFin < fInicio) { alert("Fecha fin menor que inicio"); return; }
+
+        let batch = db.batch();
+        let fechaCursor = new Date(fInicio);
+        
+        while (fechaCursor <= fFin) {
+            let dia = fechaCursor.getDate().toString().padStart(2,'0');
+            let mes = (fechaCursor.getMonth()+1).toString().padStart(2,'0');
+            let anio = fechaCursor.getFullYear();
+            let fechaStr = `${dia}/${mes}/${anio}`;
+            let baseKey = `${fechaStr}_${salon}`;
+            
+            if (validarConflicto(baseKey, turno, true)) {
+                let suffix = (turno === 'completo' ? '_FULL' : (turno === 'manana' ? '_AM' : '_PM'));
+                let docRef = db.collection("eventos").doc(baseKey + suffix);
+                batch.set(docRef, nuevoEvento);
+            }
+            fechaCursor.setDate(fechaCursor.getDate() + 1);
+        }
+        
+        batch.commit().then(() => document.getElementById('modalFicha').style.display = 'none');
+    }
+
+    function validarConflicto(baseKey, turnoNuevo) {
+        let existeFull = reservas[baseKey + '_FULL'] && reservas[baseKey + '_FULL'].estado !== 'anulado';
+        let existeAM = reservas[baseKey + '_AM'] && reservas[baseKey + '_AM'].estado !== 'anulado';
+        let existePM = reservas[baseKey + '_PM'] && reservas[baseKey + '_PM'].estado !== 'anulado';
+
+        if (turnoNuevo === 'completo') {
+            if (existeFull || existeAM || existePM) {
+                if(!confirm(`Conflicto el día ${baseKey}. ¿Sobrescribir?`)) return false;
+                if(existeFull) db.collection("eventos").doc(baseKey + '_FULL').delete();
+                if(existeAM) db.collection("eventos").doc(baseKey + '_AM').delete();
+                if(existePM) db.collection("eventos").doc(baseKey + '_PM').delete();
+            }
+        } else if (turnoNuevo === 'manana') {
+            if (existeFull) return false;
+            if (existeAM) { if(!confirm("Conflicto Mañana. ¿Sobrescribir?")) return false; db.collection("eventos").doc(baseKey + '_AM').delete(); }
+        } else if (turnoNuevo === 'tarde') {
+            if (existeFull) return false;
+            if (existePM) { if(!confirm("Conflicto Tarde. ¿Sobrescribir?")) return false; db.collection("eventos").doc(baseKey + '_PM').delete(); }
+        }
+        return true;
+    }
+
+    function accionAnular() {
+        let key = document.getElementById('keyOriginal').value;
+        let estadoNuevo = reservas[key].estado === 'anulado' ? 'activo' : 'anulado';
+        db.collection("eventos").doc(key).update({ estado: estadoNuevo })
+            .then(() => document.getElementById('modalFicha').style.display = 'none');
+    }
+
+    function generarOrdenSemana() {
+        let fechaVal = document.getElementById('fechaVista').value || new Date().toISOString().split('T')[0];
+        let fInicio = new Date(fechaVal);
+        let html = `<html><head><title>Orden Semanal</title>
+        <style>body{font-family:sans-serif} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ccc;padding:5px;font-size:12px} .h-guadiana{background:#c0392b;color:#fff} .h-cumbria{background:#2980b9;color:#fff} .col-money{text-align:right; font-family:monospace;}</style>
+        </head><body><h2>Semana del ${fInicio.toLocaleDateString()}</h2>`;
+
+        for(let i=0; i<7; i++){
+            let cursor = new Date(fInicio);
+            cursor.setDate(fInicio.getDate() + i);
+            let diaStr = cursor.getDate().toString().padStart(2, '0');
+            let mesStr = (cursor.getMonth() + 1).toString().padStart(2, '0');
+            let anio = cursor.getFullYear();
+            let fechaStr = `${diaStr}/${mesStr}/${anio}`;
+            
+            let eventosDelDia = [];
+            todosSalones.forEach(s => {
+                let baseKey = `${fechaStr}_${s.id}`;
+                ['_FULL', '_AM', '_PM'].forEach(suf => {
+                    let ev = reservas[baseKey + suf];
+                    if(ev && ev.estado !== 'anulado') eventosDelDia.push({ ...ev, salon: s.nombre, hotel: s.hotel });
+                });
+            });
+
+            if(eventosDelDia.length > 0){
+                html += `<h3>${fechaStr}</h3><table><tr><th>Hotel</th><th>Turno</th><th>Salón</th><th>Cliente</th><th>Pax</th><th>Alquiler</th><th>Servicios</th><th>Notas</th></tr>`;
+                eventosDelDia.forEach(e => {
+                   html += `<tr><td class="${e.hotel=='Guadiana'?'h-guadiana':'h-cumbria'}">${e.hotel}</td><td>${e.turno.toUpperCase()}</td><td><b>${e.salon}</b></td><td>${e.nombre}</td><td>${e.pax}</td><td class="col-money">${e.precioSalon}€</td><td class="col-money">${e.precioMenu}€</td><td>${e.notas}</td></tr>`; 
+                });
+                html += `</table>`;
+            }
+        }
+        html += `<script>window.print()<\/script></body></html>`;
+        let w = window.open('','_blank');
+        w.document.write(html);
+        w.document.close();
+    }
+</script>
+</body>
+</html>
