@@ -580,7 +580,7 @@
 <script>
     /* --- CONFIGURACIÓN --- */
     const APP_VERSION = "v3.1"; 
-    const apiKey = "AIzaSyDHZVBmVq1clcgY7sGBuXxiqEKrkGgJVwE"; // API Key actualizada
+    const apiKey = "AIzaSyDnJMniLswGjpysPHiH3n3L6EpJyCkbS4E"; // API Key actualizada
 
     /* FIREBASE */
     const firebaseConfig = {
@@ -1070,29 +1070,73 @@
         document.getElementById("modalFicha").style.display = "none";
     }
 
-    function addServiceRow(data = {}) {
+ function addServiceRow(data = {}) {
         const tr = document.createElement("tr");
+        
+        // Formatear precio inicial
+        const priceVal = parseFloat(data.price || 0).toFixed(2) + " €";
+        const totalVal = parseFloat(data.total || 0).toFixed(2) + " €";
+
         tr.innerHTML = `
             <td><input type="date" class="s-date svc-input" value="${data.date || ""}" onchange="updateDates()"></td>
             <td><input type="text" class="s-desc svc-input" value="${data.desc || ""}" placeholder="Concepto"></td>
-            <td><input type="number" class="s-uds svc-input" value="${data.uds || 1}" oninput="calc(this)"></td>
-            <td><input type="number" class="s-price svc-input" value="${data.price || 0}" oninput="calc(this)"></td>
-            <td><input type="text" class="s-total svc-input" value="${data.total || 0}" readonly style="background:#f5f5f5;"></td>
-            <td class="btn-del-row" onclick="this.parentElement.remove(); updateTotal()">✕</td>`;
+            
+            <td><input type="number" step="0.01" class="s-uds svc-input" value="${data.uds || 1}" oninput="calc(this)"></td>
+            
+            <td>
+                <input type="text" 
+                       inputmode="decimal" 
+                       class="s-price svc-input" 
+                       value="${priceVal}" 
+                       onfocus="this.value = this.value.replace(' €', '').replace('€', '')" 
+                       onblur="calc(this, true)" 
+                       oninput="calc(this, false)">
+            </td>
+            
+            <td><input type="text" class="s-total svc-input" value="${totalVal}" readonly style="background:#f5f5f5; text-align:right;"></td>
+            
+            <td class="btn-del-row" onclick="this.parentElement.remove(); updateTotal(); updateDates();">✕</td>`;
+            
         document.getElementById("bodyServicios").appendChild(tr);
+        
+        // Si añadimos una línea nueva vacía, quizás queramos actualizar fechas también, 
+        // pero generalmente es mejor esperar a que el usuario ponga la fecha.
     }
 
-    function calc(el) {
+// Aceptamos un segundo parámetro 'formatear' para saber si debemos añadir el € al final
+    function calc(el, formatear = true) {
         const row = el.closest("tr");
+        
+        // 1. Obtener UDS
         const uds = parseFloat(row.querySelector(".s-uds").value) || 0;
-        const prc = parseFloat(row.querySelector(".s-price").value) || 0;
-        row.querySelector(".s-total").value = (uds * prc).toFixed(2);
+        
+        // 2. Obtener PRECIO (Limpiamos "€" y espacios para poder calcular)
+        // Nota: Si usas comas decimales, descomenta la linea .replace(',','.')
+        let priceInput = row.querySelector(".s-price");
+        let rawPrice = priceInput.value.replace(" €", "").replace("€", "").trim();
+        // rawPrice = rawPrice.replace(",", "."); // Descomentar si escribes con comas
+        const prc = parseFloat(rawPrice) || 0;
+
+        // 3. Calcular TOTAL
+        const total = uds * prc;
+        row.querySelector(".s-total").value = total.toFixed(2) + " €";
+
+        // 4. Formatear el campo PRECIO solo si hemos terminado de editar (onblur)
+        if (formatear && el.classList.contains("s-price")) {
+             priceInput.value = prc.toFixed(2) + " €";
+        }
+
         updateTotal();
     }
 
-    function updateTotal() {
+function updateTotal() {
         let total = 0;
-        document.querySelectorAll(".s-total").forEach((i) => (total += parseFloat(i.value) || 0));
+        document.querySelectorAll(".s-total").forEach((i) => {
+            // Limpiamos el símbolo '€' y espacios para obtener solo el número
+            const cleanValue = i.value.replace(" €", "").replace("€", "").trim();
+            total += parseFloat(cleanValue) || 0;
+        });
+        // CORREGIDO: Solo ponemos .toFixed(2) sin añadir texto extra, porque tu HTML ya lo pone
         document.getElementById("totalAmount").innerText = total.toFixed(2);
     }
 
@@ -1117,7 +1161,7 @@
         return `${year}-${month}-${day}`;
     }
 
-    function guardarFicha(estadoOverride, skipClose) {
+function guardarFicha(estadoOverride, skipClose) {
         try {
             const id = document.getElementById("dataId").value;
             const type = document.getElementById("dataType").value;
@@ -1146,6 +1190,7 @@
                 estado: estadoFinal
             };
 
+            // --- RESTAURANTE ---
             if (type === "restaurante") {
                 dataBase.hora = document.getElementById("inpHora").value;
                 dataBase.paxRest = document.getElementById("inpPaxRest").value;
@@ -1154,10 +1199,44 @@
                 dataBase.fechaFin = dataBase.fechaInicio;
             }
 
+            // --- PRESUPUESTO ---
             if (type === "presupuesto") {
-                dataBase.fechaInicio = document.getElementById("inpFechaDesde").value;
-                dataBase.fechaFin = document.getElementById("inpFechaHasta").value;
-                dataBase.total = document.getElementById("totalAmount").innerText;
+                const fInicio = document.getElementById("inpFechaDesde").value;
+                const fFin = document.getElementById("inpFechaHasta").value;
+                const salon = document.getElementById("inpSalon").value;
+
+                // >>>> VALIDACIÓN DE CONFLICTOS INTELIGENTE <<<<
+                // Si el presupuesto está confirmado, verificamos que no pisemos a OTROS eventos
+                if (estadoFinal === "confirmado" && salon && salon !== "Pendiente") {
+                    const d1 = new Date(fInicio); const d2 = new Date(fFin);
+                    const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+
+                    for (let i = 0; i <= diffDays; i++) {
+                        const fechaCheck = sumarDiasFecha(fInicio, i);
+                        const conflicto = dataCache.find(d => 
+                            d.hotel === currentHotel && 
+                            d.type === "evento" && 
+                            d.salon === salon && 
+                            d.fechaInicio === fechaCheck && 
+                            d.estado !== "anulado" &&
+                            d.refPresupuesto !== id // <--- LA CLAVE: Ignoramos si el conflicto soy yo mismo
+                        );
+                        if (conflicto) { 
+                            alert(`⛔ CONFLICTO el día ${fechaCheck}: El salón ya está ocupado por "${conflicto.nombre}".`); 
+                            return Promise.reject("Conflicto de fechas");
+                        }
+                    }
+                }
+                // >>>> FIN VALIDACIÓN <<<<
+
+                dataBase.fechaInicio = fInicio;
+                dataBase.fechaFin = fFin;
+                dataBase.total = document.getElementById("totalAmount").innerText.replace(" €", "").replace("€","").trim();
+                
+                dataBase.paxA = document.getElementById("inpPaxA").value;
+                dataBase.paxN = document.getElementById("inpPaxN").value;
+                dataBase.montaje = document.getElementById("inpMontaje").value;
+
                 dataBase.servicios = []; 
                 document.querySelectorAll("#bodyServicios tr").forEach((tr) =>
                     dataBase.servicios.push({
@@ -1168,6 +1247,7 @@
                 if (!id && !dataBase.ref) dataBase.ref = "PRE-" + Date.now();
             }
 
+            // --- EVENTO ---
             if (type === "evento") {
                 const fInicio = document.getElementById("inpFecha").value;
                 const fFin = fInicio;
@@ -1180,14 +1260,13 @@
                     );
                     for(let ev of coincidencias) {
                         if (ev.turno === "dia_completo" || turnoCheck === "dia_completo" || ev.turno === turnoCheck) {
-                            alert("⛔ CONFLICTO: El salón ya está ocupado en ese turno.");
+                            alert("⛔ CONFLICTO: El salón ya está ocupado.");
                             return Promise.reject("Ocupado");
                         }
                     }
                 }
                 
-                dataBase.fechaInicio = fInicio; 
-                dataBase.fechaFin = fFin;
+                dataBase.fechaInicio = fInicio; dataBase.fechaFin = fFin;
                 dataBase.paxA = document.getElementById("inpPaxA").value;
                 dataBase.paxN = document.getElementById("inpPaxN").value;
                 dataBase.montaje = document.getElementById("inpMontaje").value;
@@ -1205,77 +1284,146 @@
                 dataBase.servicios = serviciosRaw;
             }
 
+            // GUARDAR
             if (id) {
-                return db.collection("master_data").doc(id).update(dataBase).then(() => { if (!skipClose) cerrarModal(); return id; });
+                return db.collection("master_data").doc(id).update(dataBase).then(() => { 
+                    // Si es presupuesto confirmado, sincronizamos (actualiza agenda)
+                    if(type === "presupuesto" && estadoFinal === "confirmado") {
+                        sincronizarEventosVinculados(id, dataBase);
+                    }
+                    if (!skipClose) cerrarModal(); 
+                    return id; 
+                });
             } else {
-                return db.collection("master_data").add(dataBase).then((ref) => { document.getElementById("dataId").value = ref.id; if (!skipClose) cerrarModal(); return ref.id; });
+                return db.collection("master_data").add(dataBase).then((ref) => { 
+                    document.getElementById("dataId").value = ref.id; 
+                    if (!skipClose) cerrarModal(); 
+                    return ref.id; 
+                });
             }
         } catch (e) { alert("Error: " + e.message); return Promise.reject(e); }
     }
 
-    function anularFicha() {
-        const id = document.getElementById("dataId").value;
-        if (id && confirm("¿Anular registro?")) {
-            db.collection("master_data").doc(id).update({ estado: "anulado" }).then(() => cerrarModal());
-        }
-    }
-
-    function recuperarFicha() {
+ function anularFicha() {
         const id = document.getElementById("dataId").value;
         const type = document.getElementById("dataType").value;
-        const estadoDestino = (type === "restaurante") ? "confirmado" : "pendiente";
-        if (id && confirm("¿Recuperar este registro?")) {
-            db.collection("master_data").doc(id).update({ estado: estadoDestino }).then(() => cerrarModal());
+
+        if (id && confirm("¿Anular este registro? (Se anulará también el evento vinculado si existe).")) {
+            db.collection("master_data").doc(id).update({ estado: "anulado" }).then(() => {
+                if (type === "presupuesto") {
+                    sincronizarEventosVinculados(id, { estado: "anulado" });
+                }
+                cerrarModal();
+            });
         }
     }
 
-    async function confirmarPresupuesto() {
+  function recuperarFicha() {
+        const id = document.getElementById("dataId").value;
+        const type = document.getElementById("dataType").value;
+        const estadoDestino = (type === "restaurante" || type === "presupuesto") ? "confirmado" : "pendiente";
+
+        if (id && confirm("¿Recuperar este registro?")) {
+            db.collection("master_data").doc(id).update({ estado: estadoDestino }).then(() => {
+                if (type === "presupuesto") {
+                    sincronizarEventosVinculados(id, { estado: "confirmado" });
+                }
+                cerrarModal();
+            });
+        }
+    }
+
+async function confirmarPresupuesto() {
         if (document.getElementById("dataType").value !== "presupuesto") return;
+        
         const salon = document.getElementById("inpSalon").value;
-        if (!salon || salon === "Pendiente" || salon.startsWith("--")) { alert("Indica el salón."); return; }
+        if (!salon || salon === "Pendiente" || salon.startsWith("--")) { alert("Por favor, selecciona un Salón definitivo antes de confirmar."); return; }
+        
         const nombre = document.getElementById("inpNombre").value;
-        if (!nombre) { alert("Nombre obligatorio."); return; }
+        if (!nombre) { alert("El nombre es obligatorio."); return; }
 
         const fInicio = document.getElementById("inpFechaDesde").value;
         const fFin = document.getElementById("inpFechaHasta").value || fInicio;
+        
+        // Calcular días
         const d1 = new Date(fInicio); const d2 = new Date(fFin);
         const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
 
+        // 1. Comprobar conflictos de fecha antes de nada
         for (let i = 0; i <= diffDays; i++) {
             const fechaCheck = sumarDiasFecha(fInicio, i);
-            const conflicto = dataCache.find(d => d.hotel === currentHotel && d.type === "evento" && d.salon === salon && d.fechaInicio === fechaCheck && d.estado !== "anulado");
-            if (conflicto) { alert(`⛔ CONFLICTO el día ${fechaCheck}: ${conflicto.nombre}`); return; }
+            const conflicto = dataCache.find(d => 
+                d.hotel === currentHotel && 
+                d.type === "evento" && 
+                d.salon === salon && 
+                d.fechaInicio === fechaCheck && 
+                d.estado !== "anulado"
+            );
+            if (conflicto) { alert(`⛔ CONFLICTO el día ${fechaCheck}: El salón ya está ocupado por "${conflicto.nombre}".`); return; }
         }
 
         try {
+            // 2. Guardamos el presupuesto como CONFIRMADO primero
+            // Esto nos devuelve el ID del presupuesto (pptoId) que usaremos de etiqueta
             const pptoId = await guardarFicha("confirmado", true);
+            
+            // Recogemos datos clave para clonarlos al evento
+            const paxA = document.getElementById("inpPaxA").value;
+            const paxN = document.getElementById("inpPaxN").value;
+            const montaje = document.getElementById("inpMontaje").value;
+            const notas = document.getElementById("inpNotas").value;
+            const notaCliente = document.getElementById("inpNotaCliente").value;
+
             const promesas = [];
+            
+            // 3. Crear los eventos en la agenda (uno por día)
             for (let i = 0; i <= diffDays; i++) {
                 const fechaActual = sumarDiasFecha(fInicio, i);
+                
                 const evt = {
-                    hotel: currentHotel, type: "evento", nombre, salon,
-                    fechaInicio: fechaActual, fechaFin: fechaActual,
-                    paxA: document.getElementById("inpPaxA").value,
-                    montaje: document.getElementById("inpMontaje").value,
-                    notas: document.getElementById("inpNotas").value,
-                    notaCliente: document.getElementById("inpNotaCliente").value,
-                    estado: "confirmado", turno: "dia_completo", refPresupuesto: pptoId
+                    hotel: currentHotel, 
+                    type: "evento", 
+                    nombre: nombre, 
+                    salon: salon,
+                    fechaInicio: fechaActual, 
+                    fechaFin: fechaActual,
+                    paxA: paxA,          // Sincronizado
+                    paxN: paxN,          // Sincronizado
+                    montaje: montaje,    // Sincronizado
+                    notas: notas,        // Sincronizado
+                    notaCliente: notaCliente, // Sincronizado
+                    estado: "confirmado", 
+                    turno: "dia_completo",
+                    
+                    // --- LA CLAVE ---
+                    refPresupuesto: pptoId  // ¡Esta es la etiqueta que faltaba!
                 };
+                
+                // Copiar servicios correspondientes a este día
                 const servs = [];
                 document.querySelectorAll("#bodyServicios tr").forEach((tr) => {
                      const sDate = tr.querySelector(".s-date").value;
+                     // Si la línea tiene fecha coincidente O es el primer día y no tiene fecha asignada
                      if (sDate === fechaActual || (i===0 && !sDate)) {
                          servs.push({
-                            date: sDate || fechaActual, desc: tr.querySelector(".s-desc").value,
-                            uds: tr.querySelector(".s-uds").value, price: tr.querySelector(".s-price").value, total: tr.querySelector(".s-total").value
+                            date: sDate || fechaActual, 
+                            desc: tr.querySelector(".s-desc").value,
+                            uds: tr.querySelector(".s-uds").value, 
+                            price: tr.querySelector(".s-price").value, 
+                            total: tr.querySelector(".s-total").value
                          });
                      }
                 });
                 if(servs.length) evt.servicios = servs;
+                
                 promesas.push(db.collection("master_data").add(evt));
             }
+            
             await Promise.all(promesas);
-            alert("Confirmado y bloqueado."); cerrarModal(); render();
+            alert("✅ Presupuesto confirmado y agenda bloqueada correctamente."); 
+            cerrarModal(); 
+            render();
+            
         } catch (e) { console.error(e); alert("Error: " + e.message); }
     }
 
@@ -1815,6 +1963,103 @@
         
         const res = await callGemini(prompt);
         if(res) document.getElementById("aiOutput").value = res;
+    }
+
+// --- FUNCIÓN DE SINCRONIZACIÓN AVANZADA (Actualiza Fechas, Servicios y Datos) ---
+    async function sincronizarEventosVinculados(idPresupuesto, datosPresupuesto) {
+        if (!idPresupuesto) return;
+
+        try {
+            console.log("🔄 Sincronizando estructura completa del presupuesto...");
+            
+            // 1. Obtener eventos YA existentes en la agenda vinculados a este presupuesto
+            const snapshot = await db.collection("master_data")
+                .where("refPresupuesto", "==", idPresupuesto)
+                .get();
+
+            const batch = db.batch();
+            
+            // --- A. Preparar datos comunes a actualizar ---
+            const commonUpdates = {
+                nombre: datosPresupuesto.nombre,
+                notas: datosPresupuesto.notas,
+                notaCliente: datosPresupuesto.notaCliente,
+                estado: datosPresupuesto.estado,
+                paxA: datosPresupuesto.paxA,
+                paxN: datosPresupuesto.paxN,
+                montaje: datosPresupuesto.montaje,
+                salon: datosPresupuesto.salon // Por si cambiamos de salón
+            };
+            
+            // --- B. Calcular qué días DEBERÍA tener ahora el evento ---
+            const fInicio = datosPresupuesto.fechaInicio;
+            const fFin = datosPresupuesto.fechaFin || fInicio;
+            
+            // Generamos la lista de fechas necesarias (strings YYYY-MM-DD)
+            const targetDates = [];
+            const d1 = new Date(fInicio);
+            const d2 = new Date(fFin);
+            // Calculamos diferencia en días
+            const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+            
+            for(let i=0; i<=diffDays; i++) {
+                 targetDates.push(sumarDiasFecha(fInicio, i));
+            }
+
+            // --- C. Mapear Eventos Existentes ---
+            // Creamos un diccionario: { "2025-12-01": DocReference, ... }
+            const existingMap = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                existingMap[data.fechaInicio] = doc.ref; 
+            });
+
+            // --- D. Procesar cada día necesario (Crear o Actualizar) ---
+            targetDates.forEach(dateStr => {
+                // Filtrar servicios del presupuesto que coincidan con ESTA fecha
+                const servsDia = (datosPresupuesto.servicios || []).filter(s => s.date === dateStr);
+                
+                // Datos específicos para este día
+                const eventData = {
+                    ...commonUpdates,
+                    fechaInicio: dateStr,
+                    fechaFin: dateStr,
+                    servicios: servsDia // ¡Aquí se sincronizan los servicios!
+                };
+
+                if (existingMap[dateStr]) {
+                    // CASO 1: El día YA EXISTE -> Lo actualizamos
+                    batch.update(existingMap[dateStr], eventData);
+                    // Lo borramos del mapa para marcarlo como "procesado"
+                    delete existingMap[dateStr];
+                } else {
+                    // CASO 2: El día NO EXISTE (se ha ampliado fecha) -> Lo creamos
+                    // Solo creamos si el presupuesto NO está anulado
+                    if (datosPresupuesto.estado !== 'anulado') {
+                        const newRef = db.collection("master_data").doc();
+                        batch.set(newRef, {
+                            ...eventData,
+                            hotel: datosPresupuesto.hotel || currentHotel,
+                            type: "evento",
+                            turno: "dia_completo", // Por defecto día completo al crear desde sincro
+                            refPresupuesto: idPresupuesto
+                        });
+                    }
+                }
+            });
+
+            // --- E. Eliminar días sobrantes ---
+            // Si había eventos en fechas que ya no están en el nuevo rango (ej. acortamos el evento), se borran.
+            Object.keys(existingMap).forEach(dateKey => {
+                batch.delete(existingMap[dateKey]);
+            });
+
+            await batch.commit();
+            console.log("✅ Agenda sincronizada: Fechas, Servicios y Datos actualizados.");
+
+        } catch (e) {
+            console.error("Error sincronizando eventos:", e);
+        }
     }
 </script>
 </body>
