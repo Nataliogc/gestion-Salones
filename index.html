@@ -14,116 +14,124 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     
     <style>
-        :root {
-            --primary: #263238;
-            --accent: #546e7a;
-            --bg-body: #f0f2f5;
-            --surface: #ffffff;
-            --border: #dfe3e8;
-            --purple-ai: #8b5cf6; /* Color exacto botón IA original */
-        }
+        :root { --primary: #263238; --accent: #546e7a; --bg-body: #f0f2f5; --surface: #ffffff; --border: #dfe3e8; --purple-ai: #8b5cf6; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        
         body { margin: 0; background: var(--bg-body); color: #1a1a1a; font-size: 13px; -webkit-tap-highlight-color: transparent; }
 
-        /* --- LANDING --- */
+        /* LANDING */
         #landingPage { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%); padding: 20px; }
         .landing-container { background: var(--surface); border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 40px; max-width: 900px; width: 100%; text-align: center; }
         .app-logo-big { width: 120px; height: 120px; object-fit: cover; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 10px; }
-        .hotel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .h-card { border: 1px solid var(--border); border-radius: 20px; padding: 24px; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; align-items: center; }
+        .hotel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .h-card { border: 1px solid var(--border); border-radius: 20px; padding: 24px; cursor: pointer; transition: all 0.2s ease; background: #fff; display: flex; flex-direction: column; align-items: center; }
         .h-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); }
         .h-card img { max-height: 50px; margin-bottom: 15px; object-fit: contain; }
-        .h-tag { background: #f3f4f6; color: #4b5563; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .h-tag { background: #f3f4f6; color: #4b5563; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; }
 
-        /* --- HEADER --- */
+        /* HEADER */
         #appContainer { display: none; min-height: 100vh; flex-direction: column; }
         .app-header { background: #fff; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap:15px; }
         .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
         .btn-back { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #cfd8dc; background: #f5f5f5; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
         .header-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
         #headerLogo { max-height: 36px; object-fit: contain; }
-        
         .connection-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid transparent; white-space: nowrap; }
-        .status-online { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; } 
-        .status-offline { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-online { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; } .status-online .status-dot { background: #2e7d32; }
+        .status-offline { background: #ffebee; color: #c62828; border-color: #ef9a9a; } .status-offline .status-dot { background: #c62828; }
 
         .module-tabs { display: flex; gap: 6px; background: #f5f5f5; padding: 4px; border-radius: 999px; }
         .tab-btn { border: none; background: transparent; padding: 6px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #37474f; }
         .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 
+        /* VISTAS */
         .controls-bar { padding: 15px 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-        .table-wrapper { margin: 0 20px 20px; background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: auto; flex: 1; }
+        .left-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .left-controls input, .left-controls select { margin: 0; width: auto; }
+        .btn-nav { width: 30px; height: 30px; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; }
+        .btn-nav:hover { background: #f1f5f9; }
+
+        /* BUSCADOR IA STYLE */
+        .search-wrapper { position: relative; display: flex; align-items: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 4px; width: 300px; }
+        .search-wrapper input { border: none; outline: none; padding: 6px 8px; font-size: 13px; width: 100%; border-radius: 6px; }
+        .btn-search-ai { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; transition: 0.2s; }
+        .btn-search-ai:hover { box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4); transform: translateY(-1px); }
+        .search-loading { position: absolute; right: 80px; font-size: 12px; display: none; }
+
+        .table-wrapper { margin: 0 20px 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: auto; flex: 1; }
         
         table { border-collapse: collapse; width: 100%; }
         th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; }
         td { border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-
-        /* CELDAS CALENDARIO */
-        .split-cell { display: flex; flex-direction: column; height: 90px; width: 100%; position: relative; }
-        .split-zone { flex: 1; border-bottom: 1px dotted #e2e8f0; display: flex; align-items: center; padding: 0 4px; cursor: pointer; transition: 0.1s; }
-        .split-zone:hover { background: #f8fafc; }
         
-        .evt-full-day { position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; background: #dbeafe; color: #1e40af; border-left: 4px solid #2563eb; border-radius: 4px; padding: 6px; font-size: 11px; z-index: 2; overflow: hidden; }
-        .evt-part { width: 100%; height: 90%; border-radius: 4px; padding: 4px 6px; font-size: 11px; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+        /* CELDAS FIN DE SEMANA */
+        .weekend-cell { background-color: #f1f5f9; } 
+        .salon-name-cell { background-color: #e2e8f0; color: #1e293b; font-weight: 800; text-align: center; vertical-align: middle; border-right: 1px solid #cbd5e1; width: 140px; min-width: 140px; }
+
+        /* CALENDARIO */
+        .split-cell { display: flex; flex-direction: column; height: auto; min-height: 100px; width: 100%; position: relative; }
+        .split-zone { flex: 1; border-bottom: 1px dotted #e2e8f0; display: flex; align-items: center; padding: 4px; cursor: pointer; transition: 0.1s; min-height: 50px; }
+        .split-zone:hover { background: #e2e8f0; }
+        
+        .evt-full-day { position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; background: #dbeafe; color: #1e40af; border-left: 4px solid #2563eb; border-radius: 4px; padding: 4px 6px; font-size: 11px; z-index: 2; overflow: hidden; line-height: 1.3; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+        .evt-part { width: 100%; height: 90%; border-radius: 4px; padding: 4px 6px; font-size: 10px; display: flex; flex-direction: column; justify-content: center; gap: 2px; overflow: hidden; line-height: 1.3; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        
         .evt-manana { background: #e0f2fe; color: #0369a1; border-left: 3px solid #0ea5e9; }
         .evt-tarde { background: #f3e8ff; color: #6b21a8; border-left: 3px solid #d8b4fe; }
         .evt-confirmado { background: #dcfce7 !important; color: #166534 !important; border-left-color: #22c55e !important; }
+        .evt-pendiente { background: #ffedd5 !important; color: #9a3412 !important; border-left-color: #f97316 !important; opacity: 0.9; }
         .evt-gran { background: #fce7f3; color: #9d174d; border-left: 3px solid #be185d; }
 
+        .cell-rest { padding: 4px; }
+        .rest-zone { min-height: 60px; border: 1px dashed #cbd5e1; border-radius: 8px; margin-bottom: 4px; padding: 4px; }
+        .mesa-card { display: block; background: #fff; padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 11px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .mesa-manana { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        .mesa-tarde { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+
         /* LISTADOS */
-        .budget-table { width: 100%; border-collapse: collapse; }
+        .budget-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .budget-row { border-bottom: 1px solid #f1f5f9; cursor: pointer; }
         .budget-row:hover { background: #f8fafc; }
-        .budget-row td { padding: 8px 10px; }
-        .badge { display: inline-flex; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+        .budget-row td { padding: 8px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+
+        .badge { display: inline-flex; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 600; text-transform: capitalize; }
         .st-confirmado { background: #dcfce7; color: #166534; border: 1px solid #22c55e; }
         .st-pendiente { background: #ffedd5; color: #9a3412; border: 1px solid #f97316; }
         .st-anulado { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .st-caducado { background: #f3f4f6; color: #64748b; border: 1px solid #94a3b8; }
 
-        /* --- MODAL ORIGINAL --- */
+        /* MODAL */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; justify-content: center; align-items: center; padding: 20px;}
         .modal-content { background: #fff; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
         .modal-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #eee; }
         .modal-body { padding: 20px; overflow-y: auto; background: #fff; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; background: #f8fafc; }
 
-        /* BARRA IA & BOTONES ORIGINALES */
-        .ai-toolbar { display: flex; gap: 8px; padding: 8px; background: #f5f3ff; border-radius: 8px; border: 1px dashed #8b5cf6; margin-bottom: 15px; align-items: center; }
-        .ai-label { font-size: 11px; font-weight: 700; color: #6b21a8; margin-right: auto; text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
-        
-        .btn-ai { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: #fff; padding: 5px 12px; border-radius: 99px; font-size: 11px; border:none; cursor:pointer; box-shadow: 0 2px 5px rgba(124, 58, 237, 0.3); font-weight: 600; }
-        .btn-ai:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        /* BARRA IA */
+        .ai-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f5f3ff; border-radius: 8px; border: 1px dashed #8b5cf6; margin-bottom: 15px; }
+        .btn-ai-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border:none; cursor:pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.25); }
 
         .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
         .form-group { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; font-weight: 600; }
-        
-        /* INPUTS ORIGINALES (REDONDEADOS) */
         input, select, textarea { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 100%; }
         input:focus, select:focus { outline:none; border-color: #8b5cf6; }
-
-        /* TABLA SERVICIOS (ESTILO ORIGINAL IMAGEN 3) */
-        .svc-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; margin-top: 10px; }
-        .svc-table th { background: #f1f5f9; padding: 8px; border-bottom: 1px solid #cbd5e1; text-align: left; font-weight: 700; color: #475569; }
-        .svc-table td { padding: 2px 4px; vertical-align: middle; }
         
-        /* INPUTS TABLA (BLANCOS Y REDONDEADOS) */
-        .svc-input { border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; background: #fff; text-align: center; height: 36px; }
-        .s-desc { text-align: left !important; }
-
-        .btn-add-row { margin-top: 8px; background: #f0f9ff; border: 1px dashed #bae6fd; color: #0284c7; padding: 10px; border-radius: 8px; width: 100%; cursor:pointer; font-weight: 600; }
+        .svc-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; margin-top: 5px; }
+        .svc-table th { background: #f8fafc; padding: 8px; border-bottom: 2px solid #e2e8f0; text-align: left; color:#64748b; font-weight:700; font-size:11px; text-transform: uppercase; }
+        .svc-table td { padding: 0 4px; vertical-align: middle; }
         
-        /* BOTONES PIE DE PÁGINA (IMAGEN 4) */
-        .btn-primary { background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; } /* Negro */
-        .btn-secondary { background: #fff; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 8px; font-weight: 600; } /* Blanco */
-        .btn-confirm { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; border:none; } /* Verde */
-        .btn-anular { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 18px; border-radius: 8px; font-weight: 600; } /* Rojo */
-        .btn-email { background: #8b5cf6; color: white; padding: 10px 18px; border-radius: 8px; font-weight: 600; border:none; display: flex; align-items: center; gap: 5px; } /* Morado */
-
-        /* INFO BOX */
-        .info-box { background: #f1f5f9; padding: 8px; border-radius: 6px; border: 1px dashed #cbd5e1; display: flex; gap: 15px; align-items: center; margin-bottom: 10px; }
+        .svc-input { width: 100%; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; text-align: center; height: 34px; font-size: 13px; }
+        .svc-input:focus { border-color: #8b5cf6; background: #f5f3ff; }
         
+        .btn-add-row { margin-top: 10px; background: #f0f9ff; border: 2px dashed #bae6fd; color: #0284c7; padding: 10px; border-radius: 8px; width: 100%; cursor:pointer; font-weight: 700; font-size: 13px; transition:0.2s; }
+        .btn-primary { background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; border:none; cursor:pointer; }
+        .btn-secondary { background: #fff; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor:pointer; }
+        .btn-confirm { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; border:none; cursor:pointer; }
+        .btn-anular { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor:pointer; }
+        .btn-email { background: #8b5cf6; color: white; padding: 10px 18px; border-radius: 8px; font-weight: 600; border:none; cursor:pointer; display: flex; align-items: center; gap: 6px; }
+
         #aiResponseModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; justify-content: center; align-items: center; }
         .ai-box { background: white; padding: 20px; border-radius: 12px; width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
     </style>
@@ -132,12 +140,10 @@
 
     <div id="landingPage">
         <div class="landing-container">
-            <div class="landing-header">
-               <img src="mesa-chef-512.png" alt="Logo" class="app-logo-big">
-                <h1 style="margin:0; font-size:24px; color:#1f2937;">RESERVAS SALAS Y RESTAURANTE</h1>
-                <p style="color:#666;">Gestión unificada para <strong>Sercotel Guadiana</strong> y <strong>Cumbria Spa&Hotel</strong>.</p>
-                <div style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:10px; display:inline-block; font-size:11px;">● v17.0 ORIGINAL RESTORED</div>
-            </div>
+            <img src="mesa-chef-512.png" class="app-logo-big" alt="Logo">
+            <h1 style="margin:10px 0 5px; font-size:24px; color:#1f2937;">RESERVAS SALAS Y RESTAURANTE</h1>
+            <p style="color:#666; margin-bottom:30px;">Gestión unificada para <strong>Sercotel Guadiana</strong> y <strong>Cumbria Spa&Hotel</strong>.</p>
+            <div style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:10px; display:inline-block; font-size:11px;">● v25.21 PDF FIX</div>
             <div class="hotel-grid">
                 <div class="h-card" onclick="initApp('Guadiana')">
                     <img src="Img/logo-guadiana.svg" alt="Logo Guadiana" onerror="this.style.display='none'">
@@ -154,7 +160,7 @@
     </div>
 
     <div id="appContainer">
-        <div class="app-header">
+        <header class="app-header">
             <div class="header-left">
                 <button class="btn-back" onclick="location.reload()">⬅</button>
                 <h2 id="tituloHotelActual" class="header-title">Hotel</h2>
@@ -172,20 +178,26 @@
                 </div>
                 <a href="admin.html" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; padding: 6px 12px; font-size: 12px;">⚙️ Config</a>
             </div>
-        </div>
+        </header>
 
         <div class="controls-bar">
             <div class="left-controls">
-                <input type="date" id="fechaVista" onchange="render()" />
+                <button class="btn-nav" onclick="cambiarSemana(-7)">❮</button>
+                <input type="date" id="fechaVista" onchange="render()" title="Fecha inicio vista" />
+                <button class="btn-nav" onclick="cambiarSemana(7)">❯</button>
                 <select id="filtroEstado" onchange="render()">
                     <option value="todos">Ver activos</option>
                     <option value="pendiente">⏳ Pendientes</option>
                     <option value="confirmado">✅ Confirmados</option>
+                    <option value="caducado">⛔ Caducados</option>
                     <option value="anulado">❌ Anulados</option>
                 </select>
+                <div class="search-wrapper">
+                    <input type="text" id="searchInput" placeholder="🔎 Buscar en todo..." oninput="render()">
+                    <button class="btn-search-ai" onclick="busquedaIA()">✨ IA</button>
+                </div>
             </div>
             <div style="display:flex; gap:10px;">
-                <button class="btn-secondary" id="btnReporte" onclick="alert('Informe listo')">🖨️ Informe</button>
                 <button class="btn-primary" id="btnNuevoPrincipal" onclick="nuevoGeneral()">+ Nuevo</button>
             </div>
         </div>
@@ -195,7 +207,15 @@
             <div id="presupuestosContainer" style="display: none">
                 <table class="budget-table">
                     <thead>
-                        <tr><th style="width: 120px">Fecha</th><th>Cliente</th><th>Salón</th><th style="width: 150px">Ref</th><th style="width: 120px">Estado</th><th style="width: 120px; text-align: right">Total</th></tr>
+                        <tr>
+                            <th style="width: 100px">Fecha</th>
+                            <th style="width: 130px">Ref.</th>
+                            <th>Cliente</th> 
+                            <th style="width: 140px">Salón</th>
+                            <th style="width: 90px">Validez</th>
+                            <th style="width: 100px">Estado</th>
+                            <th style="width: 80px; text-align: right">Total</th>
+                        </tr>
                     </thead>
                     <tbody id="budgetBody"></tbody>
                 </table>
@@ -213,25 +233,15 @@
             <div class="modal-body">
                 <input type="hidden" id="dataId"><input type="hidden" id="dataType"><input type="hidden" id="refPresupuesto">
 
-                <div class="ai-toolbar" id="aiToolbar">
-                    <span class="ai-label">✨ Herramientas IA</span>
-                    <button class="btn-ai" onclick="generarMenuIA()">🍽️ Menú</button>
-                    <button class="btn-ai" onclick="checklistIA()">✅ Checklist</button>
-                    <button class="btn-ai" onclick="auditarIA()" style="background:#f59e0b;">⚠️ Auditar</button>
-                </div>
-
-                <div class="form-row" style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div class="form-group" id="grpFechaUnica">
-                        <label>Fecha</label><input type="date" id="inpFecha" />
+                <div class="form-row" style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div class="form-group" id="grpFechaUnica"><label>Fecha</label><input type="date" id="inpFecha" /></div>
+                    <div id="grpRangoFechas" style="display: none; gap:10px; flex: 0 0 auto;">
+                        <div style="width: 130px;"><label>Desde</label><input type="date" id="inpFechaDesde" /></div>
+                        <div style="width: 130px;"><label>Hasta</label><input type="date" id="inpFechaHasta" /></div>
                     </div>
-                    <div class="form-group" id="grpRangoFechas" style="display: none">
-                        <div style="display:flex; gap: 10px;">
-                            <div style="flex:1"><label>Desde</label><input type="date" id="inpFechaDesde" /></div>
-                            <div style="flex:1"><label>Hasta</label><input type="date" id="inpFechaHasta" /></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Espacio / Salón</label><select id="inpSalon"></select>
+                    <div class="form-group" style="flex:1;">
+                       <label>Espacio / Salón</label>
+                       <select id="inpSalon" style="width:100%" onchange="checkSalonPendiente(this); actualizarLineaSalon()"></select>
                     </div>
                 </div>
 
@@ -255,34 +265,33 @@
                 </div>
 
                 <div id="blockEventos">
-                    <div class="form-row">
-                        <div class="form-group">
+                    <div class="form-row" style="align-items: flex-end; gap: 10px;">
+                        <div class="form-group" style="width: 140px;">
                             <label>Estado</label>
                             <select id="inpEstadoEvento">
                                 <option value="pendiente">⏳ Pendiente</option>
                                 <option value="confirmado">✅ Confirmado</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Jornada</label><select id="inpTurnoEvento"><option value="dia_completo">Todo el día</option><option value="manana">☀️ Mañana</option><option value="tarde">🌙 Tarde</option></select></div>
-                        <div class="form-group"><label>Montaje</label><select id="inpMontaje"><option>Banquete</option><option>Escuela</option><option>Teatro</option><option>Cóctel</option><option>U</option></select></div>
-                        <div class="form-group"><label>Pax A.</label><input type="number" id="inpPaxA" style="width:60px" /></div>
-                        <div class="form-group"><label>Pax N.</label><input type="number" id="inpPaxN" style="width:60px" /></div>
+                        <div class="form-group" style="width: 140px;"><label>Jornada</label><select id="inpTurnoEvento" onchange="actualizarLineaSalon()"><option value="dia_completo">Todo el día</option><option value="manana">☀️ Mañana</option><option value="tarde">🌙 Tarde</option></select></div>
+                        <div class="form-group" style="flex: 1;"><label>Montaje</label><select id="inpMontaje"><option>Banquete</option><option>Escuela</option><option>Teatro</option><option>Cóctel</option><option>U</option></select></div>
+                        <div class="form-group" style="width: 100px;"><label>Hora</label><input type="time" id="inpHoraInicio" /></div>
+                        <input type="hidden" id="inpHoraFin">
+                        <div class="form-group" style="width: 70px;"><label>Pax A.</label><input type="number" id="inpPaxA" /></div>
+                        <div class="form-group" style="width: 70px;"><label>Pax N.</label><input type="number" id="inpPaxN" /></div>
                     </div>
                     
-                    <div class="form-row" style="background: #f1f5f9; padding: 8px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                        <div class="form-group"><label>Hora Inicio</label><input type="time" id="inpHoraInicio" /></div>
-                        <div class="form-group"><label>Hora Fin</label><input type="time" id="inpHoraFin" /></div>
-                        <div style="font-size:11px; color:#666; flex:2; display:flex; align-items:center">* Horario orientativo</div>
-                    </div>
-
-                    <div style="margin-top: 15px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                        <label style="color: var(--primary); font-weight: 700;">DESGLOSE / SERVICIOS</label>
+                    <div style="margin-top: 10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="color: var(--primary); font-weight: 700;">DESGLOSE / SERVICIOS</label>
+                            <button class="btn-ai-purple" onclick="generarMenuIA()">🟣 Menú IA</button>
+                        </div>
                         <table class="svc-table">
-                            <thead><tr><th width="120">Fecha</th><th>Concepto</th><th width="50">Uds</th><th width="80">Precio</th><th width="80">Total</th><th width="20"></th></tr></thead>
+                            <thead><tr><th style="width:135px">Fecha</th><th>Concepto</th><th style="width:60px">Uds</th><th style="width:90px">Precio</th><th style="width:90px">Total</th><th style="width:30px"></th></tr></thead>
                             <tbody id="bodyServicios"></tbody>
                         </table>
                         <button class="btn-add-row" onclick="addServiceRow()">+ Añadir línea</button>
-                        <div style="text-align: right; font-size: 16px; font-weight: 700; margin-top: 10px;">TOTAL: <span id="totalAmount">0.00</span> €</div>
+                        <div style="text-align: right; font-size: 15px; font-weight: 700; margin-top: 10px;">TOTAL: <span id="totalAmount">0.00</span> €</div>
                     </div>
                 </div>
 
@@ -292,14 +301,12 @@
                         <div class="form-group"><label>Precio Std</label><input type="number" id="inpPrcStd" onchange="aplicarStd()"></div>
                         <div class="form-group"><label>Estado</label><select id="inpEstadoGran"><option value="abierto">🟢 Abierto</option><option value="cerrado">🔴 Cerrado</option></select></div>
                     </div>
-                    <div style="font-weight:bold; margin-bottom:5px; font-size:12px;">
-                        Pax: <span id="gPax">0</span> | Total: <span id="gTot">0</span>€ | Pendiente: <span id="gPend" style="color:red">0</span>€
-                    </div>
+                    <div style="font-weight:bold; margin-bottom:5px; font-size:12px;">Pax: <span id="gPax">0</span> | Total: <span id="gTot">0</span>€ | Pendiente: <span id="gPend" style="color:red">0</span>€</div>
                     <table class="svc-table">
                         <thead><tr><th>Mesa</th><th>Nombre</th><th>Pax</th><th>Precio</th><th>Pagado</th><th></th></tr></thead>
                         <tbody id="bodyPart"></tbody>
                     </table>
-                    <button class="btn-add-row" onclick="addPart()">+ Añadir Participante</button>
+                    <button class="btn-add-row" style="border-color:#fbcfe8; color:#be185d; background:#fff;" onclick="addPart()">+ Añadir Participante</button>
                 </div>
 
                 <div class="form-row" style="margin-top: 15px">
@@ -307,7 +314,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <label style="color:#2563eb;">Nota para Cliente (PDF)</label>
-                            <button class="btn-ai" onclick="mejorarNotaIA()" style="padding:2px 8px; font-size:10px;">✨ Mejorar</button>
+                            <button class="btn-ai-purple" onclick="mejorarNotaIA()" style="padding:2px 8px; font-size:10px;">✨ Mejorar</button>
                         </div>
                         <textarea id="inpNotaCliente" rows="2"></textarea>
                     </div>
@@ -317,12 +324,11 @@
             <div class="modal-footer">
                 <button class="btn-email" id="btnEmail" onclick="redactarEmailIA()" style="display:none;">📧 Email Cliente</button>
                 <button class="btn-secondary" id="btnPdf" onclick="imprimirPDF()" style="display:none;">📄 PDF</button>
-                
                 <div style="flex: 1"></div>
-                
+                <button class="btn-secondary" id="btnRecuperar" onclick="recuperarFicha()" style="display:none; background:#fef3c7; color:#d97706; border:1px solid #f59e0b;">🔄 Recuperar</button>
                 <button class="btn-confirm" id="btnConfirmarPpto" onclick="confirmarPresupuesto()" style="display:none;">✅ Confirmar</button>
                 <button class="btn-anular" id="btnAnular" onclick="anularFicha()">Anular</button>
-                <button class="btn-primary" onclick="guardarFicha()">GUARDAR</button>
+                <button class="btn-primary" id="btnGuardarMain" onclick="guardarFicha()">GUARDAR</button>
             </div>
         </div>
     </div>
@@ -330,7 +336,7 @@
     <div id="aiResponseModal">
         <div class="ai-box">
             <h3>🤖 Respuesta IA</h3>
-            <textarea id="aiOutput" style="width:100%; height:200px; padding:10px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+            <textarea id="aiOutput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:8px;"></textarea>
             <div style="text-align:right; margin-top:10px;">
                 <button class="btn-secondary" onclick="document.getElementById('aiResponseModal').style.display='none'">Cerrar</button>
                 <button class="btn-primary" onclick="copiarAI()">Copiar</button>
@@ -345,6 +351,7 @@
     const db = firebase.firestore();
 
     let currentHotel = null, currentModule = "eventos", dataCache = [], salonesConfig = {Guadiana:[], Cumbria:[], horarios:{}};
+    let aiFilteredIds = null;
 
     function initApp(h) {
         currentHotel = h;
@@ -353,18 +360,22 @@
         document.getElementById("landingPage").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("fechaVista").valueAsDate = new Date();
-        
         db.collection("master_data").doc("CONFIG_SALONES").onSnapshot(doc => { if(doc.exists) salonesConfig = doc.data(); render(); });
         cargarDatos();
+        setModulo('restaurante');
     }
-
     function cargarDatos() {
         db.collection("master_data").onSnapshot(snap => {
-            document.getElementById("statusBadge").classList.add("status-online");
+            const badge = document.getElementById("statusBadge");
+            badge.classList.remove("status-offline"); badge.classList.add("status-online");     
             document.getElementById("statusText").innerText = "Conectado";
             dataCache = [];
             snap.forEach(d => { if(d.id!=="CONFIG_SALONES") dataCache.push({id:d.id, ...d.data()}); });
             render();
+        }, (error) => {
+            const badge = document.getElementById("statusBadge");
+            badge.classList.remove("status-online"); badge.classList.add("status-offline");
+            document.getElementById("statusText").innerText = "Sin Conexión";
         });
     }
 
@@ -375,17 +386,16 @@
         if(m==="restaurante") document.getElementById("btnModRest").classList.add("active");
         if(m==="presupuestos") document.getElementById("btnModPpto").classList.add("active");
         if(m==="grandes_eventos") document.getElementById("btnModGran").classList.add("active");
-
         const isList = (m==="presupuestos" || m==="grandes_eventos");
         document.getElementById("mainTable").style.display = isList ? "none" : "table";
         document.getElementById("presupuestosContainer").style.display = isList ? "block" : "none";
-        
+        document.querySelectorAll(".btn-nav").forEach(btn => btn.style.display = (m==="presupuestos"?"none":"flex"));
         const btn = document.getElementById("btnNuevoPrincipal");
         if(m==="eventos") btn.innerText = "+ Nuevo Evento";
         if(m==="restaurante") btn.innerText = "+ Nueva Mesa";
         if(m==="presupuestos") btn.innerText = "+ Presupuesto";
         if(m==="grandes_eventos") btn.innerText = "+ Gran Evento";
-        
+        document.getElementById("searchInput").value = ""; aiFilteredIds = null;
         render();
     }
 
@@ -393,33 +403,68 @@
         if(currentModule === "presupuestos" || currentModule === "grandes_eventos") {
             const body = document.getElementById("budgetBody");
             const isGran = currentModule === "grandes_eventos";
-            
             body.innerHTML = "";
             const typeFilter = isGran ? "gran_evento" : "presupuesto";
             const filtro = document.getElementById("filtroEstado").value;
+            const searchText = document.getElementById("searchInput").value.toLowerCase();
+            const hoyObj = new Date(); hoyObj.setHours(0,0,0,0);
+            const today = new Date();
+            const hoyStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const isSearching = (aiFilteredIds !== null) || (searchText !== "");
 
             const items = dataCache.filter(d => {
-                if(d.hotel !== currentHotel || d.type !== typeFilter) return false;
-                if(filtro === "todos") return d.estado !== 'anulado';
-                if(filtro === "anulado") return d.estado === 'anulado';
-                if(filtro === "pendiente") return d.estado !== 'confirmado' && d.estado !== 'anulado';
-                return d.estado === filtro;
+                if(d.hotel !== currentHotel) return false;
+                if (isSearching) {
+                    if (aiFilteredIds !== null && !aiFilteredIds.includes(d.id)) return false;
+                    if (searchText && !JSON.stringify(d).toLowerCase().includes(searchText)) return false;
+                    return true;
+                }
+                if (d.fechaInicio < hoyStr) return false;
+                if (d.type !== typeFilter) return false;
+                let estadoReal = d.estado;
+                if(d.type === 'presupuesto' && d.estado === 'pendiente' && d.validez) {
+                    const val = safeDate(d.validez);
+                    if(val < hoyObj) estadoReal = 'caducado';
+                }
+                if(filtro === "todos") return (estadoReal !== 'anulado' && estadoReal !== 'caducado');
+                if(filtro === "anulado") return estadoReal === 'anulado';
+                if(filtro === "caducado") return estadoReal === 'caducado';
+                if(filtro === "pendiente") return estadoReal === 'pendiente'; 
+                return estadoReal === filtro;
             });
-
-            items.sort((a,b) => new Date(b.fechaInicio) - new Date(a.fechaInicio));
+            items.sort((a,b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
 
             items.forEach(d => {
                 const tr = document.createElement("tr"); tr.className = "budget-row";
-                let badge = `<span class="badge ${d.estado==='confirmado'?'st-confirmado':(d.estado==='anulado'?'st-anulado':'st-pendiente')}">${d.estado}</span>`;
-                
+                let estadoVisual = d.estado;
+                if(d.type === 'presupuesto' && d.estado === 'pendiente' && d.validez) {
+                    const val = safeDate(d.validez);
+                    if(val < hoyObj) estadoVisual = 'caducado';
+                }
+                let badgeClass = 'st-pendiente';
+                if(estadoVisual === 'confirmado') badgeClass = 'st-confirmado';
+                if(estadoVisual === 'anulado') badgeClass = 'st-anulado';
+                if(estadoVisual === 'caducado') badgeClass = 'st-caducado';
+                let badge = `<span class="badge ${badgeClass}">${estadoVisual}</span>`;
+                let totalText = d.total ? parseFloat(d.total).toFixed(2) + '€' : '-';
+                if(d.type === 'restaurante' && d.precioMenu) totalText = ((d.precioMenu)*(d.paxRest||0)).toFixed(2) + '€';
+                const fechaEventoFmt = formatearFechaListado(d.fechaInicio);
+                let fechaValidezFmt = "-";
+                if(d.validez) {
+                    fechaValidezFmt = formatearFechaListado(d.validez);
+                    if(d.estado === 'pendiente' && estadoVisual !== 'caducado') {
+                        const val = safeDate(d.validez);
+                        const diff = Math.ceil((val - hoyObj) / (1000 * 60 * 60 * 24));
+                        if(diff <= 5 && diff >= 0) fechaValidezFmt += ` <span style="color:#d97706; font-weight:bold" title="Caduca en ${diff} días">⚠️</span>`;
+                    }
+                }
+                let refDisplay = d.ref || "-";
                 if(isGran) {
                     let pax=0, pend=0;
-                    (d.participantes||[]).forEach(p => { 
-                        const t = (p.pax||0)*(p.precio||0); pax+=parseInt(p.pax)||0; pend+=(t-(p.pagado||0)); 
-                    });
-                    tr.innerHTML = `<td>${d.fechaInicio}</td><td><b>${d.nombre}</b></td><td>${d.aforo} pax</td><td>${pax} insc.</td><td>${badge}</td><td style="text-align:right; color:${pend>0?'red':'green'}">${pend.toFixed(2)}€</td>`;
+                    (d.participantes||[]).forEach(p => { const t = (p.pax||0)*(p.precio||0); pax+=parseInt(p.pax)||0; pend+=(t-(p.pagado||0)); });
+                    tr.innerHTML = `<td>${fechaEventoFmt}</td><td>-</td><td><b>${d.nombre}</b></td><td>Aforo: ${d.aforo}</td><td>-</td><td>${badge}</td><td style="text-align:right; color:${pend>0?'red':'green'}">${pend.toFixed(2)}€</td>`;
                 } else {
-                    tr.innerHTML = `<td>${d.fechaInicio}</td><td><b>${d.nombre}</b></td><td>${d.salon}</td><td>${d.ref||''}</td><td>${badge}</td><td style="text-align:right"><b>${d.total}€</b></td>`;
+                    tr.innerHTML = `<td style="font-weight:600; color:#334155">${fechaEventoFmt}</td><td style="font-size:11px; color:#64748b; font-family:monospace;">${refDisplay}</td><td style="font-size:14px; font-weight:bold; color:#0f172a" title="${d.nombre}">${d.nombre}</td><td style="color:#475569" title="${d.salon}">${d.salon || 'Sin Salón'}</td><td style="font-size:11px">${fechaValidezFmt}</td><td>${badge}</td><td style="text-align:right; font-weight:bold; color:#0f172a">${totalText}</td>`;
                 }
                 tr.onclick = () => abrirModalId(d.id);
                 body.appendChild(tr);
@@ -430,13 +475,14 @@
         const thead = document.getElementById("tableHead");
         const tbody = document.getElementById("tableBody");
         thead.innerHTML = ""; tbody.innerHTML = "";
-        
-        const fBase = new Date(document.getElementById("fechaVista").value);
-        let hRow = `<tr><th style="width:150px;left:0;z-index:10">ESPACIO</th>`;
-        const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const fBase = safeDate(document.getElementById("fechaVista").value);
+        let hRow = `<tr><th style="width:150px;left:0;z-index:10;background:#fff;border-right:1px solid #e2e8f0;">ESPACIO</th>`;
         for(let i=0; i<7; i++) {
-            const d = new Date(fBase); d.setDate(d.getDate()+i);
-            hRow += `<th>${dias[d.getDay()]} ${d.getDate()}</th>`;
+            const d = new Date(fBase); d.setDate(d.getDate() + i);
+            const diaSem = d.getDay();
+            const bg = (diaSem === 5 || diaSem === 6 || diaSem === 0) ? 'background:#f1f5f9 !important;' : 'background:#fff;';
+            const dateStr = d.toISOString().split("T")[0]; 
+            hRow += `<th style="${bg}">${formatearFechaListado(dateStr)}</th>`;
         }
         thead.innerHTML = hRow + "</tr>";
 
@@ -445,16 +491,24 @@
             const esRest = s.name.includes("Restaurante") || s.name.includes("Cafetería");
             if(currentModule === "restaurante" && !esRest) return;
             if(currentModule === "eventos" && esRest) return;
-
             const tr = document.createElement("tr");
-            let row = `<td style="font-weight:bold;position:sticky;left:0;background:#fff;z-index:5">${s.name}</td>`;
-            
+            const sizeInfo = s.size ? `<br><span style="font-size:9px; font-weight:normal; color:#64748b;">${s.size} m²</span>` : '';
+            let row = `<td class="salon-name-cell" style="position:sticky;left:0;z-index:5">${s.name}${sizeInfo}</td>`;
             for(let i=0; i<7; i++) {
-                const d = new Date(fBase); d.setDate(d.getDate()+i);
+                const d = new Date(fBase); d.setDate(d.getDate() + i);
                 const dateStr = d.toISOString().split("T")[0];
-                const evts = dataCache.filter(x => x.hotel===currentHotel && x.salon===s.name && x.fechaInicio<=dateStr && x.fechaFin>=dateStr && x.estado!=='anulado');
-
-                row += `<td>`;
+                const diaSem = d.getDay();
+                const esFinde = (diaSem === 5 || diaSem === 6 || diaSem === 0);
+                const styleBg = esFinde ? 'style="background-color:#f1f5f9;"' : '';
+                const bgClass = esFinde ? 'weekend-cell' : '';
+                const evts = dataCache.filter(x => {
+                    if(x.hotel!==currentHotel) return false;
+                    if(x.type === 'presupuesto' && x.estado === 'pendiente' && x.salon === s.name) { return (x.fechaInicio <= dateStr && x.fechaFin >= dateStr); }
+                    if(x.salon!==s.name) return false;
+                    if(x.fechaInicio > dateStr || x.fechaFin < dateStr) return false;
+                    return x.estado!=='anulado';
+                });
+                row += `<td class="${bgClass}" ${styleBg}>`;
                 if(currentModule === "restaurante") {
                     const m = evts.filter(x => x.turno === "manana").map(x=>`<div class="mesa-card mesa-manana" onclick="abrirModalId('${x.id}')"><b>${x.hora||''}</b> ${x.nombre} (${x.paxRest})</div>`).join('');
                     const t = evts.filter(x => x.turno === "tarde").map(x=>`<div class="mesa-card mesa-tarde" onclick="abrirModalId('${x.id}')"><b>${x.hora||''}</b> ${x.nombre} (${x.paxRest})</div>`).join('');
@@ -462,15 +516,25 @@
                 } else {
                     const dia = evts.find(x => x.turno === "dia_completo");
                     if(dia) {
-                        const cls = dia.type==='gran_evento'?'evt-gran':(dia.estado==='confirmado'?'evt-confirmado':'evt-full-day');
-                        row += `<div class="split-cell" onclick="abrirModalId('${dia.id}')"><div class="evt-full-day ${cls}">${dia.nombre}</div></div>`;
+                        let cls = dia.type==='gran_evento'?'evt-gran':(dia.estado==='confirmado'?'evt-confirmado':'evt-full-day');
+                        if(dia.type === 'presupuesto' && dia.estado === 'pendiente') cls = 'evt-pendiente'; 
+                        let dailyInfo = "";
+                        if(dia.type === 'presupuesto' && dia.servicios) { const svcs = dia.servicios.filter(s => s.date === dateStr); if(svcs.length > 0) dailyInfo = svcs[0].desc; }
+                        const paxInfo = dia.paxA ? `<br>Pax: ${dia.paxA}` : '';
+                        const timeInfo = dia.horaInicio ? `<br>Hora: ${dia.horaInicio}` : '';
+                        const dailyConcept = dailyInfo ? `<br><i>${dailyInfo}</i>` : '';
+                        row += `<div class="split-cell" onclick="abrirModalId('${dia.id}')"><div class="evt-full-day ${cls}"><b>${dia.nombre}</b>${paxInfo}${timeInfo}${dailyConcept}</div></div>`;
                     } else {
                         const m = evts.find(x => x.turno === "manana");
                         const t = evts.find(x => x.turno === "tarde");
-                        row += `<div class="split-cell">
-                            <div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','manana')">${m ? `<div class="evt-part evt-manana ${m.estado==='confirmado'?'st-confirmado':''}" onclick="event.stopPropagation(); abrirModalId('${m.id}')">${m.nombre}</div>` : ''}</div>
-                            <div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','tarde')">${t ? `<div class="evt-part evt-tarde ${t.estado==='confirmado'?'st-confirmado':''}" onclick="event.stopPropagation(); abrirModalId('${t.id}')">${t.nombre}</div>` : ''}</div>
-                        </div>`;
+                        const renderPart = (e) => {
+                            if(!e) return '';
+                            let cls = e.turno==='manana'?'evt-manana':'evt-tarde';
+                            if(e.estado==='confirmado') cls += ' evt-confirmado';
+                            if(e.type === 'presupuesto' && e.estado === 'pendiente') cls += ' evt-pendiente';
+                            return `<div class="evt-part ${cls}" onclick="event.stopPropagation(); abrirModalId('${e.id}')"><b>${e.nombre}</b><div style="font-size:9px">Pax: ${e.paxA||e.paxRest||'?'}</div></div>`;
+                        };
+                        row += `<div class="split-cell"><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','manana')">${renderPart(m)}</div><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','tarde')">${renderPart(t)}</div></div>`;
                     }
                 }
                 row += `</td>`;
@@ -480,11 +544,14 @@
         });
     }
 
+    /* --- LÓGICA CRÍTICA DE PRESUPUESTOS Y FILAS --- */
+
     function nuevoGeneral() { nuevo(new Date().toISOString().split("T")[0], "", ""); }
+    function nuevoSalon(fecha, salon, turno) { nuevo(fecha, salon, turno); }
+
     function nuevo(fecha, salon, turno) {
         document.getElementById("dataId").value = "";
         document.getElementById("refPresupuesto").value = "";
-        
         let type = "evento";
         if(currentModule==="restaurante") type="restaurante";
         if(currentModule==="presupuestos") type="presupuesto";
@@ -494,20 +561,22 @@
         document.querySelectorAll("#modalFicha input").forEach(i => i.value="");
         document.querySelectorAll("#modalFicha select").forEach(i => i.selectedIndex=0);
         document.querySelectorAll("#modalFicha textarea").forEach(i => i.value="");
-        document.getElementById("modalTitle").innerText = type==="presupuesto" ? "Nuevo Presupuesto" : "Nuevo Evento";
         
+        document.getElementById("modalTitle").innerText = type==="presupuesto" ? "Nuevo Presupuesto" : "Nuevo Evento";
+        document.getElementById("btnGuardarMain").innerText = "GUARDAR";
         document.getElementById("inpFecha").value = fecha;
-        if(type==="presupuesto") { document.getElementById("inpFechaDesde").value = fecha; document.getElementById("inpFechaHasta").value = fecha; }
+        if(type==="presupuesto") { 
+            document.getElementById("inpFechaDesde").value = fecha; 
+            document.getElementById("inpFechaHasta").value = fecha; 
+        }
         
         document.getElementById("blockRestaurante").style.display = type==="restaurante" ? "block" : "none";
         document.getElementById("blockEventos").style.display = (type==="evento"||type==="presupuesto") ? "block" : "none";
         document.getElementById("blockGran").style.display = type==="gran_evento" ? "block" : "none";
-        
         document.getElementById("grpFechaUnica").style.display = type==="presupuesto" ? "none" : "block";
         document.getElementById("grpRangoFechas").style.display = type==="presupuesto" ? "flex" : "none";
         document.getElementById("btnPdf").style.display = type==="presupuesto" ? "inline-flex" : "none";
         document.getElementById("btnConfirmarPpto").style.display = type==="presupuesto" ? "inline-flex" : "none";
-        document.getElementById("aiToolbar").style.display = (type==="presupuesto"||type==="evento") ? "flex" : "none";
         document.getElementById("btnEmail").style.display = (type==="presupuesto") ? "inline-flex" : "none";
 
         document.getElementById("bodyServicios").innerHTML = "";
@@ -517,268 +586,225 @@
         const sel = document.getElementById("inpSalon"); sel.innerHTML = "";
         const allS = salonesConfig[currentHotel] || [];
         if(type==="presupuesto") sel.innerHTML = "<option value='Pendiente'>-- Pendiente --</option>";
+        
         allS.forEach(s => {
             if(!s.active) return;
+            let infoExtra = "";
+            if(s.pax > 0) infoExtra += `Max: ${s.pax}`;
+            if(s.size > 0) infoExtra += (infoExtra ? " | " : "") + `${s.size} m²`;
+            if(infoExtra) infoExtra = ` (${infoExtra})`;
             const esRest = s.name.includes("Restaurante") || s.name.includes("Cafetería");
-            if(type==="restaurante" && esRest) sel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
-            if(type!=="restaurante" && !esRest) sel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            if(type==="restaurante" && esRest) sel.innerHTML += `<option value="${s.name}">${s.name}${infoExtra}</option>`;
+            if(type!=="restaurante" && !esRest) sel.innerHTML += `<option value="${s.name}">${s.name}${infoExtra}</option>`;
         });
         if(salon) sel.value = salon;
 
         if(type==="evento" && turno) document.getElementById("inpTurnoEvento").value = turno;
         if(type==="restaurante" && turno) document.getElementById("inpTurno").value = turno;
         if(type==="gran_evento") addPart(); 
-        if(type==="presupuesto") addServiceRow({date: fecha}); 
 
+        if(type==="presupuesto") { 
+            // Crear fila inicial
+            addServiceRow({ date: fecha, desc: "Alquiler de Salón", price: "" });
+            // Forzar actualización inmediata tras 200ms para asegurar DOM
+            setTimeout(actualizarLineaSalon, 200); 
+        }
+        
+        document.getElementById("btnRecuperar").style.display = "none";
+        document.getElementById("btnAnular").style.display = "none"; 
         document.getElementById("modalFicha").style.display = "flex";
     }
 
+    function addServiceRow(d={}) {
+        const tr = document.createElement("tr");
+        let defaultDate = document.getElementById("inpFecha").value;
+        const existingDates = document.querySelectorAll(".s-date");
+        if(!d.date && existingDates.length > 0) { defaultDate = existingDates[existingDates.length - 1].value; }
+        const f = d.date || defaultDate;
+        
+        let displayPrice = "";
+        if(d.price !== undefined && d.price !== "") displayPrice = d.price;
+
+        tr.innerHTML = `
+            <td><input type="date" class="svc-input s-date" value="${f}" onchange="updatePresupuestoDates()" oninput="updatePresupuestoDates()"></td>
+            <td><input class="svc-input s-desc" value="${d.desc||''}" style="text-align:left" placeholder="Concepto"></td>
+            <td><input type="number" class="svc-input s-uds" value="${d.uds||1}" oninput="calcTotal()"></td>
+            <td><input type="text" class="svc-input s-price" value="${displayPrice}" placeholder="0.00 €" onfocus="this.value=''" onblur="formatPrice(this); calcTotal()" oninput="calcTotal()"></td>
+            <td><input class="svc-input s-tot" readonly style="font-weight:bold;"></td>
+            <td class="btn-del-row" style="text-align:center;cursor:pointer;color:red;" onclick="this.parentElement.remove(); calcTotal(); updatePresupuestoDates()">✕</td>`;
+        document.getElementById("bodyServicios").appendChild(tr);
+        calcTotal(); setTimeout(updatePresupuestoDates, 50); 
+    }
+
+    function actualizarLineaSalon() {
+        const typeEl = document.getElementById("dataType");
+        if(!typeEl || typeEl.value !== "presupuesto") return;
+        const firstRow = document.querySelector("#bodyServicios tr");
+        if(!firstRow) return;
+
+        const salon = document.getElementById("inpSalon").value;
+        const turno = document.getElementById("inpTurnoEvento").value;
+        const inputDesc = firstRow.querySelector(".s-desc");
+        const inputPrice = firstRow.querySelector(".s-price");
+        if(!inputDesc || !inputPrice) return;
+
+        if(!salon || salon === "Pendiente") {
+            if(inputDesc.value.includes("Alquiler") || inputDesc.value === "") inputDesc.value = "Alquiler de Salón";
+            return; 
+        }
+
+        // --- DEFINIR TEXTO (NOMENCLATURA ADMIN) ---
+        // Forzamos el texto aunque no haya precio todavía
+        let nombreJornada = "Jornada Comp."; 
+        if(turno === "manana") nombreJornada = "1/2 Día (Mañana)";
+        else if(turno === "tarde") nombreJornada = "1/2 Día (Tarde)";
+
+        inputDesc.value = `Alquiler Salón ${salon} - ${nombreJornada}`;
+
+        // --- BUSCAR PRECIO ---
+        const configHotel = salonesConfig[currentHotel] || [];
+        const datosSalon = configHotel.find(s => s.name.trim() === salon.trim());
+        
+        // Limpiador agresivo
+        const cleanPrice = (val) => {
+            if(!val) return 0;
+            const limpio = String(val).replace(/€/g, '').replace(/\s/g, '').replace(',', '.');
+            return parseFloat(limpio) || 0;
+        };
+
+        let pFull = datosSalon ? cleanPrice(datosSalon.priceFull) : 0;
+        let pHalf = datosSalon ? cleanPrice(datosSalon.priceHalf) : 0;
+        
+        let precioAplicar = pFull;
+        if(turno === "manana" || turno === "tarde") {
+            precioAplicar = pHalf;
+        }
+
+        if(precioAplicar > 0) {
+            inputPrice.value = precioAplicar.toFixed(2) + " €";
+        } else {
+            inputPrice.value = ""; 
+        }
+        calcTotal();
+    }
+
+    /* --- HELPERS --- */
+    function checkColision(salon, fecha, turno, ignoreId) {
+        if(!salon || salon === "Pendiente" || salon.includes("Restaurante")) return false;
+        return dataCache.some(d => {
+            if(d.id === ignoreId) return false; 
+            if(ignoreId && d.refPresupuesto === ignoreId) return false; 
+            if(d.hotel !== currentHotel) return false;
+            if(d.estado === 'anulado') return false;
+            if(d.salon !== salon) return false;
+            if(d.type === 'presupuesto' && d.estado === 'pendiente') return false; 
+            if(fecha >= d.fechaInicio && fecha <= d.fechaFin) {
+                if(d.turno === 'dia_completo') return true; 
+                if(turno === 'dia_completo') return true;   
+                if(d.turno === turno) return true;          
+            }
+            return false;
+        });
+    }
     function abrirModalId(id) {
-        const d = dataCache.find(x => x.id === id);
-        if(!d) return;
+        const d = dataCache.find(x => x.id === id); if(!d) return;
         const prevMod = currentModule;
         currentModule = d.type==="gran_evento"?"grandes_eventos":d.type==="restaurante"?"restaurante":d.type==="presupuesto"?"presupuestos":"eventos";
-        nuevo(d.fechaInicio, d.salon, "");
-        currentModule = prevMod;
-
+        nuevo(d.fechaInicio, d.salon, ""); currentModule = prevMod;
         document.getElementById("dataId").value = d.id;
         document.getElementById("inpNombre").value = d.nombre;
-        document.getElementById("modalTitle").innerText = d.nombre || "Ficha";
+        const contextTitle = (d.type === "presupuesto") ? " [PRESUPUESTO GLOBAL]" : (d.refPresupuesto) ? " [DÍA SUELTO]" : "";
+        document.getElementById("modalTitle").innerText = (d.nombre || "Ficha") + contextTitle;
+        document.getElementById("btnGuardarMain").innerText = "GUARDAR CAMBIOS"; 
         document.getElementById("inpTel").value = d.tel||"";
         document.getElementById("inpEmail").value = d.email||"";
         document.getElementById("inpNotas").value = d.notas||"";
         document.getElementById("inpNotaCliente").value = d.notaCliente||"";
-        
+        const isAnulado = d.estado === "anulado";
+        document.getElementById("btnRecuperar").style.display = isAnulado ? "inline-flex" : "none";
+        document.getElementById("btnAnular").style.display = isAnulado ? "none" : "inline-flex";
+        if(d.type === "presupuesto") {
+            if(isAnulado || d.estado === "confirmado") { document.getElementById("btnConfirmarPpto").style.display = "none"; } else { document.getElementById("btnConfirmarPpto").style.display = "inline-flex"; }
+        } else { document.getElementById("btnConfirmarPpto").style.display = "none"; }
         if(d.type==="restaurante") {
-            document.getElementById("inpHora").value = d.hora||"";
-            document.getElementById("inpPaxRest").value = d.paxRest||"";
-            document.getElementById("inpPrecioMenu").value = d.precioMenu||"";
-            document.getElementById("inpTurno").value = d.turno||"manana";
-            document.getElementById("inpEstadoRest").value = d.estado;
+            document.getElementById("inpHora").value = d.hora||""; document.getElementById("inpPaxRest").value = d.paxRest||""; document.getElementById("inpPrecioMenu").value = d.precioMenu||""; document.getElementById("inpTurno").value = d.turno||"manana"; document.getElementById("inpEstadoRest").value = d.estado;
         } else if (d.type==="gran_evento") {
-            document.getElementById("inpAforo").value = d.aforo||"";
-            document.getElementById("inpPrcStd").value = d.precioStd||"";
-            document.getElementById("inpEstadoGran").value = d.estado;
-            document.getElementById("bodyPart").innerHTML="";
-            (d.participantes||[]).forEach(p => addPart(p));
-            calcGran();
+            document.getElementById("inpAforo").value = d.aforo||""; document.getElementById("inpPrcStd").value = d.precioStd||""; document.getElementById("inpEstadoGran").value = d.estado;
+            document.getElementById("bodyPart").innerHTML=""; (d.participantes||[]).forEach(p => addPart(p)); calcGran();
         } else {
-            document.getElementById("inpFechaDesde").value = d.fechaInicio;
-            document.getElementById("inpFechaHasta").value = d.fechaFin;
-            document.getElementById("inpTurnoEvento").value = d.turno||"dia_completo";
-            document.getElementById("inpMontaje").value = d.montaje;
-            document.getElementById("inpPaxA").value = d.paxA;
-            document.getElementById("inpPaxN").value = d.paxN;
-            document.getElementById("inpHoraInicio").value = d.horaInicio||"";
-            document.getElementById("inpHoraFin").value = d.horaFin||"";
-            document.getElementById("inpEstadoEvento").value = d.estado;
-            document.getElementById("refPresupuesto").value = d.ref||"";
-            document.getElementById("bodyServicios").innerHTML = "";
-            (d.servicios||[]).forEach(s => addServiceRow(s));
-            calcTotal();
+            document.getElementById("inpFechaDesde").value = d.fechaInicio; document.getElementById("inpFechaHasta").value = d.fechaFin;
+            document.getElementById("inpTurnoEvento").value = d.turno||"dia_completo"; document.getElementById("inpMontaje").value = d.montaje;
+            document.getElementById("inpPaxA").value = d.paxA; document.getElementById("inpPaxN").value = d.paxN;
+            document.getElementById("inpHoraInicio").value = d.horaInicio||""; document.getElementById("inpHoraFin").value = d.horaFin||"";
+            document.getElementById("inpEstadoEvento").value = d.estado; document.getElementById("refPresupuesto").value = d.ref||"";
+            document.getElementById("bodyServicios").innerHTML = ""; (d.servicios||[]).forEach(s => addServiceRow(s));
+            calcTotal(); updatePresupuestoDates();
         }
     }
-
-    // --- INPUTS PRECIO & CALCULOS (CORREGIDO: Limpiar €) ---
-    function addServiceRow(d={}) {
-        const tr = document.createElement("tr");
-        const f = d.date || document.getElementById("inpFecha").value;
-        let displayPrice = "";
-        if(d.price && parseFloat(d.price)>0) displayPrice = parseFloat(d.price).toFixed(2) + " €";
-
-        tr.innerHTML = `<td><input type="date" class="svc-input s-date" value="${f}"></td>
-                        <td><input class="svc-input s-desc" value="${d.desc||''}" style="text-align:left" placeholder="Concepto"></td>
-                        <td><input type="number" class="svc-input s-uds" value="${d.uds||1}" oninput="calcTotal()"></td>
-                        <td><input type="text" class="svc-input s-price" value="${displayPrice}" placeholder="0.00 €" onfocus="this.value=''" onblur="formatPrice(this); calcTotal()" oninput="calcTotal()"></td>
-                        <td><input class="svc-input s-tot" readonly style="font-weight:bold;"></td>
-                        <td class="btn-del-row" style="text-align:center;cursor:pointer;color:red;" onclick="this.parentElement.remove();calcTotal()">✕</td>`;
-        document.getElementById("bodyServicios").appendChild(tr);
-        calcTotal();
+    function updatePresupuestoDates() {
+        const divRango = document.getElementById("grpRangoFechas");
+        if (!divRango || divRango.style.display === "none") return;
+        const dates = [];
+        document.querySelectorAll(".s-date").forEach(input => { if(input.value) { dates.push(input.value); } });
+        if(dates.length > 0) {
+            dates.sort();
+            document.getElementById("inpFechaDesde").value = dates[0]; 
+            document.getElementById("inpFechaHasta").value = dates[dates.length - 1];
+        }
     }
     function formatPrice(el) {
         let val = el.value.replace(',','.').replace(' €','').replace('€','');
-        if(val && !isNaN(val) && parseFloat(val)!==0) el.value = parseFloat(val).toFixed(2) + " €";
-        else if(!val || parseFloat(val)===0) el.value = "";
+        if(val && !isNaN(val) && parseFloat(val)!==0) el.value = parseFloat(val).toFixed(2) + " €"; else el.value = "";
+    }
+    function parseCurrency(str) {
+        if(!str) return 0;
+        let clean = str.toString().replace(/[^0-9.,]/g, '').replace(',', '.');
+        return parseFloat(clean) || 0;
     }
     function calcTotal() {
         let t=0; 
         document.querySelectorAll("#bodyServicios tr").forEach(tr => {
             const uds = parseFloat(tr.querySelector(".s-uds").value)||0;
-            // Lógica clave: Limpiar € antes de multiplicar
-            const rawP = tr.querySelector(".s-price").value.replace(' €','').replace('€','').replace(',','.');
-            const price = parseFloat(rawP)||0;
+            const rawP = tr.querySelector(".s-price").value;
+            const price = parseCurrency(rawP);
             const tot = uds * price;
             tr.querySelector(".s-tot").value = tot.toFixed(2) + " €";
             t += tot;
         });
         document.getElementById("totalAmount").innerText = t.toFixed(2);
     }
-
-    function addPart(d={}) {
-        const tr = document.createElement("tr");
-        const std = document.getElementById("inpPrcStd").value || 0;
-        tr.innerHTML = `<td><input class="svc-input p-mesa" value="${d.mesa||''}"></td><td><input class="svc-input p-nom" value="${d.nombre||''}" style="text-align:left"></td><td><input type="number" class="svc-input p-pax" value="${d.pax||1}" oninput="calcGran()"></td><td><input type="number" class="svc-input p-prc" value="${d.precio||std}" oninput="calcGran()"></td><td><input type="number" class="svc-input p-pag" value="${d.pagado||0}" oninput="calcGran()" style="color:green; font-weight:bold;"></td><td style="text-align:center;cursor:pointer;color:red;" onclick="this.parentElement.remove();calcGran()">✕</td>`;
-        document.getElementById("bodyPart").appendChild(tr);
-        calcGran();
-    }
-    function calcGran() {
-        let pax=0, tot=0, pag=0;
-        document.querySelectorAll("#bodyPart tr").forEach(tr => {
-            const p = parseFloat(tr.querySelector(".p-pax").value)||0;
-            const pr = parseFloat(tr.querySelector(".p-prc").value)||0;
-            const pg = parseFloat(tr.querySelector(".p-pag").value)||0;
-            pax+=p; tot+=(p*pr); pag+=pg;
-        });
-        document.getElementById("gPax").innerText = pax;
-        document.getElementById("gTot").innerText = tot.toFixed(2);
-        document.getElementById("gPag").innerText = pag.toFixed(2);
-        document.getElementById("gPend").innerText = (tot-pag).toFixed(2);
-    }
-    function aplicarStd() {
-        if(confirm("¿Aplicar a todos?")) { const v = document.getElementById("inpPrcStd").value; document.querySelectorAll(".p-prc").forEach(i=>{i.value=v}); calcGran(); }
-    }
-
-    async function guardarFicha() {
-        const nombre = document.getElementById("inpNombre").value;
-        if (!nombre || nombre.trim() === "") { alert("⚠️ Escribe un Nombre"); return; }
-
-        try {
-            const id = document.getElementById("dataId").value;
-            const type = document.getElementById("dataType").value;
-            
-            const data = {
-                hotel: currentHotel, type, nombre,
-                tel: document.getElementById("inpTel").value,
-                email: document.getElementById("inpEmail").value,
-                salon: document.getElementById("inpSalon").value,
-                notas: document.getElementById("inpNotas").value,
-                notaCliente: document.getElementById("inpNotaCliente").value,
-                updatedAt: new Date().toISOString() 
-            };
-
-            if (type === "restaurante") {
-                data.hora = document.getElementById("inpHora").value;
-                data.paxRest = document.getElementById("inpPaxRest").value;
-                data.precioMenu = document.getElementById("inpPrecioMenu").value;
-                data.turno = document.getElementById("inpTurno").value;
-                data.estado = document.getElementById("inpEstadoRest").value;
-                data.fechaInicio = document.getElementById("inpFecha").value;
-                data.fechaFin = data.fechaInicio;
-            } else if (type === "gran_evento") {
-                data.fechaInicio = document.getElementById("inpFecha").value;
-                data.fechaFin = data.fechaInicio;
-                data.aforo = document.getElementById("inpAforo").value;
-                data.precioStd = document.getElementById("inpPrcStd").value;
-                data.estado = document.getElementById("inpEstadoGran").value;
-                data.participantes = [];
-                document.querySelectorAll("#bodyPart tr").forEach(tr => {
-                    data.participantes.push({
-                        mesa: tr.querySelector(".p-mesa").value, nombre: tr.querySelector(".p-nom").value,
-                        pax: tr.querySelector(".p-pax").value, precio: tr.querySelector(".p-prc").value, pagado: tr.querySelector(".p-pag").value
-                    });
-                });
-            } else {
-                if(type==="presupuesto") {
-                    data.fechaInicio = document.getElementById("inpFechaDesde").value;
-                    data.fechaFin = document.getElementById("inpFechaHasta").value;
-                    data.ref = document.getElementById("refPresupuesto").value || "PRE-"+Date.now();
-                } else {
-                    data.fechaInicio = document.getElementById("inpFecha").value;
-                    data.fechaFin = data.fechaInicio;
-                }
-                if(!data.fechaInicio) data.fechaInicio = new Date().toISOString().split("T")[0]; 
-
-                data.turno = document.getElementById("inpTurnoEvento").value;
-                data.montaje = document.getElementById("inpMontaje").value;
-                data.paxA = document.getElementById("inpPaxA").value;
-                data.paxN = document.getElementById("inpPaxN").value;
-                data.horaInicio = document.getElementById("inpHoraInicio").value;
-                data.horaFin = document.getElementById("inpHoraFin").value;
-                data.estado = document.getElementById("inpEstadoEvento").value;
-                data.total = document.getElementById("totalAmount").innerText;
-                data.servicios = [];
-                document.querySelectorAll("#bodyServicios tr").forEach(tr => {
-                    // GUARDAR LIMPIO
-                    const rawP = tr.querySelector(".s-price").value.replace(' €','').replace('€','').replace(',','.');
-                    data.servicios.push({date:tr.querySelector(".s-date").value, desc:tr.querySelector(".s-desc").value, uds:tr.querySelector(".s-uds").value, price:rawP});
-                });
-            }
-
-            if (id) await db.collection("master_data").doc(id).update(data);
-            else await db.collection("master_data").add(data);
-
-            if (type === "presupuesto" && data.estado === "confirmado") sincronizarEventosVinculados(id || "NEW", data);
-
-            alert("✅ Guardado correctamente");
-            document.getElementById("modalFicha").style.display = "none";
-            
-        } catch (e) {
-            console.error(e);
-            alert("❌ ERROR AL GUARDAR: " + e.message);
+    function recuperarFicha() {
+        const id = document.getElementById("dataId").value;
+        if(id && confirm("¿Recuperar este evento? Pasará a Pendiente.")) {
+            db.collection("master_data").doc(id).update({estado:"pendiente"});
+            document.getElementById("modalFicha").style.display = "none"; render();
         }
     }
-
-    async function confirmarPresupuesto() {
-        const salon = document.getElementById("inpSalon").value;
-        if(!salon || salon==="Pendiente") return alert("Selecciona un salón definitivo");
-        document.getElementById("inpEstadoEvento").value = "confirmado";
-        await guardarFicha();
-    }
-
-    async function sincronizarEventosVinculados(idRef, data) {
-        if(!idRef) return;
-        const h = salonesConfig.horarios || { almIni:"13:00", almFin:"16:00", cenaIni:"20:30", cenaFin:"23:00", corte:"18:00" };
-        const toMin = s => {const [hh,mm]=s.split(":").map(Number); return (hh*60)+mm;}
-        
-        const d1 = new Date(data.fechaInicio); const d2 = new Date(data.fechaFin);
-        const diff = (d2-d1)/(1000*60*60*24);
-        const batch = db.batch();
-        for(let i=0; i<=diff; i++) {
-            const d = new Date(d1); d.setDate(d.getDate()+i);
-            const dateStr = d.toISOString().split("T")[0];
-            const isRest = data.salon.includes("Restaurante") || data.salon.includes("Cafetería");
-            let newType = isRest ? "restaurante" : "evento";
-            let turno = "manana"; let hora = "14:00";
-            let pax = data.paxA; let precio = 0;
-            if(isRest) {
-                const horaP = data.horaInicio || "14:00";
-                if(toMin(horaP) >= toMin(h.corte)) { turno="tarde"; hora="21:00"; }
-                let uds=0, prc=0;
-                (data.servicios||[]).forEach(s => { 
-                    if(s.date === dateStr) { uds += parseInt(s.uds)||0; prc += parseFloat(s.price)||0; }
-                });
-                if(uds>0) pax = uds;
-                if(prc>0) precio = prc;
-            } else { turno = "dia_completo"; }
-
-            const ref = db.collection("master_data").doc();
-            batch.set(ref, {
-                hotel: currentHotel, type: newType, nombre: data.nombre,
-                salon: data.salon, fechaInicio: dateStr, fechaFin: dateStr,
-                estado: "confirmado", refPresupuesto: idRef,
-                paxA: pax, paxRest: pax, turno: turno, hora: hora, precioMenu: precio
-            });
-        }
-        await batch.commit();
-        alert("✅ Sincronizado con Agenda");
-    }
-
     function anularFicha() {
         const id = document.getElementById("dataId").value;
-        if(id && confirm("¿Anular?")) {
+        if(id && confirm("¿Anular? (Se moverá al histórico, NO se borra)")) {
             db.collection("master_data").doc(id).update({estado:"anulado"});
-            document.getElementById("modalFicha").style.display = "none";
+            db.collection("master_data").where("refPresupuesto", "==", id).get().then(snap => { const b = db.batch(); snap.forEach(d => b.delete(d.ref)); b.commit(); });
+            document.getElementById("modalFicha").style.display = "none"; render();
         }
     }
-
+    async function busquedaIA() {
+        const query = document.getElementById("searchInput").value; if(!query) { aiFilteredIds = null; render(); return; }
+        document.getElementById("aiLoading").style.display = "block";
+        const contexto = dataCache.map(d => ({ id: d.id, tipo: d.type, estado: d.estado, txt: `${d.nombre} ${d.salon} ${d.notas} ${d.email} ${d.total} ${d.fechaInicio}` }));
+        const prompt = `Eres un motor de búsqueda. Datos: ${JSON.stringify(contexto)}. Consulta: "${query}". INSTRUCCIÓN: Devuelve estrictamente un array JSON con los IDs que coinciden. Ejemplo: ["id1", "id2"]`;
+        try {
+            let result = await callGemini(prompt);
+            result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonMatch = result.match(/\[.*\]/s);
+            if(jsonMatch) { aiFilteredIds = JSON.parse(jsonMatch[0]); render(); } else { alert("La IA no encontró coincidencias."); }
+        } catch(e) { console.error(e); alert("Error IA"); } finally { document.getElementById("aiLoading").style.display = "none"; }
+    }
     async function callGemini(prompt) {
         try {
-            const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key="+apiKey, {
-                method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-            });
-            const d = await r.json();
-            return d.candidates?.[0]?.content?.parts?.[0]?.text;
-        } catch(e) { alert("Error IA"); return null; }
+            const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key="+apiKey, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents:[{parts:[{text:prompt}]}]}) });
+            const d = await r.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text;
+        } catch(e) { return null; }
     }
     async function generarMenuIA() {
         const p = `Crea un menú de 3 platos para un evento tipo "${document.getElementById("inpNombre").value}". Solo nombres de platos.`;
@@ -795,14 +821,45 @@
         const r = await callGemini(p);
         if(r) document.getElementById("inpNotaCliente").value = r;
     }
-    function checklistIA() { alert("Checklist generado (simulado)"); }
-    function auditarIA() { alert("Auditoría (simulada)"); }
     function copiarAI() { document.getElementById("aiOutput").select(); document.execCommand("copy"); document.getElementById("aiResponseModal").style.display="none"; }
     
     function imprimirPDF() {
-        alert("Función PDF Lista.");
-    }
+        // FIX: Comprobación más permisiva para evitar el error "El PDF solo está disponible..."
+        const typeEl = document.getElementById("dataType"); 
+        // Si el tipo es presupuesto, O si estamos en el módulo de presupuestos, permitimos imprimir.
+        if ((!typeEl || typeEl.value !== "presupuesto") && currentModule !== "presupuestos") { 
+            alert("El PDF solo está disponible para presupuestos."); 
+            return; 
+        }
 
+        const escapeHTML = (str = "") => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const nl2br = (str = "") => escapeHTML(str).replace(/\r\n|\n/g, "<br>");
+        const getInputValue = (id) => document.getElementById(id)?.value?.trim() || "";
+        const getTextValue = (id) => document.getElementById(id)?.innerText?.trim() || "";
+        const formatISODate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; };
+        const HOTEL_CONFIG = { Cumbria: { nombre: "Cumbria Spa&Hotel", linea: "Presupuesto de evento", dir: "Ctra. de Toledo, 26 · 13005 Ciudad Real", tel: "Tel. (+34) 926 25 04 04", web: "www.cumbriahotel.es", logoRel: "Img/logo-cumbria.svg" }, Guadiana: { nombre: "Sercotel Guadiana", linea: "Presupuesto de evento", dir: "C/ Guadiana, 36 · 13002 Ciudad Real", tel: "Tel. (+34) 926 22 33 13", web: "www.hotelguadiana.es", logoRel: "Img/logo-guadiana.svg" } };
+        const hotelInfo = HOTEL_CONFIG[currentHotel] || HOTEL_CONFIG["Guadiana"];
+        const hoy = new Date(); const emis = hoy.toLocaleDateString("es-ES");
+        let filasServicios = ""; const filas = document.querySelectorAll("#bodyServicios tr");
+        filas.forEach((tr) => {
+            const fecha = formatISODate(tr.querySelector(".s-date")?.value);
+            const desc = tr.querySelector(".s-desc")?.value;
+            const uds = tr.querySelector(".s-uds")?.value;
+            const price = tr.querySelector(".s-price")?.value;
+            const tot = tr.querySelector(".s-tot")?.value;
+            filasServicios += `<tr><td>${escapeHTML(fecha)}</td><td>${escapeHTML(desc)}</td><td class="num">${escapeHTML(uds)}</td><td class="num">${escapeHTML(price)}</td><td class="num">${escapeHTML(tot)}</td></tr>`;
+        });
+        if (!filasServicios) filasServicios = `<tr><td colspan="5">Sin líneas de servicio.</td></tr>`;
+        const notasHTML = getInputValue("inpNotas").trim() ? `<h2>Notas / observaciones</h2><div class="notas">${nl2br(getInputValue("inpNotas"))}</div>` : "";
+        
+        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Presupuesto</title><style>*{box-sizing:border-box;} @page{size:A4;margin:14mm 16mm;} body{font-family:system-ui,sans-serif;font-size:12px;margin:0;padding:10mm 12mm;color:#263238;} h1{font-size:20px;margin:0 0 6px;} h2{font-size:14px;margin:18px 0 6px;} .header-top{display:flex;justify-content:space-between;margin-bottom:8px;} .header-left{display:flex;align-items:center;gap:12px;max-width:70%;} .logo-block img{height:60px;display:block;} .hotel-text{font-size:11px;line-height:1.4;color:#37474f;} .hotel-text .nombre{font-size:15px;font-weight:600;} .header-right{font-size:11px;color:#455a64;text-align:right;} hr{border:none;border-top:2px solid #cfd8dc;margin:6px 0 14px;} table{width:100%;border-collapse:collapse;margin-top:4px;} th,td{padding:5px 6px;border-bottom:1px solid #dde3ea;vertical-align:top;} thead th{background:#f5f7f9;border-top:1px solid #dde3ea;font-weight:600;} .num{text-align:right;} .total-box{margin-top:10px;text-align:right;font-size:14px;font-weight:bold;} .notas{margin-top:8px;border:1px solid #cfd8dc;padding:6px;border-radius:4px;background:#fafafa;} .condiciones{margin-top:18px;font-size:11px;color:#455a64;border-top:1px solid #cfd8dc;padding-top:8px;} .firmas{margin-top:28px;display:flex;justify-content:space-between;gap:40px;} .firmas-col{flex:1;text-align:center;} .firmas-linea{margin-bottom:4px;border-top:1px solid #90a4ae;}</style></head><body><div class="header-top"><div class="header-left"><div class="logo-block"><img src="${escapeHTML(hotelInfo.logoRel)}"></div><div class="hotel-text"><div class="nombre">${escapeHTML(hotelInfo.nombre)}</div><div>${escapeHTML(hotelInfo.linea)}</div><div>${escapeHTML(hotelInfo.dir)}</div><div>${escapeHTML(hotelInfo.tel)}</div></div></div><div class="header-right">Ref.: <strong>${escapeHTML(ref)}</strong><br>Emisión: ${escapeHTML(emis)}</div></div><hr><h2>Datos del cliente</h2><table><tr><th style="width:120px;">Cliente</th><td>${escapeHTML(cliente)}</td></tr><tr><th>Espacio</th><td>${escapeHTML(salon)}</td></tr></table><h2>Desglose</h2><table><thead><tr><th style="width:80px;">Fecha</th><th>Concepto</th><th style="width:40px;">Uds.</th><th style="width:60px;">Precio</th><th style="width:70px;">Total</th></tr></thead><tbody>${filasServicios}</tbody></table><div class="total-box">TOTAL: ${escapeHTML(total)} €</div>${notasHTML}<div class="firmas"><div class="firmas-col"><div class="firmas-linea"></div>Firma cliente</div><div class="firmas-col"><div class="firmas-linea"></div>Firma hotel</div></div></body></html>`;
+        const win = window.open("", "_blank"); if (!win) { alert("Permite pop-ups"); return; }
+        win.document.write(html); win.document.close(); win.focus(); win.onload = function () { win.focus(); win.print(); };
+    }
+    
+    // --- SAFE DATE Y OTROS UTILS YA INCLUIDOS ARRIBA ---
+    function safeDate(val) { if(!val) return new Date(); if(val instanceof Date) return val; if(val.includes("-")) { const parts = val.split("-"); return new Date(parts[0], parts[1]-1, parts[2]); } return new Date(val); }
+    function checkSalonPendiente(sel) { if(sel.value === "Pendiente") { sel.style.border = "2px solid orange"; } else { sel.style.border = "1px solid #cbd5e1"; } }
 </script>
 </body>
 </html>

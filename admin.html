@@ -174,7 +174,7 @@
                         <thead>
                             <tr>
                                 <th>Nombre del Espacio</th>
-                                <th width="80">Pax</th>
+                                <th width="70">m²</th> <th width="80">Pax Máx</th>
                                 <th width="100">€ 1/2 Día</th>
                                 <th width="100">€ Comp.</th>
                                 <th width="60" style="text-align:center">Activo</th>
@@ -213,7 +213,7 @@
         const db = firebase.firestore();
 
         /* --- 2. GESTIÓN DE ACCESO --- */
-        const MASTER_PASS = "mesachet2026";
+        const MASTER_PASS = "mesachef2026";
 
         function checkPassword() {
             const input = document.getElementById("passInput");
@@ -231,7 +231,6 @@
             }
         }
         
-        // Permitir Enter para login
         document.getElementById("passInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") checkPassword();
         });
@@ -240,6 +239,25 @@
         let fullConfig = {}; 
         let currentHotel = "Guadiana";
 
+        /* --- DATOS OFICIALES --- */
+        const salonesGuadianaDefault = [
+            { name: "Puerta de Alarcos", size: 570, pax: 800, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta de Calatrava", size: 125, pax: 135, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta del Carmen", size: 110, pax: 120, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta de Ciruela", size: 25, pax: 20, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta de Granada", size: 120, pax: 135, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta de Santa María", size: 70, pax: 80, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Puerta de Toledo", size: 150, pax: 160, priceHalf: 0, priceFull: 0, active: true }
+        ];
+
+        const salonesCumbriaDefault = [
+            { name: "Salón Mercurio", size: 77, pax: 90, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Salón Venus", size: 77, pax: 90, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Salón La Tierra", size: 68, pax: 70, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Salón Marte", size: 77, pax: 90, priceHalf: 0, priceFull: 0, active: true },
+            { name: "Salón Júpiter", size: 68, pax: 70, priceHalf: 0, priceFull: 0, active: true }
+        ];
+
         function cargarConfig() {
             currentHotel = document.getElementById("hotelSelector").value;
             console.log("Cargando...", currentHotel);
@@ -247,8 +265,14 @@
             db.collection("master_data").doc("CONFIG_SALONES").get().then((doc) => {
                 if (doc.exists) {
                     fullConfig = doc.data();
+                    if (currentHotel === "Guadiana" && (!fullConfig.Guadiana || fullConfig.Guadiana.length === 0)) {
+                        fullConfig.Guadiana = salonesGuadianaDefault;
+                    }
+                    if (currentHotel === "Cumbria" && (!fullConfig.Cumbria || fullConfig.Cumbria.length === 0)) {
+                        fullConfig.Cumbria = salonesCumbriaDefault;
+                    }
                 } else {
-                    fullConfig = { Guadiana: [], Cumbria: [], horarios: {} };
+                    fullConfig = { Guadiana: salonesGuadianaDefault, Cumbria: salonesCumbriaDefault, horarios: {} };
                 }
                 renderInterface();
             }).catch(e => alert("Error conectando: " + e.message));
@@ -267,13 +291,33 @@
             const tbody = document.getElementById("bodySalones");
             tbody.innerHTML = "";
             const salones = fullConfig[currentHotel] || [];
+            
             salones.forEach((s, i) => {
+                // Formateo inicial para visualizar: 150.00 €
+                let pFull = (parseFloat(s.priceFull)||0).toFixed(2) + " €";
+                let pHalf = (parseFloat(s.priceHalf)||0).toFixed(2) + " €";
+
                 tbody.innerHTML += `
                     <tr>
                         <td><input type="text" value="${s.name}" onchange="updSalon(${i}, 'name', this.value)" style="margin:0"></td>
-                        <td><input type="number" value="${s.pax}" onchange="updSalon(${i}, 'pax', this.value)" style="margin:0"></td>
-                        <td><input type="number" value="${s.priceHalf || 0}" onchange="updSalon(${i}, 'priceHalf', this.value)" style="margin:0"></td>
-                        <td><input type="number" value="${s.priceFull || 0}" onchange="updSalon(${i}, 'priceFull', this.value)" style="margin:0"></td>
+                        <td><input type="number" value="${s.size || 0}" onchange="updSalon(${i}, 'size', this.value)" style="margin:0; background:#f9fafb;"></td>
+                        <td><input type="number" value="${s.pax}" onchange="updSalon(${i}, 'pax', this.value)" style="margin:0; font-weight:bold;"></td>
+                        
+                        <td>
+                            <input type="text" 
+                                   value="${pHalf}" 
+                                   onfocus="this.select()" 
+                                   onchange="formatAdminPrice(this, ${i}, 'priceHalf')" 
+                                   style="margin:0; text-align:right;">
+                        </td>
+                        <td>
+                            <input type="text" 
+                                   value="${pFull}" 
+                                   onfocus="this.select()" 
+                                   onchange="formatAdminPrice(this, ${i}, 'priceFull')" 
+                                   style="margin:0; text-align:right;">
+                        </td>
+
                         <td style="text-align:center"><input type="checkbox" ${s.active ? 'checked' : ''} onchange="updSalon(${i}, 'active', this.checked)"></td>
                         <td style="text-align:center"><button class="btn-icon" onclick="delSalon(${i})" style="color:red">✕</button></td>
                     </tr>`;
@@ -286,11 +330,9 @@
                 `<div class="tag">${m} <span class="tag-close" onclick="delMontaje(${i})">×</span></div>`
             ).join("");
 
-            // D. Legal y Mantenimiento
             document.getElementById("confLegal").value = fullConfig.textoLegal || "";
             document.getElementById("confMantenimiento").checked = fullConfig.mantenimiento || false;
             
-            // E. IA
             const ai = fullConfig.aiOptions || {};
             document.getElementById("confIATone").value = ai.tone || "formal";
             document.getElementById("confIAPrompt").value = ai.prompt || "";
@@ -299,9 +341,24 @@
         /* --- HELPERS DE ACTUALIZACIÓN --- */
         function updSalon(idx, field, val) { fullConfig[currentHotel][idx][field] = val; }
         
+        // NUEVA FUNCIÓN: Formatea el precio al salir de la casilla y actualiza el dato numérico
+        function formatAdminPrice(el, idx, field) {
+            // 1. Limpiar lo que haya escrito el usuario (quitar €, espacios y cambiar comas)
+            let raw = el.value.replace(' €', '').replace('€', '').replace(',', '.');
+            let val = parseFloat(raw);
+            
+            if(isNaN(val)) val = 0;
+
+            // 2. Guardar en memoria como NÚMERO PURO
+            fullConfig[currentHotel][idx][field] = val;
+
+            // 3. Mostrar bonito en pantalla
+            el.value = val.toFixed(2) + " €";
+        }
+
         function addSalonRow() {
             if(!fullConfig[currentHotel]) fullConfig[currentHotel] = [];
-            fullConfig[currentHotel].push({ name: "Nuevo Espacio", pax: 0, priceHalf: 0, priceFull: 0, active: true });
+            fullConfig[currentHotel].push({ name: "Nuevo Espacio", size: 0, pax: 0, priceHalf: 0, priceFull: 0, active: true });
             renderInterface();
         }
         
@@ -329,7 +386,22 @@
 
         /* --- GUARDADO GLOBAL --- */
         function guardarTodo() {
-            // Recoger datos de formularios sueltos
+            // LIMPIEZA DE SEGURIDAD ANTES DE ENVIAR
+            if(fullConfig[currentHotel]) {
+                fullConfig[currentHotel].forEach(s => {
+                    // Nos aseguramos de que todo se guarde como número
+                    s.pax = parseInt(s.pax) || 0;
+                    s.size = parseInt(s.size) || 0;
+                    
+                    // Limpieza extra por si acaso
+                    let ph = String(s.priceHalf).replace(',', '.').replace(' €', '').replace('€', '');
+                    let pf = String(s.priceFull).replace(',', '.').replace(' €', '').replace('€', '');
+                    
+                    s.priceHalf = parseFloat(ph) || 0;
+                    s.priceFull = parseFloat(pf) || 0;
+                });
+            }
+
             fullConfig.horarios = {
                 almIni: document.getElementById("confAlmIni").value,
                 almFin: document.getElementById("confAlmFin").value,
@@ -346,10 +418,8 @@
                 prompt: document.getElementById("confIAPrompt").value
             };
 
-            // Enviar a Firebase
             db.collection("master_data").doc("CONFIG_SALONES").set(fullConfig)
                 .then(() => {
-                    // Animación visual botón
                     const btn = document.getElementById("btnGuardar");
                     const prevText = btn.innerText;
                     btn.innerText = "✅ ¡GUARDADO!";
