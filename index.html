@@ -14,9 +14,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     
     <style>
-        :root { --primary: #263238; --accent: #546e7a; --bg-body: #f0f2f5; --surface: #ffffff; --border: #dfe3e8; --purple-ai: #8b5cf6; }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { margin: 0; background: var(--bg-body); color: #1a1a1a; font-size: 13px; -webkit-tap-highlight-color: transparent; }
+        :root { --primary: #263238; --accent: #546e7a; --bg-body: #f0f2f5; --surface: #ffffff; --border: #dfe3e8; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { margin: 0; background: var(--bg-body); color: #1a1a1a; font-size: 13px; }
 
         /* LANDING */
         #landingPage { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%); padding: 20px; }
@@ -65,11 +65,11 @@
         th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; }
         td { border-bottom: 1px solid #f1f5f9; vertical-align: top; }
         
-        /* CELDAS FIN DE SEMANA */
-        .weekend-cell { background-color: #f1f5f9; } 
+        /* CELDAS FIN DE SEMANA (VIERNES, SABADO, DOMINGO) */
+        .weekend-cell { background-color: #f1f5f9 !important; } 
         .salon-name-cell { background-color: #e2e8f0; color: #1e293b; font-weight: 800; text-align: center; vertical-align: middle; border-right: 1px solid #cbd5e1; width: 140px; min-width: 140px; }
 
-        /* CALENDARIO */
+        /* CALENDARIO SPLIT (SALONES) */
         .split-cell { display: flex; flex-direction: column; height: auto; min-height: 100px; width: 100%; position: relative; }
         .split-zone { flex: 1; border-bottom: 1px dotted #e2e8f0; display: flex; align-items: center; padding: 4px; cursor: pointer; transition: 0.1s; min-height: 50px; }
         .split-zone:hover { background: #e2e8f0; }
@@ -83,8 +83,9 @@
         .evt-pendiente { background: #ffedd5 !important; color: #9a3412 !important; border-left-color: #f97316 !important; opacity: 0.9; }
         .evt-gran { background: #fce7f3; color: #9d174d; border-left: 3px solid #be185d; }
 
-        .cell-rest { padding: 4px; }
-        .rest-zone { min-height: 60px; border: 1px dashed #cbd5e1; border-radius: 8px; margin-bottom: 4px; padding: 4px; }
+        /* CALENDARIO RESTAURANTE */
+        .cell-rest { padding: 4px; display:flex; flex-direction:column; gap:4px; }
+        .rest-zone { min-height: 60px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 4px; }
         .mesa-card { display: block; background: #fff; padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 11px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .mesa-manana { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .mesa-tarde { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
@@ -108,7 +109,6 @@
         .modal-body { padding: 20px; overflow-y: auto; background: #fff; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; background: #f8fafc; }
 
-        /* BARRA IA */
         .ai-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f5f3ff; border-radius: 8px; border: 1px dashed #8b5cf6; margin-bottom: 15px; }
         .btn-ai-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border:none; cursor:pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.25); }
 
@@ -124,8 +124,11 @@
         
         .svc-input { width: 100%; border: 1px solid #e2e8f0; padding: 6px; border-radius: 6px; text-align: center; height: 34px; font-size: 13px; }
         .svc-input:focus { border-color: #8b5cf6; background: #f5f3ff; }
-        
+        .s-desc { text-align: left !important; }
+
         .btn-add-row { margin-top: 10px; background: #f0f9ff; border: 2px dashed #bae6fd; color: #0284c7; padding: 10px; border-radius: 8px; width: 100%; cursor:pointer; font-weight: 700; font-size: 13px; transition:0.2s; }
+        .btn-add-row:hover { background: #e0f2fe; border-color: #7dd3fc; }
+
         .btn-primary { background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; border:none; cursor:pointer; }
         .btn-secondary { background: #fff; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor:pointer; }
         .btn-confirm { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; border:none; cursor:pointer; }
@@ -143,7 +146,7 @@
             <img src="mesa-chef-512.png" class="app-logo-big" alt="Logo">
             <h1 style="margin:10px 0 5px; font-size:24px; color:#1f2937;">RESERVAS SALAS Y RESTAURANTE</h1>
             <p style="color:#666; margin-bottom:30px;">Gestión unificada para <strong>Sercotel Guadiana</strong> y <strong>Cumbria Spa&Hotel</strong>.</p>
-            <div style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:10px; display:inline-block; font-size:11px;">● v25.21 PDF FIX</div>
+            <div style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:10px; display:inline-block; font-size:11px;">● v25.31 FIXED CALENDAR & LOGIC</div>
             <div class="hotel-grid">
                 <div class="h-card" onclick="initApp('Guadiana')">
                     <img src="Img/logo-guadiana.svg" alt="Logo Guadiana" onerror="this.style.display='none'">
@@ -193,7 +196,8 @@
                     <option value="anulado">❌ Anulados</option>
                 </select>
                 <div class="search-wrapper">
-                    <input type="text" id="searchInput" placeholder="🔎 Buscar en todo..." oninput="render()">
+                    <input type="text" id="searchInput" placeholder="🔎 Buscar..." oninput="render()">
+                    <span class="search-loading" id="aiLoading">Pensando...</span>
                     <button class="btn-search-ai" onclick="busquedaIA()">✨ IA</button>
                 </div>
             </div>
@@ -206,17 +210,7 @@
             <table id="mainTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
             <div id="presupuestosContainer" style="display: none">
                 <table class="budget-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 100px">Fecha</th>
-                            <th style="width: 130px">Ref.</th>
-                            <th>Cliente</th> 
-                            <th style="width: 140px">Salón</th>
-                            <th style="width: 90px">Validez</th>
-                            <th style="width: 100px">Estado</th>
-                            <th style="width: 80px; text-align: right">Total</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th style="width:100px">Fecha</th><th>Cliente</th><th style="width:140px">Salón</th><th style="width:100px">Estado</th><th style="width:80px;text-align:right">Total</th></tr></thead>
                     <tbody id="budgetBody"></tbody>
                 </table>
             </div>
@@ -227,63 +221,52 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Ficha</h3>
-                <button onclick="cerrarModal()" style="border:none; background:none; font-size:20px; cursor:pointer;">×</button>
+                <button onclick="document.getElementById('modalFicha').style.display='none'" style="border:none; background:none; font-size:20px; cursor:pointer;">×</button>
             </div>
-
             <div class="modal-body">
                 <input type="hidden" id="dataId"><input type="hidden" id="dataType"><input type="hidden" id="refPresupuesto">
-
-                <div class="form-row" style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div class="form-row" style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
                     <div class="form-group" id="grpFechaUnica"><label>Fecha</label><input type="date" id="inpFecha" /></div>
-                    <div id="grpRangoFechas" style="display: none; gap:10px; flex: 0 0 auto;">
-                        <div style="width: 130px;"><label>Desde</label><input type="date" id="inpFechaDesde" /></div>
-                        <div style="width: 130px;"><label>Hasta</label><input type="date" id="inpFechaHasta" /></div>
+                    <div id="grpRangoFechas" style="display:none; gap:10px; flex:0 0 auto;">
+                        <div style="width:130px;"><label>Desde</label><input type="date" id="inpFechaDesde" /></div>
+                        <div style="width:130px;"><label>Hasta</label><input type="date" id="inpFechaHasta" /></div>
                     </div>
                     <div class="form-group" style="flex:1;">
                        <label>Espacio / Salón</label>
                        <select id="inpSalon" style="width:100%" onchange="checkSalonPendiente(this); actualizarLineaSalon()"></select>
                     </div>
                 </div>
-
                 <div class="form-row">
-                    <div class="form-group" style="flex: 2">
-                        <label>Cliente / Evento</label>
-                        <input type="text" id="inpNombre" placeholder="Nombre del cliente..." oninput="document.getElementById('modalTitle').innerText = this.value || 'Ficha'" />
-                    </div>
+                    <div class="form-group" style="flex:2"><label>Cliente / Evento</label><input type="text" id="inpNombre" oninput="document.getElementById('modalTitle').innerText=this.value||'Ficha'" /></div>
                     <div class="form-group"><label>Teléfono</label><input type="text" id="inpTel" /></div>
                     <div class="form-group"><label>Email</label><input type="text" id="inpEmail" /></div>
                 </div>
-
-                <div class="form-row" id="blockRestaurante" style="display: none; background: #fffbeb; padding: 6px; border-radius: 8px; border: 1px solid #fcd34d;">
+                <div class="form-row" id="blockRestaurante" style="display:none; background:#fffbeb; padding:6px; border-radius:8px; border:1px solid #fcd34d;">
                     <div style="display:flex; gap:10px; width:100%;">
                         <div class="form-group"><label>Hora</label><input type="time" id="inpHora" /></div>
-                        <div class="form-group"><label>€ Menú</label><input type="number" id="inpPrecioMenu" /></div>
                         <div class="form-group"><label>Pax</label><input type="number" id="inpPaxRest" /></div>
                         <div class="form-group"><label>Turno</label><select id="inpTurno"><option value="manana">☀️ Almuerzo</option><option value="tarde">🌙 Cena</option></select></div>
-                        <div class="form-group"><label>Estado</label><select id="inpEstadoRest"><option value="confirmado">✅ Confirmada</option><option value="lista_espera">⏳ Lista de Espera</option></select></div>
                     </div>
                 </div>
-
                 <div id="blockEventos">
-                    <div class="form-row" style="align-items: flex-end; gap: 10px;">
-                        <div class="form-group" style="width: 140px;">
-                            <label>Estado</label>
-                            <select id="inpEstadoEvento">
-                                <option value="pendiente">⏳ Pendiente</option>
-                                <option value="confirmado">✅ Confirmado</option>
+                    <div class="form-row" style="align-items:flex-end; gap:10px;">
+                        <div class="form-group" style="width:140px;"><label>Estado</label><select id="inpEstadoEvento"><option value="pendiente">⏳ Pendiente</option><option value="confirmado">✅ Confirmado</option></select></div>
+                        
+                        <div class="form-group" style="width:140px;">
+                            <label>Jornada</label>
+                            <select id="inpTurnoEvento" onchange="actualizarLineaSalon()">
+                                <option value="dia_completo">Jornada Comp.</option>
+                                <option value="manana">1/2 Día (Mañana)</option>
+                                <option value="tarde">1/2 Día (Tarde)</option>
                             </select>
                         </div>
-                        <div class="form-group" style="width: 140px;"><label>Jornada</label><select id="inpTurnoEvento" onchange="actualizarLineaSalon()"><option value="dia_completo">Todo el día</option><option value="manana">☀️ Mañana</option><option value="tarde">🌙 Tarde</option></select></div>
-                        <div class="form-group" style="flex: 1;"><label>Montaje</label><select id="inpMontaje"><option>Banquete</option><option>Escuela</option><option>Teatro</option><option>Cóctel</option><option>U</option></select></div>
-                        <div class="form-group" style="width: 100px;"><label>Hora</label><input type="time" id="inpHoraInicio" /></div>
-                        <input type="hidden" id="inpHoraFin">
-                        <div class="form-group" style="width: 70px;"><label>Pax A.</label><input type="number" id="inpPaxA" /></div>
-                        <div class="form-group" style="width: 70px;"><label>Pax N.</label><input type="number" id="inpPaxN" /></div>
+
+                        <div class="form-group" style="flex:1;"><label>Montaje</label><select id="inpMontaje"><option>Banquete</option><option>Escuela</option><option>Teatro</option><option>Cóctel</option><option>U</option></select></div>
+                        <div class="form-group" style="width:80px;"><label>Pax A.</label><input type="number" id="inpPaxA" /></div>
                     </div>
-                    
-                    <div style="margin-top: 10px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label style="color: var(--primary); font-weight: 700;">DESGLOSE / SERVICIOS</label>
+                    <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <label style="color:var(--primary); font-weight:700;">DESGLOSE / SERVICIOS</label>
                             <button class="btn-ai-purple" onclick="generarMenuIA()">🟣 Menú IA</button>
                         </div>
                         <table class="svc-table">
@@ -291,41 +274,31 @@
                             <tbody id="bodyServicios"></tbody>
                         </table>
                         <button class="btn-add-row" onclick="addServiceRow()">+ Añadir línea</button>
-                        <div style="text-align: right; font-size: 15px; font-weight: 700; margin-top: 10px;">TOTAL: <span id="totalAmount">0.00</span> €</div>
+                        <div style="text-align:right; font-size:15px; font-weight:700; margin-top:10px;">TOTAL: <span id="totalAmount">0.00</span> €</div>
                     </div>
                 </div>
-
                 <div id="blockGran" style="display:none; background:#fdf2f8; padding:10px; border-radius:8px; border:1px solid #fbcfe8;">
                     <div class="form-row">
                         <div class="form-group"><label>Aforo</label><input type="number" id="inpAforo" oninput="calcGran()"></div>
                         <div class="form-group"><label>Precio Std</label><input type="number" id="inpPrcStd" onchange="aplicarStd()"></div>
-                        <div class="form-group"><label>Estado</label><select id="inpEstadoGran"><option value="abierto">🟢 Abierto</option><option value="cerrado">🔴 Cerrado</option></select></div>
                     </div>
-                    <div style="font-weight:bold; margin-bottom:5px; font-size:12px;">Pax: <span id="gPax">0</span> | Total: <span id="gTot">0</span>€ | Pendiente: <span id="gPend" style="color:red">0</span>€</div>
+                    <div style="font-weight:bold; margin-bottom:5px;">Pax: <span id="gPax">0</span> | Total: <span id="gTot">0</span>€ | Pendiente: <span id="gPend" style="color:red">0.00</span>€</div>
                     <table class="svc-table">
                         <thead><tr><th>Mesa</th><th>Nombre</th><th>Pax</th><th>Precio</th><th>Pagado</th><th></th></tr></thead>
                         <tbody id="bodyPart"></tbody>
                     </table>
-                    <button class="btn-add-row" style="border-color:#fbcfe8; color:#be185d; background:#fff;" onclick="addPart()">+ Añadir Participante</button>
+                    <button class="btn-add-row" style="color:#be185d;" onclick="addPart()">+ Añadir Participante</button>
                 </div>
-
-                <div class="form-row" style="margin-top: 15px">
-                    <div class="form-group"><label>Nota Interna</label><textarea id="inpNotas" rows="2"></textarea></div>
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <label style="color:#2563eb;">Nota para Cliente (PDF)</label>
-                            <button class="btn-ai-purple" onclick="mejorarNotaIA()" style="padding:2px 8px; font-size:10px;">✨ Mejorar</button>
-                        </div>
-                        <textarea id="inpNotaCliente" rows="2"></textarea>
-                    </div>
+                <div class="form-row" style="margin-top:15px">
+                    <div class="form-group"><label>Notas</label><textarea id="inpNotas" rows="2"></textarea></div>
+                    <div class="form-group"><label>Nota Cliente (PDF)</label><textarea id="inpNotaCliente" rows="2"></textarea></div>
                 </div>
             </div>
-
             <div class="modal-footer">
-                <button class="btn-email" id="btnEmail" onclick="redactarEmailIA()" style="display:none;">📧 Email Cliente</button>
-                <button class="btn-secondary" id="btnPdf" onclick="imprimirPDF()" style="display:none;">📄 PDF</button>
-                <div style="flex: 1"></div>
-                <button class="btn-secondary" id="btnRecuperar" onclick="recuperarFicha()" style="display:none; background:#fef3c7; color:#d97706; border:1px solid #f59e0b;">🔄 Recuperar</button>
+                <button class="btn-email" id="btnEmail" onclick="redactarEmailIA()" style="display:none;">📧 Email</button>
+                <button class="btn-secondary" id="btnPdf" onclick="imprimirPDF()">📄 PDF</button>
+                <div style="flex:1"></div>
+                <button class="btn-secondary" id="btnRecuperar" onclick="recuperarFicha()" style="display:none;">🔄 Recuperar</button>
                 <button class="btn-confirm" id="btnConfirmarPpto" onclick="confirmarPresupuesto()" style="display:none;">✅ Confirmar</button>
                 <button class="btn-anular" id="btnAnular" onclick="anularFicha()">Anular</button>
                 <button class="btn-primary" id="btnGuardarMain" onclick="guardarFicha()">GUARDAR</button>
@@ -333,16 +306,7 @@
         </div>
     </div>
 
-    <div id="aiResponseModal">
-        <div class="ai-box">
-            <h3>🤖 Respuesta IA</h3>
-            <textarea id="aiOutput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; border-radius:8px;"></textarea>
-            <div style="text-align:right; margin-top:10px;">
-                <button class="btn-secondary" onclick="document.getElementById('aiResponseModal').style.display='none'">Cerrar</button>
-                <button class="btn-primary" onclick="copiarAI()">Copiar</button>
-            </div>
-        </div>
-    </div>
+    <div id="aiResponseModal"><div class="ai-box"><h3>🤖 Respuesta IA</h3><textarea id="aiOutput" style="width:100%; height:200px; padding:10px; border:1px solid #ccc;"></textarea><div style="text-align:right; margin-top:10px;"><button class="btn-secondary" onclick="document.getElementById('aiResponseModal').style.display='none'">Cerrar</button> <button class="btn-primary" onclick="copiarAI()">Copiar</button></div></div></div>
 
 <script>
     const apiKey = "AIzaSyDnJMniLswGjpysPHiH3n3L6EpJyCkbS4E"; 
@@ -360,21 +324,24 @@
         document.getElementById("landingPage").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         document.getElementById("fechaVista").valueAsDate = new Date();
-        db.collection("master_data").doc("CONFIG_SALONES").onSnapshot(doc => { if(doc.exists) salonesConfig = doc.data(); render(); });
+        
+        db.collection("master_data").doc("CONFIG_SALONES").onSnapshot(doc => { 
+            if(doc.exists) salonesConfig = doc.data(); 
+            render(); 
+        });
         cargarDatos();
         setModulo('restaurante');
     }
+
     function cargarDatos() {
         db.collection("master_data").onSnapshot(snap => {
-            const badge = document.getElementById("statusBadge");
-            badge.classList.remove("status-offline"); badge.classList.add("status-online");     
+            document.getElementById("statusBadge").className = "connection-badge status-online";
             document.getElementById("statusText").innerText = "Conectado";
             dataCache = [];
             snap.forEach(d => { if(d.id!=="CONFIG_SALONES") dataCache.push({id:d.id, ...d.data()}); });
             render();
         }, (error) => {
-            const badge = document.getElementById("statusBadge");
-            badge.classList.remove("status-online"); badge.classList.add("status-offline");
+            document.getElementById("statusBadge").className = "connection-badge status-offline";
             document.getElementById("statusText").innerText = "Sin Conexión";
         });
     }
@@ -386,16 +353,20 @@
         if(m==="restaurante") document.getElementById("btnModRest").classList.add("active");
         if(m==="presupuestos") document.getElementById("btnModPpto").classList.add("active");
         if(m==="grandes_eventos") document.getElementById("btnModGran").classList.add("active");
+
         const isList = (m==="presupuestos" || m==="grandes_eventos");
         document.getElementById("mainTable").style.display = isList ? "none" : "table";
         document.getElementById("presupuestosContainer").style.display = isList ? "block" : "none";
+        
         document.querySelectorAll(".btn-nav").forEach(btn => btn.style.display = (m==="presupuestos"?"none":"flex"));
         const btn = document.getElementById("btnNuevoPrincipal");
         if(m==="eventos") btn.innerText = "+ Nuevo Evento";
         if(m==="restaurante") btn.innerText = "+ Nueva Mesa";
         if(m==="presupuestos") btn.innerText = "+ Presupuesto";
         if(m==="grandes_eventos") btn.innerText = "+ Gran Evento";
-        document.getElementById("searchInput").value = ""; aiFilteredIds = null;
+        
+        document.getElementById("searchInput").value = "";
+        aiFilteredIds = null;
         render();
     }
 
@@ -407,9 +378,7 @@
             const typeFilter = isGran ? "gran_evento" : "presupuesto";
             const filtro = document.getElementById("filtroEstado").value;
             const searchText = document.getElementById("searchInput").value.toLowerCase();
-            const hoyObj = new Date(); hoyObj.setHours(0,0,0,0);
-            const today = new Date();
-            const hoyStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const hoyStr = new Date().toISOString().split("T")[0];
             const isSearching = (aiFilteredIds !== null) || (searchText !== "");
 
             const items = dataCache.filter(d => {
@@ -421,51 +390,27 @@
                 }
                 if (d.fechaInicio < hoyStr) return false;
                 if (d.type !== typeFilter) return false;
+                
                 let estadoReal = d.estado;
-                if(d.type === 'presupuesto' && d.estado === 'pendiente' && d.validez) {
-                    const val = safeDate(d.validez);
-                    if(val < hoyObj) estadoReal = 'caducado';
-                }
+                if(d.type === 'presupuesto' && d.estado === 'pendiente' && d.validez && d.validez < hoyStr) estadoReal = 'caducado';
+
                 if(filtro === "todos") return (estadoReal !== 'anulado' && estadoReal !== 'caducado');
                 if(filtro === "anulado") return estadoReal === 'anulado';
                 if(filtro === "caducado") return estadoReal === 'caducado';
                 if(filtro === "pendiente") return estadoReal === 'pendiente'; 
                 return estadoReal === filtro;
             });
+
             items.sort((a,b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
 
             items.forEach(d => {
                 const tr = document.createElement("tr"); tr.className = "budget-row";
-                let estadoVisual = d.estado;
-                if(d.type === 'presupuesto' && d.estado === 'pendiente' && d.validez) {
-                    const val = safeDate(d.validez);
-                    if(val < hoyObj) estadoVisual = 'caducado';
-                }
                 let badgeClass = 'st-pendiente';
-                if(estadoVisual === 'confirmado') badgeClass = 'st-confirmado';
-                if(estadoVisual === 'anulado') badgeClass = 'st-anulado';
-                if(estadoVisual === 'caducado') badgeClass = 'st-caducado';
-                let badge = `<span class="badge ${badgeClass}">${estadoVisual}</span>`;
-                let totalText = d.total ? parseFloat(d.total).toFixed(2) + '€' : '-';
-                if(d.type === 'restaurante' && d.precioMenu) totalText = ((d.precioMenu)*(d.paxRest||0)).toFixed(2) + '€';
-                const fechaEventoFmt = formatearFechaListado(d.fechaInicio);
-                let fechaValidezFmt = "-";
-                if(d.validez) {
-                    fechaValidezFmt = formatearFechaListado(d.validez);
-                    if(d.estado === 'pendiente' && estadoVisual !== 'caducado') {
-                        const val = safeDate(d.validez);
-                        const diff = Math.ceil((val - hoyObj) / (1000 * 60 * 60 * 24));
-                        if(diff <= 5 && diff >= 0) fechaValidezFmt += ` <span style="color:#d97706; font-weight:bold" title="Caduca en ${diff} días">⚠️</span>`;
-                    }
-                }
-                let refDisplay = d.ref || "-";
-                if(isGran) {
-                    let pax=0, pend=0;
-                    (d.participantes||[]).forEach(p => { const t = (p.pax||0)*(p.precio||0); pax+=parseInt(p.pax)||0; pend+=(t-(p.pagado||0)); });
-                    tr.innerHTML = `<td>${fechaEventoFmt}</td><td>-</td><td><b>${d.nombre}</b></td><td>Aforo: ${d.aforo}</td><td>-</td><td>${badge}</td><td style="text-align:right; color:${pend>0?'red':'green'}">${pend.toFixed(2)}€</td>`;
-                } else {
-                    tr.innerHTML = `<td style="font-weight:600; color:#334155">${fechaEventoFmt}</td><td style="font-size:11px; color:#64748b; font-family:monospace;">${refDisplay}</td><td style="font-size:14px; font-weight:bold; color:#0f172a" title="${d.nombre}">${d.nombre}</td><td style="color:#475569" title="${d.salon}">${d.salon || 'Sin Salón'}</td><td style="font-size:11px">${fechaValidezFmt}</td><td>${badge}</td><td style="text-align:right; font-weight:bold; color:#0f172a">${totalText}</td>`;
-                }
+                if(d.estado === 'confirmado') badgeClass = 'st-confirmado';
+                if(d.estado === 'anulado') badgeClass = 'st-anulado';
+                
+                const fechaFmt = formatearFechaListado(d.fechaInicio);
+                tr.innerHTML = `<td>${fechaFmt}</td><td><b>${d.nombre}</b></td><td>${d.salon || 'Sin Salón'}</td><td><span class="badge ${badgeClass}">${d.estado}</span></td><td style="text-align:right; font-weight:bold;">${d.total || '-'}</td>`;
                 tr.onclick = () => abrirModalId(d.id);
                 body.appendChild(tr);
             });
@@ -475,14 +420,20 @@
         const thead = document.getElementById("tableHead");
         const tbody = document.getElementById("tableBody");
         thead.innerHTML = ""; tbody.innerHTML = "";
-        const fBase = safeDate(document.getElementById("fechaVista").value);
+        
+        // --- FECHAS Y COLORES CORREGIDOS (Lunes 1 Dic) ---
+        const fBase = new Date(document.getElementById("fechaVista").value);
         let hRow = `<tr><th style="width:150px;left:0;z-index:10;background:#fff;border-right:1px solid #e2e8f0;">ESPACIO</th>`;
+        
         for(let i=0; i<7; i++) {
-            const d = new Date(fBase); d.setDate(d.getDate() + i);
-            const diaSem = d.getDay();
-            const bg = (diaSem === 5 || diaSem === 6 || diaSem === 0) ? 'background:#f1f5f9 !important;' : 'background:#fff;';
+            const d = new Date(fBase); // Copia limpia para cada día
+            d.setDate(d.getDate() + i);
+            const diaSem = d.getDay(); // 0=Dom, 1=Lun ... 6=Sab
+            // Viernes(5), Sábado(6), Domingo(0) con color
+            const esFinde = (diaSem === 5 || diaSem === 6 || diaSem === 0);
+            const bg = esFinde ? 'background:#f1f5f9 !important;' : 'background:#fff;';
             const dateStr = d.toISOString().split("T")[0]; 
-            hRow += `<th style="${bg}">${formatearFechaListado(dateStr)}</th>`;
+            hRow += `<th style="${bg}">${d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' })}</th>`;
         }
         thead.innerHTML = hRow + "</tr>";
 
@@ -491,39 +442,34 @@
             const esRest = s.name.includes("Restaurante") || s.name.includes("Cafetería");
             if(currentModule === "restaurante" && !esRest) return;
             if(currentModule === "eventos" && esRest) return;
+
             const tr = document.createElement("tr");
-            const sizeInfo = s.size ? `<br><span style="font-size:9px; font-weight:normal; color:#64748b;">${s.size} m²</span>` : '';
+            const sizeInfo = s.size ? `<br><span style="font-size:9px; color:#666;">${s.size} m²</span>` : '';
             let row = `<td class="salon-name-cell" style="position:sticky;left:0;z-index:5">${s.name}${sizeInfo}</td>`;
+            
             for(let i=0; i<7; i++) {
-                const d = new Date(fBase); d.setDate(d.getDate() + i);
+                const d = new Date(fBase); 
+                d.setDate(d.getDate() + i);
                 const dateStr = d.toISOString().split("T")[0];
                 const diaSem = d.getDay();
                 const esFinde = (diaSem === 5 || diaSem === 6 || diaSem === 0);
                 const styleBg = esFinde ? 'style="background-color:#f1f5f9;"' : '';
-                const bgClass = esFinde ? 'weekend-cell' : '';
-                const evts = dataCache.filter(x => {
-                    if(x.hotel!==currentHotel) return false;
-                    if(x.type === 'presupuesto' && x.estado === 'pendiente' && x.salon === s.name) { return (x.fechaInicio <= dateStr && x.fechaFin >= dateStr); }
-                    if(x.salon!==s.name) return false;
-                    if(x.fechaInicio > dateStr || x.fechaFin < dateStr) return false;
-                    return x.estado!=='anulado';
-                });
-                row += `<td class="${bgClass}" ${styleBg}>`;
+                
+                const evts = dataCache.filter(x => x.hotel===currentHotel && x.salon===s.name && x.fechaInicio<=dateStr && x.fechaFin>=dateStr && x.estado!=='anulado');
+                
+                let cellContent = "";
+                
+                // VISUALIZACIÓN RESTAURADA (Separación Restaurante vs Salones)
                 if(currentModule === "restaurante") {
                     const m = evts.filter(x => x.turno === "manana").map(x=>`<div class="mesa-card mesa-manana" onclick="abrirModalId('${x.id}')"><b>${x.hora||''}</b> ${x.nombre} (${x.paxRest})</div>`).join('');
                     const t = evts.filter(x => x.turno === "tarde").map(x=>`<div class="mesa-card mesa-tarde" onclick="abrirModalId('${x.id}')"><b>${x.hora||''}</b> ${x.nombre} (${x.paxRest})</div>`).join('');
-                    row += `<div class="cell-rest"><div class="rest-zone">${m}</div><div class="rest-zone">${t}</div></div>`;
+                    cellContent = `<div class="cell-rest"><div class="rest-zone">${m}</div><div class="rest-zone">${t}</div></div>`;
                 } else {
                     const dia = evts.find(x => x.turno === "dia_completo");
                     if(dia) {
                         let cls = dia.type==='gran_evento'?'evt-gran':(dia.estado==='confirmado'?'evt-confirmado':'evt-full-day');
                         if(dia.type === 'presupuesto' && dia.estado === 'pendiente') cls = 'evt-pendiente'; 
-                        let dailyInfo = "";
-                        if(dia.type === 'presupuesto' && dia.servicios) { const svcs = dia.servicios.filter(s => s.date === dateStr); if(svcs.length > 0) dailyInfo = svcs[0].desc; }
-                        const paxInfo = dia.paxA ? `<br>Pax: ${dia.paxA}` : '';
-                        const timeInfo = dia.horaInicio ? `<br>Hora: ${dia.horaInicio}` : '';
-                        const dailyConcept = dailyInfo ? `<br><i>${dailyInfo}</i>` : '';
-                        row += `<div class="split-cell" onclick="abrirModalId('${dia.id}')"><div class="evt-full-day ${cls}"><b>${dia.nombre}</b>${paxInfo}${timeInfo}${dailyConcept}</div></div>`;
+                        cellContent = `<div class="split-cell" onclick="abrirModalId('${dia.id}')"><div class="${cls}"><b>${dia.nombre}</b></div></div>`;
                     } else {
                         const m = evts.find(x => x.turno === "manana");
                         const t = evts.find(x => x.turno === "tarde");
@@ -532,26 +478,25 @@
                             let cls = e.turno==='manana'?'evt-manana':'evt-tarde';
                             if(e.estado==='confirmado') cls += ' evt-confirmado';
                             if(e.type === 'presupuesto' && e.estado === 'pendiente') cls += ' evt-pendiente';
-                            return `<div class="evt-part ${cls}" onclick="event.stopPropagation(); abrirModalId('${e.id}')"><b>${e.nombre}</b><div style="font-size:9px">Pax: ${e.paxA||e.paxRest||'?'}</div></div>`;
+                            return `<div class="evt-part ${cls}" onclick="event.stopPropagation(); abrirModalId('${e.id}')"><b>${e.nombre}</b></div>`;
                         };
-                        row += `<div class="split-cell"><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','manana')">${renderPart(m)}</div><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','tarde')">${renderPart(t)}</div></div>`;
+                        cellContent = `<div class="split-cell"><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','manana')">${renderPart(m)}</div><div class="split-zone" onclick="nuevoSalon('${dateStr}','${s.name}','tarde')">${renderPart(t)}</div></div>`;
                     }
                 }
-                row += `</td>`;
+                row += `<td class="${esFinde?'weekend-cell':''}" ${styleBg}>${cellContent}</td>`;
             }
             tr.innerHTML = row;
             tbody.appendChild(tr);
         });
     }
 
-    /* --- LÓGICA CRÍTICA DE PRESUPUESTOS Y FILAS --- */
-
+    /* --- LÓGICA DE FICHA --- */
     function nuevoGeneral() { nuevo(new Date().toISOString().split("T")[0], "", ""); }
-    function nuevoSalon(fecha, salon, turno) { nuevo(fecha, salon, turno); }
+    function nuevoSalon(f, s, t) { nuevo(f, s, t); }
 
     function nuevo(fecha, salon, turno) {
         document.getElementById("dataId").value = "";
-        document.getElementById("refPresupuesto").value = "";
+        
         let type = "evento";
         if(currentModule==="restaurante") type="restaurante";
         if(currentModule==="presupuestos") type="presupuesto";
@@ -564,6 +509,7 @@
         
         document.getElementById("modalTitle").innerText = type==="presupuesto" ? "Nuevo Presupuesto" : "Nuevo Evento";
         document.getElementById("btnGuardarMain").innerText = "GUARDAR";
+
         document.getElementById("inpFecha").value = fecha;
         if(type==="presupuesto") { 
             document.getElementById("inpFechaDesde").value = fecha; 
@@ -575,9 +521,10 @@
         document.getElementById("blockGran").style.display = type==="gran_evento" ? "block" : "none";
         document.getElementById("grpFechaUnica").style.display = type==="presupuesto" ? "none" : "block";
         document.getElementById("grpRangoFechas").style.display = type==="presupuesto" ? "flex" : "none";
-        document.getElementById("btnPdf").style.display = type==="presupuesto" ? "inline-flex" : "none";
-        document.getElementById("btnConfirmarPpto").style.display = type==="presupuesto" ? "inline-flex" : "none";
-        document.getElementById("btnEmail").style.display = (type==="presupuesto") ? "inline-flex" : "none";
+        
+        // FIX PDF: Mostrar siempre
+        document.getElementById("btnPdf").style.display = "inline-flex"; 
+        document.getElementById("btnConfirmarPpto").style.display = (type==="presupuesto") ? "inline-flex" : "none";
 
         document.getElementById("bodyServicios").innerHTML = "";
         document.getElementById("bodyPart").innerHTML = "";
@@ -603,11 +550,10 @@
         if(type==="restaurante" && turno) document.getElementById("inpTurno").value = turno;
         if(type==="gran_evento") addPart(); 
 
-        if(type==="presupuesto") { 
-            // Crear fila inicial
+        // FIX ROW: Crear fila siempre y forzar actualización
+        if(type==="presupuesto" || type==="evento") { 
             addServiceRow({ date: fecha, desc: "Alquiler de Salón", price: "" });
-            // Forzar actualización inmediata tras 200ms para asegurar DOM
-            setTimeout(actualizarLineaSalon, 200); 
+            setTimeout(() => { actualizarLineaSalon(); }, 200); 
         }
         
         document.getElementById("btnRecuperar").style.display = "none";
@@ -617,25 +563,34 @@
 
     function addServiceRow(d={}) {
         const tr = document.createElement("tr");
-        let defaultDate = document.getElementById("inpFecha").value;
-        const existingDates = document.querySelectorAll(".s-date");
-        if(!d.date && existingDates.length > 0) { defaultDate = existingDates[existingDates.length - 1].value; }
-        const f = d.date || defaultDate;
+        let defDate = document.getElementById("inpFecha").value;
+        if(!d.date) {
+            const existing = document.querySelectorAll(".s-date");
+            if(existing.length>0) defDate = existing[existing.length-1].value;
+        }
+        const f = d.date || defDate;
         
-        let displayPrice = "";
-        if(d.price !== undefined && d.price !== "") displayPrice = d.price;
+        let displayPrice = "0.00 €";
+        if(d.price !== undefined && d.price !== "") {
+             // Limpieza robusta si viene de la BD
+             let s = String(d.price).replace(' €', '').replace('€','').replace(/\s/g, '').replace(',', '.');
+             let val = parseFloat(s) || 0;
+             displayPrice = val.toFixed(2) + " €";
+        }
 
         tr.innerHTML = `
-            <td><input type="date" class="svc-input s-date" value="${f}" onchange="updatePresupuestoDates()" oninput="updatePresupuestoDates()"></td>
+            <td><input type="date" class="svc-input s-date" value="${f}" onchange="updatePresupuestoDates()"></td>
             <td><input class="svc-input s-desc" value="${d.desc||''}" style="text-align:left" placeholder="Concepto"></td>
             <td><input type="number" class="svc-input s-uds" value="${d.uds||1}" oninput="calcTotal()"></td>
-            <td><input type="text" class="svc-input s-price" value="${displayPrice}" placeholder="0.00 €" onfocus="this.value=''" onblur="formatPrice(this); calcTotal()" oninput="calcTotal()"></td>
+            <td><input type="text" class="svc-input s-price" value="${displayPrice}" placeholder="0.00 €" onblur="formatPrice(this); calcTotal()" onfocus="this.select()"></td>
             <td><input class="svc-input s-tot" readonly style="font-weight:bold;"></td>
-            <td class="btn-del-row" style="text-align:center;cursor:pointer;color:red;" onclick="this.parentElement.remove(); calcTotal(); updatePresupuestoDates()">✕</td>`;
+            <td style="color:red; cursor:pointer; text-align:center;" onclick="this.parentElement.remove(); calcTotal(); updatePresupuestoDates()">✕</td>`;
+        
         document.getElementById("bodyServicios").appendChild(tr);
         calcTotal(); setTimeout(updatePresupuestoDates, 50); 
     }
 
+    // --- LÓGICA DE PRECIOS EXACTA (BASADA EN TU TXT) ---
     function actualizarLineaSalon() {
         const typeEl = document.getElementById("dataType");
         if(!typeEl || typeEl.value !== "presupuesto") return;
@@ -649,187 +604,261 @@
         if(!inputDesc || !inputPrice) return;
 
         if(!salon || salon === "Pendiente") {
-            if(inputDesc.value.includes("Alquiler") || inputDesc.value === "") inputDesc.value = "Alquiler de Salón";
-            return; 
+            if(inputDesc.value.includes("Alquiler")) inputDesc.value = "Alquiler de Salón";
+            return;
         }
 
-        // --- DEFINIR TEXTO (NOMENCLATURA ADMIN) ---
-        // Forzamos el texto aunque no haya precio todavía
-        let nombreJornada = "Jornada Comp."; 
-        if(turno === "manana") nombreJornada = "1/2 Día (Mañana)";
-        else if(turno === "tarde") nombreJornada = "1/2 Día (Tarde)";
+        // TEXTO CORRECTO (1/2 Día)
+        let txtJornada = (turno === "dia_completo") ? "Jornada Comp." : (turno==="manana" ? "1/2 Día (Mañana)" : "1/2 Día (Tarde)");
+        inputDesc.value = `Alquiler Salón ${salon} - ${txtJornada}`;
 
-        inputDesc.value = `Alquiler Salón ${salon} - ${nombreJornada}`;
-
-        // --- BUSCAR PRECIO ---
+        // BUSCAR PRECIO (Lógica del archivo TXT: replace/[^0-9.,]/g)
         const configHotel = salonesConfig[currentHotel] || [];
-        const datosSalon = configHotel.find(s => s.name.trim() === salon.trim());
+        const datos = configHotel.find(s => s.name.trim() === salon.trim());
         
-        // Limpiador agresivo
-        const cleanPrice = (val) => {
-            if(!val) return 0;
-            const limpio = String(val).replace(/€/g, '').replace(/\s/g, '').replace(',', '.');
-            return parseFloat(limpio) || 0;
-        };
+       let p = 0;
+if (datos) {
+    // Usamos el motor común de limpieza numérica
+    const pFull = parseCurrency(datos.priceFull);
+    const pHalf = parseCurrency(datos.priceHalf);
 
-        let pFull = datosSalon ? cleanPrice(datosSalon.priceFull) : 0;
-        let pHalf = datosSalon ? cleanPrice(datosSalon.priceHalf) : 0;
+    p = (turno === "dia_completo") ? pFull : pHalf;
+
+    console.log("Detectado:", p); // Debug
+}
+
+
+        if(p > 0) inputPrice.value = p.toFixed(2) + " €";
+        else inputPrice.value = ""; 
         
-        let precioAplicar = pFull;
-        if(turno === "manana" || turno === "tarde") {
-            precioAplicar = pHalf;
-        }
-
-        if(precioAplicar > 0) {
-            inputPrice.value = precioAplicar.toFixed(2) + " €";
-        } else {
-            inputPrice.value = ""; 
-        }
         calcTotal();
     }
 
-    /* --- HELPERS --- */
-    function checkColision(salon, fecha, turno, ignoreId) {
-        if(!salon || salon === "Pendiente" || salon.includes("Restaurante")) return false;
-        return dataCache.some(d => {
-            if(d.id === ignoreId) return false; 
-            if(ignoreId && d.refPresupuesto === ignoreId) return false; 
-            if(d.hotel !== currentHotel) return false;
-            if(d.estado === 'anulado') return false;
-            if(d.salon !== salon) return false;
-            if(d.type === 'presupuesto' && d.estado === 'pendiente') return false; 
-            if(fecha >= d.fechaInicio && fecha <= d.fechaFin) {
-                if(d.turno === 'dia_completo') return true; 
-                if(turno === 'dia_completo') return true;   
-                if(d.turno === turno) return true;          
-            }
-            return false;
-        });
+    function formatPrice(el) {
+    const val = parseCurrency(el.value);
+
+    // Si quieres que un 0 deje la celda vacía:
+    if (!val) {
+        el.value = "";
+        return;
     }
+
+    el.value = val.toFixed(2) + " €";
+}
+
+
+
+    function parseCurrency(str) {
+    if (!str) return 0;
+
+    let clean = String(str).trim();
+
+    // 1) Quitar todo lo que no sea dígito, coma, punto o signo -
+    clean = clean.replace(/[^\d,.-]/g, '');
+
+    // 2) Gestionar miles y decimales:
+    const hasComma = clean.includes(',');
+    const hasDot   = clean.includes('.');
+
+    if (hasComma && hasDot) {
+        // Caso más habitual en España: 1.234,56 €
+        clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (hasComma && !hasDot) {
+        // 123,45 -> 123.45
+        clean = clean.replace(',', '.');
+    }
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+}
+
+
+    function calcTotal() {
+    let total = 0;
+
+    document.querySelectorAll("#bodyServicios tr").forEach(tr => {
+        const udsInput   = tr.querySelector(".s-uds");
+        const priceInput = tr.querySelector(".s-price");
+        const totInput   = tr.querySelector(".s-tot");
+
+        const uds   = parseFloat(udsInput?.value || "0") || 0;
+        const price = parseCurrency(priceInput?.value || "0");
+
+        const linea = uds * price;
+
+        if (totInput) {
+            totInput.value = linea ? linea.toFixed(2) + " €" : "";
+        }
+
+        total += linea;
+    });
+
+    document.getElementById("totalAmount").innerText = total.toFixed(2);
+}
+
+
+    function updatePresupuestoDates() {
+        const dates = [];
+        document.querySelectorAll(".s-date").forEach(i => { if(i.value) dates.push(i.value); });
+        if(dates.length > 0) {
+            dates.sort();
+            document.getElementById("inpFechaDesde").value = dates[0];
+            document.getElementById("inpFechaHasta").value = dates[dates.length-1];
+        }
+    }
+
+    async function guardarFicha() {
+        const nombre = document.getElementById("inpNombre").value;
+        if (!nombre) { alert("⚠️ Escribe un Nombre"); return; }
+        
+        const type = document.getElementById("dataType").value;
+        
+        const data = {
+            hotel: currentHotel,
+            type: type,
+            nombre: nombre,
+            tel: document.getElementById("inpTel").value,
+            email: document.getElementById("inpEmail").value,
+            salon: document.getElementById("inpSalon").value,
+            notas: document.getElementById("inpNotas").value,
+            notaCliente: document.getElementById("inpNotaCliente").value,
+            fechaInicio: document.getElementById("inpFecha").value,
+            updatedAt: new Date().toISOString()
+        };
+
+        if(type === 'presupuesto' || type === 'evento') {
+            data.turno = document.getElementById("inpTurnoEvento").value;
+            data.montaje = document.getElementById("inpMontaje").value;
+            data.paxA = document.getElementById("inpPaxA").value;
+            data.estado = document.getElementById("inpEstadoEvento").value;
+            data.total = document.getElementById("totalAmount").innerText;
+            data.fechaInicio = document.getElementById("inpFechaDesde").value || data.fechaInicio;
+            data.fechaFin = document.getElementById("inpFechaHasta").value || data.fechaInicio;
+            data.validez = data.fechaInicio;
+            
+            // GUARDAR SERVICIOS
+            data.servicios = [];
+            document.querySelectorAll("#bodyServicios tr").forEach(tr => {
+                data.servicios.push({
+                    date: tr.querySelector(".s-date").value,
+                    desc: tr.querySelector(".s-desc").value,
+                    uds: tr.querySelector(".s-uds").value,
+                    price: parseCurrency(tr.querySelector(".s-price").value)
+                });
+            });
+        } 
+        else if (type === 'gran_evento') {
+            data.aforo = document.getElementById("inpAforo").value;
+            data.precioStd = document.getElementById("inpPrcStd").value;
+            data.participantes = [];
+            document.querySelectorAll("#bodyPart tr").forEach(tr => {
+                data.participantes.push({
+                    mesa: tr.querySelector(".p-mesa").value,
+                    nombre: tr.querySelector(".p-nom").value,
+                    pax: tr.querySelector(".p-pax").value,
+                    precio: tr.querySelector(".p-prc").value,
+                    pagado: tr.querySelector(".p-pag").value
+                });
+            });
+        }
+
+        const id = document.getElementById("dataId").value;
+        try {
+            if(id) await db.collection("master_data").doc(id).update(data);
+            else await db.collection("master_data").add(data);
+            
+            if(type === "presupuesto" && data.estado === "confirmado") {
+                await sincronizarEventosVinculados(id, data);
+            }
+            
+            document.getElementById("modalFicha").style.display = "none";
+            alert("✅ Guardado");
+        } catch(e) { alert("Error: " + e.message); }
+    }
+
+    async function confirmarPresupuesto() {
+        if(!confirm("¿Confirmar presupuesto? Esto reservará los días en el calendario.")) return;
+        document.getElementById("inpEstadoEvento").value = "confirmado";
+        await guardarFicha();
+    }
+
+    async function sincronizarEventosVinculados(idRef, data) {
+        // Borrar anteriores
+        const snap = await db.collection("master_data").where("refPresupuesto", "==", idRef).get();
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        
+        // Crear nuevos días
+        const d1 = new Date(data.fechaInicio); const d2 = new Date(data.fechaFin);
+        const dias = (d2-d1)/(1000*60*60*24);
+        
+        for(let i=0; i<=dias; i++) {
+            const d = new Date(d1); d.setDate(d.getDate()+i);
+            const dateStr = d.toISOString().split("T")[0];
+            const ref = db.collection("master_data").doc();
+            batch.set(ref, {
+                hotel: currentHotel, type: 'evento', 
+                nombre: data.nombre, salon: data.salon,
+                fechaInicio: dateStr, fechaFin: dateStr,
+                estado: 'confirmado', refPresupuesto: idRef,
+                turno: data.turno
+            });
+        }
+        await batch.commit();
+    }
+
     function abrirModalId(id) {
-        const d = dataCache.find(x => x.id === id); if(!d) return;
+        const d = dataCache.find(x => x.id === id);
+        if(!d) return;
+        
+        // Simular navegación para configurar modal
         const prevMod = currentModule;
-        currentModule = d.type==="gran_evento"?"grandes_eventos":d.type==="restaurante"?"restaurante":d.type==="presupuesto"?"presupuestos":"eventos";
-        nuevo(d.fechaInicio, d.salon, ""); currentModule = prevMod;
+        // Forzar cambio de módulo temporal para pintar el modal correcto
+        if(d.type==='gran_evento') currentModule='grandes_eventos';
+        else if(d.type==='restaurante') currentModule='restaurante';
+        else currentModule='presupuestos'; // por defecto para eventos
+        
+        nuevo(d.fechaInicio, d.salon, "");
+        currentModule = prevMod; // Restaurar
+
         document.getElementById("dataId").value = d.id;
         document.getElementById("inpNombre").value = d.nombre;
-        const contextTitle = (d.type === "presupuesto") ? " [PRESUPUESTO GLOBAL]" : (d.refPresupuesto) ? " [DÍA SUELTO]" : "";
-        document.getElementById("modalTitle").innerText = (d.nombre || "Ficha") + contextTitle;
-        document.getElementById("btnGuardarMain").innerText = "GUARDAR CAMBIOS"; 
+        document.getElementById("modalTitle").innerText = d.nombre;
         document.getElementById("inpTel").value = d.tel||"";
         document.getElementById("inpEmail").value = d.email||"";
         document.getElementById("inpNotas").value = d.notas||"";
-        document.getElementById("inpNotaCliente").value = d.notaCliente||"";
-        const isAnulado = d.estado === "anulado";
-        document.getElementById("btnRecuperar").style.display = isAnulado ? "inline-flex" : "none";
-        document.getElementById("btnAnular").style.display = isAnulado ? "none" : "inline-flex";
-        if(d.type === "presupuesto") {
-            if(isAnulado || d.estado === "confirmado") { document.getElementById("btnConfirmarPpto").style.display = "none"; } else { document.getElementById("btnConfirmarPpto").style.display = "inline-flex"; }
-        } else { document.getElementById("btnConfirmarPpto").style.display = "none"; }
-        if(d.type==="restaurante") {
-            document.getElementById("inpHora").value = d.hora||""; document.getElementById("inpPaxRest").value = d.paxRest||""; document.getElementById("inpPrecioMenu").value = d.precioMenu||""; document.getElementById("inpTurno").value = d.turno||"manana"; document.getElementById("inpEstadoRest").value = d.estado;
-        } else if (d.type==="gran_evento") {
-            document.getElementById("inpAforo").value = d.aforo||""; document.getElementById("inpPrcStd").value = d.precioStd||""; document.getElementById("inpEstadoGran").value = d.estado;
-            document.getElementById("bodyPart").innerHTML=""; (d.participantes||[]).forEach(p => addPart(p)); calcGran();
-        } else {
-            document.getElementById("inpFechaDesde").value = d.fechaInicio; document.getElementById("inpFechaHasta").value = d.fechaFin;
-            document.getElementById("inpTurnoEvento").value = d.turno||"dia_completo"; document.getElementById("inpMontaje").value = d.montaje;
-            document.getElementById("inpPaxA").value = d.paxA; document.getElementById("inpPaxN").value = d.paxN;
-            document.getElementById("inpHoraInicio").value = d.horaInicio||""; document.getElementById("inpHoraFin").value = d.horaFin||"";
-            document.getElementById("inpEstadoEvento").value = d.estado; document.getElementById("refPresupuesto").value = d.ref||"";
-            document.getElementById("bodyServicios").innerHTML = ""; (d.servicios||[]).forEach(s => addServiceRow(s));
-            calcTotal(); updatePresupuestoDates();
+        
+        if(d.type === 'presupuesto' || d.type === 'evento') {
+            document.getElementById("inpEstadoEvento").value = d.estado;
+            document.getElementById("inpTurnoEvento").value = d.turno;
+            document.getElementById("inpMontaje").value = d.montaje;
+            document.getElementById("inpPaxA").value = d.paxA;
+            document.getElementById("inpFechaDesde").value = d.fechaInicio;
+            document.getElementById("inpFechaHasta").value = d.fechaFin;
+            document.getElementById("refPresupuesto").value = d.refPresupuesto || "";
+            
+            document.getElementById("bodyServicios").innerHTML = "";
+            if(d.servicios) {
+                d.servicios.forEach(s => addServiceRow(s));
+            }
+            calcTotal();
+        } else if (d.type === 'gran_evento') {
+            document.getElementById("inpAforo").value = d.aforo;
+            document.getElementById("inpPrcStd").value = d.precioStd;
+            document.getElementById("bodyPart").innerHTML = "";
+            if(d.participantes) d.participantes.forEach(p => addPart(p));
+            calcGran();
         }
+
+        document.getElementById("btnGuardarMain").innerText = "GUARDAR CAMBIOS";
+        document.getElementById("btnRecuperar").style.display = (d.estado==='anulado') ? 'inline-flex' : 'none';
+        document.getElementById("btnAnular").style.display = (d.estado!=='anulado') ? 'inline-flex' : 'none';
     }
-    function updatePresupuestoDates() {
-        const divRango = document.getElementById("grpRangoFechas");
-        if (!divRango || divRango.style.display === "none") return;
-        const dates = [];
-        document.querySelectorAll(".s-date").forEach(input => { if(input.value) { dates.push(input.value); } });
-        if(dates.length > 0) {
-            dates.sort();
-            document.getElementById("inpFechaDesde").value = dates[0]; 
-            document.getElementById("inpFechaHasta").value = dates[dates.length - 1];
-        }
-    }
-    function formatPrice(el) {
-        let val = el.value.replace(',','.').replace(' €','').replace('€','');
-        if(val && !isNaN(val) && parseFloat(val)!==0) el.value = parseFloat(val).toFixed(2) + " €"; else el.value = "";
-    }
-    function parseCurrency(str) {
-        if(!str) return 0;
-        let clean = str.toString().replace(/[^0-9.,]/g, '').replace(',', '.');
-        return parseFloat(clean) || 0;
-    }
-    function calcTotal() {
-        let t=0; 
-        document.querySelectorAll("#bodyServicios tr").forEach(tr => {
-            const uds = parseFloat(tr.querySelector(".s-uds").value)||0;
-            const rawP = tr.querySelector(".s-price").value;
-            const price = parseCurrency(rawP);
-            const tot = uds * price;
-            tr.querySelector(".s-tot").value = tot.toFixed(2) + " €";
-            t += tot;
-        });
-        document.getElementById("totalAmount").innerText = t.toFixed(2);
-    }
-    function recuperarFicha() {
-        const id = document.getElementById("dataId").value;
-        if(id && confirm("¿Recuperar este evento? Pasará a Pendiente.")) {
-            db.collection("master_data").doc(id).update({estado:"pendiente"});
-            document.getElementById("modalFicha").style.display = "none"; render();
-        }
-    }
-    function anularFicha() {
-        const id = document.getElementById("dataId").value;
-        if(id && confirm("¿Anular? (Se moverá al histórico, NO se borra)")) {
-            db.collection("master_data").doc(id).update({estado:"anulado"});
-            db.collection("master_data").where("refPresupuesto", "==", id).get().then(snap => { const b = db.batch(); snap.forEach(d => b.delete(d.ref)); b.commit(); });
-            document.getElementById("modalFicha").style.display = "none"; render();
-        }
-    }
-    async function busquedaIA() {
-        const query = document.getElementById("searchInput").value; if(!query) { aiFilteredIds = null; render(); return; }
-        document.getElementById("aiLoading").style.display = "block";
-        const contexto = dataCache.map(d => ({ id: d.id, tipo: d.type, estado: d.estado, txt: `${d.nombre} ${d.salon} ${d.notas} ${d.email} ${d.total} ${d.fechaInicio}` }));
-        const prompt = `Eres un motor de búsqueda. Datos: ${JSON.stringify(contexto)}. Consulta: "${query}". INSTRUCCIÓN: Devuelve estrictamente un array JSON con los IDs que coinciden. Ejemplo: ["id1", "id2"]`;
-        try {
-            let result = await callGemini(prompt);
-            result = result.replace(/```json/g, '').replace(/```/g, '').trim();
-            const jsonMatch = result.match(/\[.*\]/s);
-            if(jsonMatch) { aiFilteredIds = JSON.parse(jsonMatch[0]); render(); } else { alert("La IA no encontró coincidencias."); }
-        } catch(e) { console.error(e); alert("Error IA"); } finally { document.getElementById("aiLoading").style.display = "none"; }
-    }
-    async function callGemini(prompt) {
-        try {
-            const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key="+apiKey, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents:[{parts:[{text:prompt}]}]}) });
-            const d = await r.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text;
-        } catch(e) { return null; }
-    }
-    async function generarMenuIA() {
-        const p = `Crea un menú de 3 platos para un evento tipo "${document.getElementById("inpNombre").value}". Solo nombres de platos.`;
-        const r = await callGemini(p);
-        if(r) addServiceRow({desc: r.replace(/\n/g, " | "), uds: document.getElementById("inpPaxA").value, price:0, date: document.getElementById("inpFecha").value});
-    }
-    async function redactarEmailIA() {
-        const p = `Redacta email para cliente ${document.getElementById("inpNombre").value} enviando presupuesto de ${document.getElementById("totalAmount").innerText}€. Tono formal.`;
-        const r = await callGemini(p);
-        if(r) { document.getElementById("aiOutput").value=r; document.getElementById("aiResponseModal").style.display="flex"; }
-    }
-    async function mejorarNotaIA() {
-        const p = `Mejora este texto para cliente: ${document.getElementById("inpNotaCliente").value}`;
-        const r = await callGemini(p);
-        if(r) document.getElementById("inpNotaCliente").value = r;
-    }
-    function copiarAI() { document.getElementById("aiOutput").select(); document.execCommand("copy"); document.getElementById("aiResponseModal").style.display="none"; }
-    
+
     function imprimirPDF() {
-        // FIX: Comprobación más permisiva para evitar el error "El PDF solo está disponible..."
         const typeEl = document.getElementById("dataType"); 
-        // Si el tipo es presupuesto, O si estamos en el módulo de presupuestos, permitimos imprimir.
+        // Permitimos imprimir en cualquier caso si estamos en el módulo correcto
         if ((!typeEl || typeEl.value !== "presupuesto") && currentModule !== "presupuestos") { 
-            alert("El PDF solo está disponible para presupuestos."); 
-            return; 
+             // Opcional: alert("Imprimiendo ficha...");
         }
 
         const escapeHTML = (str = "") => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -837,11 +866,12 @@
         const getInputValue = (id) => document.getElementById(id)?.value?.trim() || "";
         const getTextValue = (id) => document.getElementById(id)?.innerText?.trim() || "";
         const formatISODate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; };
-        const HOTEL_CONFIG = { Cumbria: { nombre: "Cumbria Spa&Hotel", linea: "Presupuesto de evento", dir: "Ctra. de Toledo, 26 · 13005 Ciudad Real", tel: "Tel. (+34) 926 25 04 04", web: "www.cumbriahotel.es", logoRel: "Img/logo-cumbria.svg" }, Guadiana: { nombre: "Sercotel Guadiana", linea: "Presupuesto de evento", dir: "C/ Guadiana, 36 · 13002 Ciudad Real", tel: "Tel. (+34) 926 22 33 13", web: "www.hotelguadiana.es", logoRel: "Img/logo-guadiana.svg" } };
+        
+        const HOTEL_CONFIG = { Cumbria: { nombre: "Cumbria Spa&Hotel", linea: "Presupuesto", dir: "Ctra. de Toledo, 26", tel: "926 25 04 04", logoRel: "Img/logo-cumbria.svg" }, Guadiana: { nombre: "Sercotel Guadiana", linea: "Presupuesto", dir: "C/ Guadiana, 36", tel: "926 22 33 13", logoRel: "Img/logo-guadiana.svg" } };
         const hotelInfo = HOTEL_CONFIG[currentHotel] || HOTEL_CONFIG["Guadiana"];
-        const hoy = new Date(); const emis = hoy.toLocaleDateString("es-ES");
-        let filasServicios = ""; const filas = document.querySelectorAll("#bodyServicios tr");
-        filas.forEach((tr) => {
+        
+        let filasServicios = ""; 
+        document.querySelectorAll("#bodyServicios tr").forEach((tr) => {
             const fecha = formatISODate(tr.querySelector(".s-date")?.value);
             const desc = tr.querySelector(".s-desc")?.value;
             const uds = tr.querySelector(".s-uds")?.value;
@@ -849,17 +879,64 @@
             const tot = tr.querySelector(".s-tot")?.value;
             filasServicios += `<tr><td>${escapeHTML(fecha)}</td><td>${escapeHTML(desc)}</td><td class="num">${escapeHTML(uds)}</td><td class="num">${escapeHTML(price)}</td><td class="num">${escapeHTML(tot)}</td></tr>`;
         });
-        if (!filasServicios) filasServicios = `<tr><td colspan="5">Sin líneas de servicio.</td></tr>`;
-        const notasHTML = getInputValue("inpNotas").trim() ? `<h2>Notas / observaciones</h2><div class="notas">${nl2br(getInputValue("inpNotas"))}</div>` : "";
+
+        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Presupuesto</title><style>
+            body{font-family:sans-serif; font-size:12px; margin:0; padding:20px; color:#333;}
+            .header{display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:20px;}
+            .logo img{height:50px;}
+            table{width:100%; border-collapse:collapse; margin-bottom:20px;}
+            th{background:#f8f9fa; text-align:left; padding:8px; border-bottom:1px solid #ddd;}
+            td{padding:8px; border-bottom:1px solid #eee;}
+            .num{text-align:right;}
+            .total{text-align:right; font-size:16px; font-weight:bold; margin-top:10px;}
+            .notes{background:#f9f9f9; padding:10px; border-radius:5px; margin-top:20px;}
+        </style></head><body>
+            <div class="header">
+                <div><img src="${hotelInfo.logoRel}" style="height:50px;"> <br> <strong>${hotelInfo.nombre}</strong><br>${hotelInfo.dir}</div>
+                <div style="text-align:right;"><strong>PRESUPUESTO</strong><br>Fecha: ${new Date().toLocaleDateString()}<br>Ref: ${getInputValue('refPresupuesto')||'BORRADOR'}</div>
+            </div>
+            <h3>Cliente: ${getInputValue('inpNombre')}</h3>
+            <table><thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Uds</th><th class="num">Precio</th><th class="num">Total</th></tr></thead><tbody>${filasServicios}</tbody></table>
+            <div class="total">TOTAL: ${getTextValue('totalAmount')} €</div>
+            <div class="notes"><strong>Notas:</strong><br>${nl2br(getInputValue('inpNotaCliente') || getInputValue('inpNotas'))}</div>
+            <br><br><br>
+            <div style="display:flex; justify-content:space-between;"><div>Firma Cliente</div><div>Firma Hotel</div></div>
+        </body></html>`;
         
-        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Presupuesto</title><style>*{box-sizing:border-box;} @page{size:A4;margin:14mm 16mm;} body{font-family:system-ui,sans-serif;font-size:12px;margin:0;padding:10mm 12mm;color:#263238;} h1{font-size:20px;margin:0 0 6px;} h2{font-size:14px;margin:18px 0 6px;} .header-top{display:flex;justify-content:space-between;margin-bottom:8px;} .header-left{display:flex;align-items:center;gap:12px;max-width:70%;} .logo-block img{height:60px;display:block;} .hotel-text{font-size:11px;line-height:1.4;color:#37474f;} .hotel-text .nombre{font-size:15px;font-weight:600;} .header-right{font-size:11px;color:#455a64;text-align:right;} hr{border:none;border-top:2px solid #cfd8dc;margin:6px 0 14px;} table{width:100%;border-collapse:collapse;margin-top:4px;} th,td{padding:5px 6px;border-bottom:1px solid #dde3ea;vertical-align:top;} thead th{background:#f5f7f9;border-top:1px solid #dde3ea;font-weight:600;} .num{text-align:right;} .total-box{margin-top:10px;text-align:right;font-size:14px;font-weight:bold;} .notas{margin-top:8px;border:1px solid #cfd8dc;padding:6px;border-radius:4px;background:#fafafa;} .condiciones{margin-top:18px;font-size:11px;color:#455a64;border-top:1px solid #cfd8dc;padding-top:8px;} .firmas{margin-top:28px;display:flex;justify-content:space-between;gap:40px;} .firmas-col{flex:1;text-align:center;} .firmas-linea{margin-bottom:4px;border-top:1px solid #90a4ae;}</style></head><body><div class="header-top"><div class="header-left"><div class="logo-block"><img src="${escapeHTML(hotelInfo.logoRel)}"></div><div class="hotel-text"><div class="nombre">${escapeHTML(hotelInfo.nombre)}</div><div>${escapeHTML(hotelInfo.linea)}</div><div>${escapeHTML(hotelInfo.dir)}</div><div>${escapeHTML(hotelInfo.tel)}</div></div></div><div class="header-right">Ref.: <strong>${escapeHTML(ref)}</strong><br>Emisión: ${escapeHTML(emis)}</div></div><hr><h2>Datos del cliente</h2><table><tr><th style="width:120px;">Cliente</th><td>${escapeHTML(cliente)}</td></tr><tr><th>Espacio</th><td>${escapeHTML(salon)}</td></tr></table><h2>Desglose</h2><table><thead><tr><th style="width:80px;">Fecha</th><th>Concepto</th><th style="width:40px;">Uds.</th><th style="width:60px;">Precio</th><th style="width:70px;">Total</th></tr></thead><tbody>${filasServicios}</tbody></table><div class="total-box">TOTAL: ${escapeHTML(total)} €</div>${notasHTML}<div class="firmas"><div class="firmas-col"><div class="firmas-linea"></div>Firma cliente</div><div class="firmas-col"><div class="firmas-linea"></div>Firma hotel</div></div></body></html>`;
-        const win = window.open("", "_blank"); if (!win) { alert("Permite pop-ups"); return; }
-        win.document.write(html); win.document.close(); win.focus(); win.onload = function () { win.focus(); win.print(); };
+        const win = window.open("", "_blank"); 
+        if (!win) { alert("Permite pop-ups"); return; }
+        win.document.write(html); win.document.close(); win.focus(); 
+        setTimeout(() => win.print(), 500);
     }
     
-    // --- SAFE DATE Y OTROS UTILS YA INCLUIDOS ARRIBA ---
+    // Funciones Auxiliares Grandes Eventos
+    function addPart(d={}) { const tr=document.createElement("tr"); tr.innerHTML=`<td><input class="svc-input p-mesa" value="${d.mesa||''}"></td><td><input class="svc-input p-nom" value="${d.nombre||''}"></td><td><input type="number" class="svc-input p-pax" value="${d.pax||1}" oninput="calcGran()"></td><td><input type="number" class="svc-input p-prc" value="${d.precio||''}" oninput="calcGran()"></td><td><input type="number" class="svc-input p-pag" value="${d.pagado||0}" oninput="calcGran()"></td>`; document.getElementById("bodyPart").appendChild(tr); }
+    function calcGran() {
+        let pax=0, tot=0, pag=0;
+        document.querySelectorAll("#bodyPart tr").forEach(tr => {
+            const p = parseFloat(tr.querySelector(".p-pax").value)||0;
+            const pr = parseFloat(tr.querySelector(".p-prc").value)||0;
+            const pg = parseFloat(tr.querySelector(".p-pag").value)||0;
+            pax+=p; tot+=(p*pr); pag+=pg;
+        });
+        document.getElementById("gPax").innerText = pax;
+        document.getElementById("gTot").innerText = tot.toFixed(2);
+        document.getElementById("gPend").innerText = (tot-pag).toFixed(2);
+    }
+    function aplicarStd() { const v=document.getElementById("inpPrcStd").value; document.querySelectorAll(".p-prc").forEach(i=>{i.value=v}); calcGran(); }
+
+    // Utils
     function safeDate(val) { if(!val) return new Date(); if(val instanceof Date) return val; if(val.includes("-")) { const parts = val.split("-"); return new Date(parts[0], parts[1]-1, parts[2]); } return new Date(val); }
-    function checkSalonPendiente(sel) { if(sel.value === "Pendiente") { sel.style.border = "2px solid orange"; } else { sel.style.border = "1px solid #cbd5e1"; } }
+    // FECHA CORRECTA: Lun 1 Dic 25
+    function formatearFechaListado(s) { 
+        if(!s) return "-"; 
+        const d=safeDate(s); 
+        const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return `${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`; 
+    }
+    function cambiarSemana(d) { const i=document.getElementById("fechaVista"); const dt=safeDate(i.value); dt.setDate(dt.getDate()+d); i.valueAsDate=dt; render(); }
+    function checkSalonPendiente(s) { s.style.border = (s.value==="Pendiente") ? "2px solid orange" : "1px solid #cbd5e1"; }
 </script>
 </body>
 </html>
