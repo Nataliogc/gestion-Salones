@@ -660,3 +660,7 @@ img.hero-hotel-logo,
 }
 
 }
+
+/* Error Blinking */
+.estado-error { color: #dc2626 !important; font-weight: bold; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
