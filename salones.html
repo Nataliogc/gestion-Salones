@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MesaChef · Salones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Estilos base y reutilizados -->
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Estilos específicos si hicieran falta, de momento usamos styles.css que ya tiene .planning-grid etc -->
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-init.js"></script>
+
+    <!-- App Common -->
+    <script src="js/app-common.js"></script>
+
+    <!-- Lógica de este módulo -->
+    <script defer src="js/salones.js"></script>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="breadcrumb"><a href="index.html" style="text-decoration:none; color:inherit;">Inicio</a></span>
+        <span class="crumb-sep">·</span>
+        <span id="tituloHotel" class="breadcrumb strong">
+          Salones
+        </span>
+        <span id="estadoConexion" class="estado-conexion">
+          Conectando...
+        </span>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Buscador -->
+        <input
+          id="txtBuscar"
+          class="input-buscar"
+          type="search"
+          placeholder="Buscar evento..."
+        />
+
+        <!-- Botón Nuevo Evento -->
+        <button id="btnNuevoEvento" class="btn-primary">
+          + Nuevo Evento
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <!-- CONTROL DE FECHAS / SEMANA -->
+      <section class="toolbar-fecha">
+        <div class="toolbar-fecha-left">
+          <button id="btnPrev" class="btn-icon" type="button">‹</button>
+          <input id="inputSemana" type="date" class="input-fecha" />
+          <button id="btnNext" class="btn-icon" type="button">›</button>
+          <span id="lblSemana" class="label-semana"></span>
+        </div>
+      </section>
+
+      <!-- TABLERO PLANNING SALONES -->
+      <section class="planning-section">
+        <div class="planning-wrapper">
+          <!-- Se rellena desde JS -->
+          <div id="gridSalones" class="planning-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- MODAL EVENTO (Alta / Edición) -->
+    <div id="modalEvento" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2 id="tituloModalEvento">Nuevo Evento</h2>
+          <button
+            type="button"
+            id="btnCerrarModal"
+            class="modal-close"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form id="formEvento" class="modal-body">
+          
+          <div class="form-row form-row-inline">
+            <div class="form-field">
+                <label for="campoSalon">Salón</label>
+                <!-- Opciones se llenan dinámicamente con JS según config -->
+                <select id="campoSalon" required></select>
+            </div>
+            <div class="form-field">
+                <label for="campoFechaInicio">Fecha Inicio</label>
+                <input id="campoFechaInicio" type="date" required />
+            </div>
+            <div class="form-field">
+                <label for="campoFechaFin">Fecha Fin</label>
+                <input id="campoFechaFin" type="date" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="campoNombre">Nombre Evento / Cliente</label>
+            <input id="campoNombre" type="text" autocomplete="off" required placeholder="Ej: Boda María & Juan" />
+          </div>
+
+          <div class="form-row form-row-inline">
+             <div class="form-field">
+                <label for="campoTipoMontaje">Montaje</label>
+                <select id="campoTipoMontaje">
+                   <option value="Escuela">Escuela</option>
+                   <option value="Teatro">Teatro</option>
+                   <option value="U">Forma de U</option>
+                   <option value="Imperial">Imperial</option>
+                   <option value="Banquete">Banquete</option>
+                   <option value="Cóctel">Cóctel</option>
+                   <option value="Otro">Otro</option>
+                </select>
+             </div>
+             <div class="form-field">
+                <label for="campoPax">Pax (Personas)</label>
+                <input id="campoPax" type="number" min="0" />
+             </div>
+             <div class="form-field">
+                <label for="campoPrecio">Precio Total (€)</label>
+                <input id="campoPrecio" type="number" min="0" step="0.01" />
+             </div>
+          </div>
+
+          <div class="form-row">
+             <label for="campoNotas">Notas / Observaciones</label>
+             <textarea id="campoNotas" rows="3" placeholder="Detalles del menú, horario, etc..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="campoEstado">Estado</label>
+            <select id="campoEstado">
+               <option value="pendiente">En espera / Presupuesto</option>
+               <option value="confirmada">Confirmado</option>
+               <option value="anulada">Cancelado / Anulado</option>
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" id="btnCancelarEvento" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">Guardar Evento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>

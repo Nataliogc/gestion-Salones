@@ -1,0 +1,16 @@
+{
+    "name": "Mesa Chef Enterprise",
+    "short_name": "MesaChef",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f4f5fb",
+    "theme_color": "#2563eb",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "Img/logo-guadiana.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
+}

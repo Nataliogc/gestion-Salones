@@ -1,0 +1,662 @@
+/* ======================== RESET BÁSICO ======================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 14px;
+  color: #14213d;
+  background: #f4f5fb;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal-open {
+  overflow: hidden;
+}
+
+/* ======================== TOPBAR ============================== */
+
+.topbar {
+  height: 52px;
+  padding: 0 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e7f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #7a8499;
+}
+
+.breadcrumb.strong {
+  color: #14213d;
+  font-weight: 600;
+}
+
+.crumb-sep {
+  color: #c5cad7;
+}
+
+.estado-conexion {
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #fff3cd;
+  color: #856404;
+}
+
+.estado-ok {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.estado-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-buscar {
+  border-radius: 999px;
+  border: 1px solid #d0d7e5;
+  padding: 6px 12px;
+  min-width: 180px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-icon {
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  padding: 8px 14px;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 7px 14px;
+}
+
+.btn-icon {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 4px 10px;
+}
+
+/* ======================== PÁGINA ============================== */
+
+.page {
+  padding: 10px 12px 16px;
+}
+
+/* ======================== HERO PORTADA ======================== */
+
+.hero-portada {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.hero-left {
+  flex: 2;
+  min-width: 260px;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: radial-gradient(circle at top left, #3b82f6, #1d4ed8);
+  color: #e5edff;
+  box-shadow: 0 14px 40px rgba(37, 99, 235, 0.35);
+}
+
+.hero-title {
+  margin: 0 0 2px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.hero-subtitle {
+  margin: 0 0 6px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hero-copy {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hero-tag {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(226, 232, 240, 0.2);
+}
+
+.hero-tag-strong {
+  background: #fbbf24;
+  color: #1f2937;
+  border-color: transparent;
+}
+
+.hero-right {
+  flex: 2;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-hotel-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.hero-hotel-logo {
+  width: 64px;
+  height: auto;
+}
+
+.hero-hotel-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-hotel-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.hero-hotel-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ======================== TOOLBAR FECHA ======================= */
+
+.toolbar-fecha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+
+.toolbar-fecha-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-fecha {
+  border-radius: 999px;
+  border: 1px solid #d0d7e5;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.label-semana {
+  margin-left: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ======================== RESUMEN DIARIO ====================== */
+
+.resumen-diario-section {
+  margin-bottom: 6px;
+}
+
+.resumen-diario-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 2px;
+  margin-bottom: 4px;
+}
+
+.resumen-diario-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.resumen-diario-range {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.resumen-diario-wrapper {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 4px 0;
+}
+
+.resumen-dia-card {
+  min-width: 190px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 6px 8px 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+.resumen-dia-fecha {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.resumen-dia-servicios {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resumen-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #f3f4ff;
+}
+
+.resumen-chip-label {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.resumen-chip-data {
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+/* ======================== PLANNING ============================ */
+
+.planning-section {
+  margin-top: 2px;
+}
+
+.planning-wrapper {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e7f0;
+  padding: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.planning-grid {
+  min-width: 760px;
+}
+
+.planning-row {
+  display: grid;
+  grid-template-columns: 140px repeat(7, minmax(140px, 1fr));
+  min-height: 80px;
+}
+
+.planning-row-header {
+  background: #f5f7fb;
+  border-bottom: 1px solid #e2e7f0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.planning-header-cell,
+.planning-cell {
+  border-right: 1px solid #e2e7f0;
+  padding: 6px 8px;
+}
+
+.planning-row-header .planning-header-cell:last-child,
+.planning-row .planning-cell:last-child {
+  border-right: none;
+}
+
+.planning-col-espacio {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.planning-cell.planning-dia {
+  position: relative;
+  min-height: 100px;
+  cursor: pointer;
+}
+
+.planning-dia-empty {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Tarjeta de reserva */
+
+.reserva-card {
+  border-radius: 14px;
+  padding: 6px 8px;
+  background: #fffdf3;
+  box-shadow: 0 4px 10px rgba(15, 35, 95, 0.08);
+  margin-bottom: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.reserva-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.reserva-hora {
+  font-weight: 700;
+}
+
+.reserva-pax {
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.reserva-card-body {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.reserva-nombre {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.reserva-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.badge-estado {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.reserva-importe {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+/* ======================== MODAL =============================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modal-body {
+  padding: 12px 16px 14px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Formularios */
+
+.form-row {
+  margin-bottom: 8px;
+}
+
+.form-row-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.form-field {
+  flex: 1;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 2px;
+  color: #4b5563;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+input[type="date"],
+select {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+/* Toast */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, 0.92);
+  color: #f9fafb;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  z-index: 50;
+}
+
+/* ======================== RESPONSIVE ========================== */
+
+@media (max-width: 1024px) {
+  .planning-wrapper {
+    padding: 4px 2px;
+  }
+
+  .planning-row {
+    grid-template-columns: 120px repeat(7, minmax(220px, 1fr));
+    width: max-content;
+  }
+
+  .reserva-card {
+    padding: 8px 9px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-portada {
+    flex-direction: column;
+  }
+
+  .hero-right {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .hero-hotel-card {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 10px;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .input-buscar {
+    flex: 1;
+  }
+
+  .planning-row {
+    grid-template-columns: 100px repeat(7, minmax(220px, 1fr));
+  }
+
+  .reserva-card {
+    margin-bottom: 6px;
+  }
+
+  /* Botón flotante nueva mesa/presupuesto */
+  #btnNuevaReserva {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 60;
+    padding-inline: 18px;
+  }
+/* ==== FIX PORTADA: LOGOS GUADIANA / CUMBRIA ==== */
+
+/* Si tienes un img { width:100% } global, esto lo anula para los logos del héroe */
+img.hero-hotel-logo,
+.hero-hotel-card img {
+  width: 120px !important;   /* tamaño razonable */
+  max-width: 120px !important;
+  height: auto !important;
+  display: block;
+  object-fit: contain;
+}
+
+/* Tarjetas de hotel más compactas */
+.hero-hotel-card {
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+/* Contenedor general centrado para que no “flote” a lo ancho de la pantalla */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+}

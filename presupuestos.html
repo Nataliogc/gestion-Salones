@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>MesaChef · Presupuestos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Estilos base -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    /* Estilos específicos para tabla/lista de presupuestos */
+    .presupuestos-grid-header {
+      display: grid;
+      grid-template-columns: 100px 100px 1fr 80px 100px 100px 60px;
+      gap: 10px;
+      background: #eef2ff;
+      padding: 10px 15px;
+      border-radius: 12px 12px 0 0;
+      font-weight: 600;
+      font-size: 12px;
+      color: #4338ca;
+      text-transform: uppercase;
+      align-items: center;
+    }
+
+    .presupuesto-row {
+      display: grid;
+      grid-template-columns: 100px 100px 1fr 80px 100px 100px 60px;
+      gap: 10px;
+      background: white;
+      padding: 12px 15px;
+      border-bottom: 1px solid #f3f4f6;
+      align-items: center;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .presupuesto-row:hover {
+      background: #f9fafb;
+    }
+
+    .presupuesto-row:last-child {
+      border-bottom: none;
+    }
+
+    .p-ref {
+      color: #4338ca;
+      font-family: monospace;
+    }
+
+    .p-cliente-nombre {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .p-cliente-sub {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .font-mono {
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .badge-gray {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .badge-green {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge-red {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-orange {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 800px) {
+      .presupuestos-grid-header {
+        display: none;
+      }
+
+      .presupuesto-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: "desc imp" "meta acts";
+        gap: 6px;
+        padding: 15px;
+        border-bottom: 4px solid #f3f4f6;
+      }
+
+      .p-ref {
+        font-size: 11px;
+        margin-bottom: 4px;
+        display: inline-block;
+        background: #e0ecff;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .p-cliente {
+        grid-area: desc;
+      }
+
+      .p-importe {
+        grid-area: imp;
+        text-align: right;
+        font-size: 15px;
+      }
+
+      .p-fecha {
+        display: none;
+      }
+
+      .p-estado {
+        grid-area: meta;
+      }
+
+      .p-acciones {
+        grid-area: acts;
+        text-align: right;
+      }
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-init.js"></script>
+
+  <!-- Common -->
+  <script src="js/app-common.js"></script>
+
+  <!-- Logic -->
+  <script defer src="js/presupuestos.js"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="breadcrumb"><a href="index.html" style="text-decoration:none; color:inherit;">Inicio</a></span>
+      <span class="crumb-sep">·</span>
+      <span id="tituloHotel" class="breadcrumb strong">Presupuestos</span>
+      <span id="estadoConexion" class="estado-conexion">Conectando...</span>
+    </div>
+
+    <div class="topbar-right">
+      <select id="selFiltro" class="select-estado" style="max-width:140px;">
+        <option value="activos" selected>Ver activos</option>
+        <option value="pendientes">Pendientes</option>
+        <option value="confirmados">Confirmados/Acep.</option>
+        <option value="anulados">Anulados/Rech.</option>
+        <option value="todos">Ver todos</option>
+      </select>
+      <input id="txtBuscar" type="search" placeholder="Buscar..." class="input-buscar" />
+      <button id="btnNuevo" class="btn-primary">+ Nuevo Ppto</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div
+      style="background: white; border-radius: 16px; border: 1px solid #e5e7eb; min-height: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+      <!-- El contenido se renderiza aquí -->
+      <div id="listContainer">
+        <p style="padding:20px; color:#666;">Cargando presupuestos...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL PRESUPUESTO -->
+  <div id="modalPresupuesto" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div style="display:flex; flex-direction:column;">
+          <h2 id="tituloModal">Nuevo Presupuesto</h2>
+          <span id="labelRef" style="font-size:12px; color:#4338ca; font-weight:bold;">--</span>
+        </div>
+        <button id="btnCerrarModal" class="modal-close">✕</button>
+      </div>
+
+      <form id="formPresupuesto" class="modal-body">
+        <div class="form-row form-row-inline">
+          <div class="form-field">
+            <label>Cliente / Empresa / Contacto</label>
+            <input id="campoCliente" type="text" required placeholder="Nombre principal..." />
+          </div>
+        </div>
+
+        <div class="form-row form-row-inline">
+          <div class="form-field">
+            <label>Tipo Evento</label>
+            <input id="campoTipoEvento" type="text" placeholder="Ej: Boda, Reunión, Banquete..." />
+          </div>
+          <div class="form-field">
+            <label>Fecha Evento</label>
+            <input id="campoFechaEvento" type="date" required />
+          </div>
+        </div>
+
+        <div class="form-row form-row-inline">
+          <div class="form-field">
+            <label>Pax Aprox.</label>
+            <input id="campoPax" type="number" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Importe Estimado Total (€)</label>
+            <input id="campoImporte" type="number" min="0" step="0.01" />
+          </div>
+          <div class="form-field">
+            <label>Estado</label>
+            <select id="campoEstado">
+              <option value="pendiente">Pendiente</option>
+              <option value="enviada">Enviada al Cliente</option>
+              <option value="aceptada">Aceptada / Confirmada</option>
+              <option value="rechazada">Rechazada</option>
+              <option value="anulada">Anulada (Interna)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Notas Internas</label>
+          <textarea id="campoNotas" rows="4" placeholder="Detalles, recordatorios, etc."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelar" class="btn-secondary">Cancelar</button>
+          <!-- Nota: El botón submit no se llamará "Borrar" jamás -->
+          <button type="submit" class="btn-primary">Guardar Datos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,645 @@
+/* css/base.css */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.app-body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+/* Layout general */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 24px;
+}
+
+/* Topbar */
+
+.app-topbar {
+  height: 56px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f172a;
+  color: #e5e7eb;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.45);
+}
+
+.app-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.app-logo-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.app-logo-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.app-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Píldoras de hotel / estado */
+
+.hotel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  font-size: 13px;
+}
+
+.hotel-pill-name {
+  font-weight: 600;
+}
+
+.conn-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+
+.conn-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+/* Breadcrumb */
+
+.app-breadcrumb {
+  padding: 10px 20px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.app-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* Panel principal */
+
+.app-panel {
+  margin-top: 8px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(148, 163, 184, 0.18);
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Cabecera del panel */
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.panel-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Botones */
+
+.btn-primary,
+.btn-secondary,
+.btn-link {
+  font-family: inherit;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    box-shadow 150ms ease,
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #1f2933;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.btn-secondary.icon-only {
+  padding: 6px 10px;
+  border-radius: 999px;
+  min-width: 32px;
+}
+
+.btn-link {
+  background: transparent;
+  color: #2563eb;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.btn-small {
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+/* Chips */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.chip-icon {
+  font-size: 14px;
+}
+
+/* Controls bar */
+
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.week-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.week-date-input {
+  margin-left: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+/* Buscador */
+
+.search-input {
+  min-width: 220px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+/* Resumen superior */
+
+.summary-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.summary-title {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* Píldoras de resumen */
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.summary-pill strong {
+  font-weight: 600;
+}
+
+.summary-pill .summary-pill-label {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.summary-pill .summary-pill-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-pill.badge-almuerzo {
+  background: #fef9c3;
+  border-color: #facc15;
+}
+
+.summary-pill.badge-cena {
+  background: #e0e7ff;
+  border-color: #818cf8;
+}
+
+/* Colores de totales */
+
+.summary-valor {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-valor-euros::after {
+  content: " €";
+}
+
+/* Totales por día */
+
+.summary-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.summary-day {
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 6px 8px;
+  min-width: 180px;
+}
+
+.summary-day-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.summary-day-pills .summary-pill {
+  font-size: 11px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+/* Oculto por defecto con .hidden */
+.modal-overlay.hidden {
+  display: none !important;
+}
+
+/* Alias opcional por si algún módulo usa .is-open */
+.modal-overlay.is-open {
+  display: flex;
+}
+
+/* Clase para mostrar el modal cuando queramos */
+.modal-overlay.is-open {
+  display: flex;
+}
+
+
+.modal {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(148, 163, 184, 0.25);
+  max-width: 980px;
+  width: 96%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 18px 22px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.modal-close {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+}
+
+.modal-body {
+  padding: 12px 22px 18px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-footer {
+  padding: 12px 22px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Formulario */
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modal-row.bloque-turno {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.field-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.field-col label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.field-col .hint {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.field-col input,
+.field-col select,
+.field-col textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+}
+
+.field-col textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.field-col input:focus,
+.field-col select:focus,
+.field-col textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+/* Badges turno */
+
+.badge-turno {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-turno--almuerzo {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.badge-turno--cena {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+/* Grilla del planning */
+
+.planning-grid {
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.planning-header {
+  display: grid;
+  grid-template-columns: 160px repeat(7, minmax(0, 1fr));
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.planning-header-cell {
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-left: 1px solid #e5e7eb;
+}
+
+.planning-header-cell:first-child {
+  border-left: none;
+  font-weight: 700;
+}
+
+.planning-row {
+  display: grid;
+  grid-template-columns: 160px repeat(7, minmax(0, 1fr));
+  min-height: 72px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.planning-row:first-child {
+  border-top: none;
+}
+
+.planning-row-label {
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.planning-cell {
+  padding: 8px 8px;
+  border-left: 1px dashed #e5e7eb;
+}
+
+/* Toast (para mensajes puntuales) */
+
+.toast {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: #111827;
+  color: #f9fafb;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+  z-index: 50;
+}
+
+/* Estado conexión */
+
+.conn-ok .conn-indicator-dot {
+  background: #16a34a;
+}
+
+.conn-error .conn-indicator-dot {
+  background: #b91c1c;
+}
+
+.conn-pending .conn-indicator-dot {
+  background: #f59e0b;
+}
+
+.conn-ok {
+  background: #ecfdf3;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.conn-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
