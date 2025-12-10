@@ -375,17 +375,31 @@
           priceDisplay = precio + '€';
         }
 
+        // CHECK NOTES
+        let notesIcon = "";
+        if (r.notas && r.notas.trim().length > 0) {
+          notesIcon = `<span title="${r.notas}" class="ml-1 text-[10px] cursor-help">📝</span>`;
+        }
+
+        div.className = `bg-white border border-gray-100 shadow-sm rounded p-1.5 cursor-pointer hover:shadow-md transition text-[10px] ${border} mb-1`;
         div.className = `bg-white border border-gray-100 shadow-sm rounded p-1.5 cursor-pointer hover:shadow-md transition text-[10px] ${border} mb-1`;
         div.innerHTML = `
-                    <div class="flex justify-between font-bold text-gray-700 pointer-events-none items-center">
+                    <div class="flex justify-between font-bold text-gray-700 pointer-events-none items-center mb-1">
                         <div class="flex items-center gap-1">
                             ${badgeHTML}
                             <span>${time}</span>
                         </div>
-                        <span>${pax}p</span>
+                        <span class="bg-gray-100 px-1 rounded text-gray-600">${pax}p</span>
                     </div>
-                    <div class="truncate text-gray-500 my-0.5 pointer-events-none" title="${name}">${name}</div>
-                    <div class="text-right text-gray-400 font-mono pointer-events-none">${priceDisplay}</div>
+                    
+                    <div class="truncate font-bold text-slate-800 text-xs mb-1 pointer-events-none w-full" title="${name}">
+                        ${name}
+                    </div>
+
+                    <div class="flex justify-between items-end mt-1">
+                        <div class="pointer-events-auto">${notesIcon}</div>
+                        <div class="text-right text-gray-400 font-mono pointer-events-none">${priceDisplay}</div>
+                    </div>
                 `;
         div.onclick = (e) => { e.stopPropagation(); openBooking(space, rDateStr, turno, r); };
         zone.appendChild(div);
