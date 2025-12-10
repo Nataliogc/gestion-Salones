@@ -620,8 +620,11 @@
 
     window.selectSearchResult = function (r) {
         document.getElementById("searchResults").classList.add("hidden");
-        // Navigate
+        // Navigate to date
         window.goToDate(r.fecha);
+        // Open Modal Directly
+        // window.openBooking(salonName, dateStr, existing, defaultJornada)
+        window.openBooking(r.salon, r.fecha, r);
     };
 
     // --- FORM LOGIC ---
@@ -711,6 +714,19 @@
         document.getElementById("evt-nombre").value = "";
         document.getElementById("evt-telefono").value = "";
         document.getElementById("evt-email").value = "";
+
+        // Phone Mask Listener
+        const telInput = document.getElementById("evt-telefono");
+        if (telInput && !telInput.dataset.masked) {
+            telInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '').substring(0, 9);
+                if (v.length > 6) v = v.slice(0, 3) + " " + v.slice(3, 6) + " " + v.slice(6);
+                else if (v.length > 3) v = v.slice(0, 3) + " " + v.slice(3);
+                e.target.value = v;
+            });
+            telInput.dataset.masked = "true"; // Prevent duplicate listeners
+        }
+
         document.getElementById("services-list").innerHTML = "";
         document.getElementById("evt-total").innerText = "0.00 €";
         document.getElementById("evt-nota-interna").value = "";
@@ -906,6 +922,19 @@
         });
 
         console.log("Validating Event:", payload);
+
+        // --- PAST DATE VALIDATION ---
+        const eventDate = new Date(payload.fecha);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        eventDate.setHours(0, 0, 0, 0);
+
+        if (eventDate < today) {
+            alert("⛔ FECHA INVÁLIDA: No se pueden crear eventos en fechas pasadas.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
 
         // --- BLOCK VALIDATION ---
         if (globalConfig.bloqueos) {

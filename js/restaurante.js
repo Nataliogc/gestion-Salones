@@ -113,6 +113,16 @@
       updateTotalDisplay();
     });
 
+    // PHONE MASK
+    if (document.getElementById("campoTelefono")) {
+      document.getElementById("campoTelefono").addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '').substring(0, 9);
+        if (v.length > 6) v = v.slice(0, 3) + " " + v.slice(3, 6) + " " + v.slice(6);
+        else if (v.length > 3) v = v.slice(0, 3) + " " + v.slice(3);
+        e.target.value = v;
+      });
+    }
+
     // PRINT
     document.getElementById("btnPrintWeek").addEventListener("click", () => printReport('semana'));
     document.getElementById("btnPrintDay").addEventListener("click", () => printReport('dia'));
@@ -610,6 +620,17 @@
       alert("⚠️ Por favor, completa los campos obligatorios:\n- Nombre\n- Teléfono\n- Fecha");
       return;
     }
+
+    // Past Date Validation
+    const eventDate = new Date(fecha);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    eventDate.setHours(0, 0, 0, 0);
+
+    if (eventDate < today) {
+      alert("⚠️ No se puede crear una reserva en fecha pasada.");
+      return;
+    }
     const isServiceIncluded = document.getElementById("checkServicioIncluido").checked;
     let precio = parseFloat(document.getElementById("campoPrecio").value) || 0;
     if (isServiceIncluded) precio = 0;
@@ -757,8 +778,14 @@
   window.selectSearchResult = function (r) {
     document.getElementById("searchResults").classList.add("hidden");
     const rDate = r.fecha && r.fecha.toDate ? r.fecha.toDate() : new Date(r.fecha);
+    const dateStr = utils.toIsoDate(rDate);
+
+    // Navigate (optional, but good for context)
     goToDate(rDate);
-    // Optional: openBooking(r.espacio, utils.toIsoDate(rDate), r.turno, r);
+
+    // Open Modal Directly
+    // openBooking(space, dateStr, turno, data)
+    openBooking(r.espacio || "Restaurante", dateStr, r.turno, r);
   };
 
   window.goToDate = function (dateObj) {

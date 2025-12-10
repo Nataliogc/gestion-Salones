@@ -487,6 +487,11 @@ body {
   flex-direction: column;
 }
 
+.modal.modal-wide {
+  max-width: 1000px;
+  width: 95%;
+}
+
 .modal-header {
   padding: 10px 16px;
   border-bottom: 1px solid #e5e7eb;
@@ -635,32 +640,49 @@ select {
     z-index: 60;
     padding-inline: 18px;
   }
-/* ==== FIX PORTADA: LOGOS GUADIANA / CUMBRIA ==== */
 
-/* Si tienes un img { width:100% } global, esto lo anula para los logos del héroe */
-img.hero-hotel-logo,
-.hero-hotel-card img {
-  width: 120px !important;   /* tamaño razonable */
-  max-width: 120px !important;
-  height: auto !important;
-  display: block;
-  object-fit: contain;
-}
+  /* ==== FIX PORTADA: LOGOS GUADIANA / CUMBRIA ==== */
 
-/* Tarjetas de hotel más compactas */
-.hero-hotel-card {
-  max-width: 320px;
-  margin-inline: auto;
-}
+  /* Si tienes un img { width:100% } global, esto lo anula para los logos del héroe */
+  img.hero-hotel-logo,
+  .hero-hotel-card img {
+    width: 120px !important;
+    /* tamaño razonable */
+    max-width: 120px !important;
+    height: auto !important;
+    display: block;
+    object-fit: contain;
+  }
 
-/* Contenedor general centrado para que no “flote” a lo ancho de la pantalla */
-.page {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+  /* Tarjetas de hotel más compactas */
+  .hero-hotel-card {
+    max-width: 320px;
+    margin-inline: auto;
+  }
+
+  /* Contenedor general centrado para que no “flote” a lo ancho de la pantalla */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
 }
 
 /* Error Blinking */
-.estado-error { color: #dc2626 !important; font-weight: bold; animation: blink 1s infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.estado-error {
+  color: #dc2626 !important;
+  font-weight: bold;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
