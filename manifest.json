@@ -1,6 +1,6 @@
 {
-    "name": "Mesa Chef Enterprise",
-    "short_name": "MesaChef",
+    "name": "MesaChef Matrix",
+    "short_name": "MesaChef Matrix",
     "start_url": "index.html",
     "display": "standalone",
     "background_color": "#f4f5fb",
