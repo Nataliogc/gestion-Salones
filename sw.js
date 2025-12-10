@@ -1,5 +1,5 @@
-const CACHE_NAME = 'mesachef-v1';
-const PRECACHE_URLS = [
+const CACHE_NAME = 'mesachef-v8.3';
+const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './css/base.css',
@@ -12,7 +12,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting(); // Forzar activación inmediata
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(PRECACHE_URLS))
+            .then((cache) => cache.addAll(ASSETS_TO_CACHE))
     );
 });
 
