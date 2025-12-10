@@ -357,6 +357,17 @@
         if (rStatus === 'confirmada') border = 'border-l-[3px] border-green-500';
         if (rStatus === 'anulada') border = 'border-l-[3px] border-red-500';
 
+        // NEW: Check for recent creation (15 mins) -> Flashing Badge
+        let badgeHTML = "";
+        if (r.createdAt) {
+          const created = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
+          const now = new Date();
+          const diffMins = (now - created) / 1000 / 60;
+          if (diffMins <= 15) {
+            badgeHTML = `<span class="badge-nuevo">NUEVO</span>`;
+          }
+        }
+
         let priceDisplay = "";
         if (r.servicioIncluido) {
           priceDisplay = '<span class="text-xs font-bold text-blue-600 bg-blue-50 px-1 rounded">Incluido</span>';
@@ -366,8 +377,11 @@
 
         div.className = `bg-white border border-gray-100 shadow-sm rounded p-1.5 cursor-pointer hover:shadow-md transition text-[10px] ${border} mb-1`;
         div.innerHTML = `
-                    <div class="flex justify-between font-bold text-gray-700 pointer-events-none">
-                        <span>${time}</span>
+                    <div class="flex justify-between font-bold text-gray-700 pointer-events-none items-center">
+                        <div class="flex items-center gap-1">
+                            ${badgeHTML}
+                            <span>${time}</span>
+                        </div>
                         <span>${pax}p</span>
                     </div>
                     <div class="truncate text-gray-500 my-0.5 pointer-events-none" title="${name}">${name}</div>

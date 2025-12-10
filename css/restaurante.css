@@ -140,3 +140,29 @@
     /* Force scroll on small screens */
   }
 }
+
+/* NEW RESERVATION BADGE */
+@keyframes flash {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.badge-nuevo {
+  background-color: #ef4444;
+  /* Red-500 */
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  animation: flash 1s infinite;
+  margin-right: 4px;
+  letter-spacing: 0.5px;
+}
