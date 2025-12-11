@@ -82,6 +82,63 @@
         getWeekDates,
         toIsoDate,
         formatDayHeader,
-        formatDateES
+        formatDateES,
+        checkSalonAvailability: async (db, hotel, salon, dateStr, jornada, excludeId = null) => {
+            // 1. Queries Firestore
+            // Conflict Rules:
+            // - New "TODO" -> Conflicts with ANY existing (Mañana, Tarde, Todo)
+            // - New "Mañana" -> Conflicts with Existing "Mañana" OR "Todo"
+            // - New "Tarde" -> Conflicts with Existing "Tarde" OR "Todo"
+
+            try {
+                const snapshot = await db.collection("reservas_salones")
+                    .where("hotel", "==", hotel)
+                    .where("salon", "==", salon)
+                    .where("fecha", "==", dateStr)
+                    .get();
+
+                if (snapshot.empty) return { available: true };
+
+                let conflict = null;
+                const normalize = (s) => (s || "todo").toLowerCase().trim();
+                const myJornada = normalize(jornada);
+
+                snapshot.forEach(doc => {
+                    if (conflict) return; // Already found one
+                    if (excludeId && doc.id === excludeId) return; // Ignore self
+
+                    const data = doc.data();
+                    const st = (data.estado || "").toLowerCase();
+                    if (st === 'cancelada' || st === 'anulada') return;
+
+                    const otherJornada = normalize(data.detalles?.jornada || "todo");
+
+                    // LOGIC
+                    if (myJornada === 'todo' || otherJornada === 'todo' || otherJornada.includes('dia') || otherJornada.includes('completo')) {
+                        // Full day conflict
+                        conflict = data;
+                    } else if (myJornada === otherJornada) {
+                        // Exact match (mañana vs mañana)
+                        conflict = data;
+                    }
+                });
+
+                if (conflict) {
+                    return {
+                        available: false,
+                        reason: `Ocupado por ${conflict.cliente} (${conflict.detalles?.jornada || 'Todo el día'})`,
+                        conflictData: conflict
+                    };
+                }
+
+                return { available: true };
+
+            } catch (e) {
+                console.error("Error checking availability:", e);
+                // Fallback to allow if DB fails? Or block? Safety first: Block or Alert? 
+                // Let's return error so caller decides.
+                throw e;
+            }
+        }
     };
 })();

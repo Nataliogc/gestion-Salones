@@ -1000,29 +1000,26 @@
             let conflictReason = "";
 
             if (payload.estado !== 'cancelada') {
-                const existingSnapshot = await db.collection("reservas_salones")
-                    .where("hotel", "==", payload.hotel)
-                    .where("salon", "==", payload.salon)
-                    .where("fecha", "==", payload.fecha)
-                    .get();
+                // Use Shared Validation
+                try {
+                    const validation = await window.MesaChef.checkSalonAvailability(
+                        db,
+                        payload.hotel,
+                        payload.salon,
+                        payload.fecha,
+                        payload.detalles.jornada || "todo",
+                        currentBookingId // exclude self
+                    );
 
-                existingSnapshot.forEach(doc => {
-                    if (currentBookingId && doc.id === currentBookingId) return; // Ignore self
-
-                    const other = doc.data();
-                    if (other.estado === 'cancelada') return; // Ignore cancelled events
-
-                    const myJornada = payload.detalles.jornada;
-                    const otherJornada = other.detalles?.jornada || "todo";
-
-                    if (myJornada === "todo" || otherJornada === "todo") {
+                    if (!validation.available) {
                         conflict = true;
-                        conflictReason = `El salón ya está ocupado(Jornada Completa) por: ${other.cliente}`;
-                    } else if (myJornada === otherJornada) {
-                        conflict = true;
-                        conflictReason = `Ya existe un evento en la franja ${myJornada} de: ${other.cliente}`;
+                        conflictReason = validation.reason;
                     }
-                });
+                } catch (err) {
+                    console.error("Validation error", err);
+                    alert("Error validando disponibilidad: " + err.message);
+                    return;
+                }
             }
 
             if (conflict) {

@@ -54,9 +54,44 @@
     formatDateShort: (d) => d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
   };
 
+  let restaurantConfig = {}; // Global Config
+
+  async function loadRestaurantConfig() {
+    try {
+      const doc = await db.collection("master_data").doc("CONFIG_SALONES").get();
+      if (doc.exists) {
+        restaurantConfig = doc.data().horarios || {};
+        console.log("DEBUG: Restaurant Config Loaded", restaurantConfig);
+      }
+    } catch (e) { console.error("Config Load Error", e); }
+  }
+
+  // Auto-fill time based on Turn and Config
+  function autoSetTime(turno) {
+    const t = (turno || 'almuerzo').toLowerCase();
+    const field = document.getElementById("campoHora");
+    if (!field) return;
+
+    let time = "13:00"; // Fallback
+    if (t === 'almuerzo') time = restaurantConfig.almIni || "13:00";
+    if (t === 'cena') time = restaurantConfig.cenaIni || "20:30";
+
+    field.value = time;
+  }
+
   function startApp() {
     console.log("Restaurante v7: Starting...");
     db = firebase.firestore();
+
+    loadRestaurantConfig(); // <--- Load Config
+
+    // Event Listener for Auto-Time
+    const turnoSelect = document.getElementById("campoTurno");
+    if (turnoSelect) {
+      turnoSelect.addEventListener("change", (e) => {
+        autoSetTime(e.target.value);
+      });
+    }
 
     // 1. HOTEL
     let currentHotel = localStorage.getItem(STORAGE_KEY);
@@ -215,7 +250,7 @@
                                     </div>
                                     ${addBtn}
                                 </div>
-                                <div id="zone_${space}_${dateStr}_${turno}" class="flex flex-col gap-2 ${isLocked ? 'opacity-75 blur-[0.5px] pointer-events-none select-none' : ''}"></div>
+                                <div id="zone_${space}_${dateStr}_${turno}" class="flex flex-col gap-2 ${isLocked ? 'opacity-75 blur-[0.5px]' : ''}"></div>
                             </div>`;
           };
 
@@ -316,8 +351,9 @@
     const endStr = utils.toIsoDate(dates[6]);
 
     reservations.forEach(r => {
-      // 1. Filter Hotel
+      // 1. Filter Hotel & Locks
       if (r.hotel && r.hotel !== hotel) return;
+      if (r.type === 'lock') return; // Do not paint locks as cards
 
       // 2. Date
       let rDateStr = "";
@@ -602,6 +638,7 @@
       document.getElementById("campoHora").value = data.hora || "";
       document.getElementById("campoPrecio").value = data.precio || "";
       document.getElementById("campoPax").value = data.pax || "";
+      document.getElementById("campoNinos").value = data.ninos || 0; // Added: Populate campoNinos
       document.getElementById("campoNotas").value = typeof data.notas === 'object' ? Object.values(data.notas).join(". ") : (data.notas || "");
       document.getElementById("campoNotaCliente").value = data.notaCliente || "";
       if (data.espacio) document.getElementById("campoEspacio").value = data.espacio;
@@ -617,9 +654,12 @@
       if (title) title.innerText = "Editar Reserva";
     } else {
       document.getElementById("campoId").value = "";
-      document.getElementById("campoEspacio").value = space || "Restaurante";
+
+      // Defaults from arguments (Restored)
+      if (space) document.getElementById("campoEspacio").value = space;
       document.getElementById("campoFecha").value = dateStr || utils.toIsoDate(new Date());
       if (turno) document.getElementById("campoTurno").value = turno;
+
       document.getElementById("campoReferencia").value = "RES-" + Date.now().toString().slice(-6);
 
       document.getElementById("campoNombre").value = "";
@@ -627,8 +667,12 @@
       document.getElementById("campoHora").value = "";
       document.getElementById("campoPrecio").value = "";
       document.getElementById("campoPax").value = "";
+      document.getElementById("campoNinos").value = "";
       document.getElementById("campoNotas").value = "";
       document.getElementById("campoNotaCliente").value = "";
+
+      // Auto-set time based on turn (After clearing)
+      autoSetTime(turno);
 
       const title = document.getElementById("modalTitle");
       if (title) title.innerText = "Nueva Reserva";
@@ -650,6 +694,29 @@
       return;
     }
 
+    // --- CHECK KITCHEN HOURS ---
+    const valHora = document.getElementById("campoHora").value;
+    const valTurno = document.getElementById("campoTurno").value;
+    if (restaurantConfig && valHora && valTurno) {
+      const t = valTurno.toLowerCase();
+      let ini = "", fin = "";
+      // Default fallbacks if config missing
+      if (t === 'almuerzo') {
+        ini = restaurantConfig.almIni || "13:00";
+        fin = restaurantConfig.almFin || "16:00";
+      } else if (t === 'cena') {
+        ini = restaurantConfig.cenaIni || "20:30";
+        fin = restaurantConfig.cenaFin || "23:00";
+      }
+
+      if (ini && fin && (valHora < ini || valHora > fin)) {
+        if (!confirm(`⚠️ FUERA DE HORARIO DE COCINA\n\nLa hora seleccionada (${valHora}) está fuera del horario establecido para ${valTurno} (${ini} - ${fin}).\n\n¿Deseas continuar con la reserva?`)) {
+          return;
+        }
+      }
+    }
+    // ---------------------------
+
     // Past Date Validation
     const eventDate = new Date(fecha);
     const today = new Date();
@@ -660,6 +727,75 @@
       alert("⚠️ No se puede crear una reserva en fecha pasada.");
       return;
     }
+
+    // --- CHECK LOCK (COMPLETO) ---
+    // Rule: New Reservations cannot be created on blocked shifts.
+    // Rule: Existing reservations CAN be edited (Editor check).
+    const valId = document.getElementById("campoId").value;
+    const isEdit = valId && valId.trim() !== "";
+
+    if (!isEdit) {
+      const currentHotel = localStorage.getItem(STORAGE_KEY) || "Guadiana";
+      const targetSpace = document.getElementById("campoEspacio").value;
+      const targetTurn = document.getElementById("campoTurno").value;
+
+      // 1. Client-Side Check (Fast & Matches UI)
+      // Uses same defaults as Grid Render to ensure consistency
+      console.log(`Checking Lock Client-Side: Date=${fecha} Space=${targetSpace} Turn=${targetTurn}`);
+
+      const localLock = loadedReservations.find(r => {
+        if (r.type !== 'lock') return false;
+
+        const rDate = (r.fecha && r.fecha.toDate ? utils.toIsoDate(r.fecha.toDate()) : r.fecha);
+        const rSpace = r.espacio || 'Restaurante';
+        const rTurno = (r.turno || 'almuerzo').toLowerCase();
+
+        return rSpace === targetSpace &&
+          rTurno === targetTurn.toLowerCase() &&
+          rDate === fecha;
+      });
+
+      if (localLock) {
+        alert(`⛔ EL TURNO ESTÁ CERRADO (COMPLETO).\nNo se admiten nuevas reservas.`);
+        return;
+      }
+
+      // 2. Robust Async Date Check (Server Side)
+      const baseDate = new Date(fecha);
+      const startRange = new Date(baseDate); startRange.setDate(startRange.getDate() - 2);
+      const endRange = new Date(baseDate); endRange.setDate(endRange.getDate() + 2);
+
+      try {
+        const lockSnap = await db.collection("reservas_restaurante")
+          .where("hotel", "==", currentHotel)
+          .where("espacio", "==", targetSpace)
+          .where("turno", "==", targetTurn)
+          .where("type", "==", "lock")
+          .where("fecha", ">=", startRange)
+          .where("fecha", "<=", endRange)
+          .get();
+
+        let isLocked = false;
+        lockSnap.forEach(doc => {
+          const data = doc.data();
+          let dateStr = "";
+          if (data.fecha && data.fecha.toDate) dateStr = utils.toIsoDate(data.fecha.toDate());
+          else if (typeof data.fecha === 'string') dateStr = data.fecha;
+
+          if (dateStr === fecha) isLocked = true;
+        });
+
+        if (isLocked) {
+          alert(`⛔ EL TURNO ESTÁ CERRADO (COMPLETO).\nNo se permiten nuevas reservas en este turno.`);
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking lock:", err);
+        // Optionally alert user or fail open. Failing open allows work to continue if DB hiccup.
+      }
+    }
+    // -----------------------------
+
     const isServiceIncluded = document.getElementById("checkServicioIncluido").checked;
     let precio = parseFloat(document.getElementById("campoPrecio").value) || 0;
     if (isServiceIncluded) precio = 0;
@@ -673,6 +809,7 @@
       telefono: telefono,
       hora: document.getElementById("campoHora").value,
       pax: parseInt(document.getElementById("campoPax").value) || 0,
+      ninos: parseInt(document.getElementById("campoNinos").value) || 0,
       precio: precio,
       turno: document.getElementById("campoTurno").value,
       estado: document.getElementById("campoEstado").value,

@@ -1282,6 +1282,41 @@
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            // --- VALIDATION: Check Salon Availability if Confirming ---
+            if (payload.estado === 'confirmada') {
+                try {
+                    // If we are editing an existing budget, we might already have a reservation linked to it.
+                    // We must exclude that reservation from the conflict check.
+                    let excludeResId = null;
+                    if (state.editingId) {
+                        const snapRes = await db.collection("reservas_salones")
+                            .where("presupuestoId", "==", state.editingId)
+                            .get();
+                        if (!snapRes.empty) {
+                            excludeResId = snapRes.docs[0].id;
+                        }
+                    }
+
+                    const validation = await window.MesaChef.checkSalonAvailability(
+                        db,
+                        hotelId,
+                        payload.salon,
+                        payload.fechaDesde,
+                        payload.turno || "todo",
+                        excludeResId
+                    );
+
+                    if (!validation.available) {
+                        alert(`⛔ NO SE PUEDE CONFIRMAR:\nEl salón está ocupado: ${validation.reason}`);
+                        return; // Abort Save
+                    }
+                } catch (err) {
+                    console.error("Error validating availability:", err);
+                    alert("Error validando disponibilidad del salón: " + err.message);
+                    return;
+                }
+            }
+
             let savedId = state.editingId;
 
             if (state.editingId) {

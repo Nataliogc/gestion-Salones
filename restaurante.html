@@ -385,8 +385,8 @@
 
                     <!-- Column 2: Logistics -->
                     <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-4">
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
+                        <div class="grid grid-cols-4 gap-3">
+                            <div class="col-span-1">
                                 <label
                                     class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Hora</label>
                                 <div class="relative">
@@ -394,17 +394,24 @@
                                         class="w-full border border-slate-200 rounded px-2 py-1.5 text-sm font-bold text-slate-700">
                                 </div>
                             </div>
-                            <div>
+                            <div class="col-span-1">
                                 <label
-                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pax</label>
+                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Adultos</label>
                                 <input type="number" id="campoPax" min="1"
                                     class="w-full border border-slate-200 rounded px-2 py-1.5 text-sm font-bold text-slate-700 text-center"
                                     placeholder="0">
                             </div>
-                            <div>
+                            <div class="col-span-1">
+                                <label
+                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Niños</label>
+                                <input type="number" id="campoNinos" min="0"
+                                    class="w-full border border-slate-200 rounded px-2 py-1.5 text-sm font-bold text-slate-700 text-center"
+                                    placeholder="0">
+                            </div>
+                            <div class="col-span-1">
                                 <label
                                     class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Precio
-                                    p/p (€)</label>
+                                    p/p</label>
                                 <div class="relative">
                                     <input type="number" id="campoPrecio" step="0.01"
                                         class="w-full border border-slate-200 rounded px-2 py-1.5 pr-6 text-sm font-bold text-slate-700 text-right"
@@ -427,7 +434,7 @@
                             </div>
                             <div>
                                 <label
-                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Turno</label>
+                                    class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Servicio</label>
                                 <select id="campoTurno"
                                     class="w-full border border-slate-200 rounded px-2 py-1.5 text-sm text-slate-700">
                                     <option value="almuerzo">☀️ Almuerzo</option>
