@@ -926,8 +926,8 @@
             // Date & Ref
             doc.setFontSize(10);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Fecha: ${formatDateES(new Date())}`, 14, 30);
-            doc.text(`Ref: ${labelRef.textContent}`, 14, 35);
+            doc.text(`Fecha: ${formatDateES(new Date())}`, 14, 40); // Moved down
+            doc.text(`Ref: ${labelRef.textContent}`, 14, 45); // Moved down
 
             // --- CLIENT INFO ---
             const startY = 50;
