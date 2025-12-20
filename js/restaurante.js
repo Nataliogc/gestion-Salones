@@ -132,9 +132,10 @@
     document.getElementById("btnNext").addEventListener("click", () => changeWeek(1));
 
     // DYNAMIC TOTALS LISTENERS
-    const calcInputs = ["campoPrecio", "campoPax"];
+    const calcInputs = ["campoPrecio", "campoPax", "campoNinos", "campoPrecioNinos"];
     calcInputs.forEach(id => {
-      document.getElementById(id).addEventListener("input", updateTotalDisplay);
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", updateTotalDisplay);
     });
 
     // SERVICE INCLUDED TOGGLE
@@ -223,7 +224,7 @@
               return;
             }
 
-            const p = parseInt(r.pax) || 0;
+            const p = (parseInt(r.pax) || 0) + (parseInt(r.ninos) || 0);
             if (t === 'almuerzo') lunchPax += p;
             if (t === 'cena') dinnerPax += p;
           });
@@ -234,11 +235,13 @@
               ? `<button onclick="toggleLock('${space}', '${dateStr}', '${turno}')" class="text-red-500 hover:text-red-700 p-0.5" title="Desbloquear"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg></button>`
               : `<button onclick="toggleLock('${space}', '${dateStr}', '${turno}')" class="text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition p-0.5" title="Bloquear (Completo)"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 016 0v2h-1V7a2 2 0 00-2-2z"></path></svg></button>`;
 
-            const addBtn = isLocked
-              ? `<span class="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 rounded border border-red-100">COMPLETO</span>`
-              : `<button onclick="openBooking('${space}', '${dateStr}', '${turno}')" class="opacity-0 group-hover:opacity-100 text-blue-600 font-bold bg-blue-50 px-1.5 rounded text-[10px] transition">+</button>`;
+            const isPast = dateStr < utils.toIsoDate(new Date());
+            const shadeClass = isPast && !isLocked ? "bg-slate-100" : "";
+            const bgClass = isLocked ? "bg-slate-50 border-red-100" : shadeClass;
 
-            const bgClass = isLocked ? "bg-slate-50 border-red-100" : "";
+            const addBtn = isLocked || isPast
+              ? (isLocked ? `<span class="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 rounded border border-red-100">COMPLETO</span>` : ``)
+              : `<button onclick="openBooking('${space}', '${dateStr}', '${turno}')" class="opacity-0 group-hover:opacity-100 text-blue-600 font-bold bg-blue-50 px-1.5 rounded text-[10px] transition">+</button>`;
 
             return `
                             <div class="turn-cell group ${bgClass} relative">
@@ -381,7 +384,8 @@
       const turno = r.turno || "almuerzo";
       const time = r.hora || "--:--";
       const name = r.nombre || r.cliente || "Sin nombre";
-      const pax = r.pax || "?";
+      const totalPax = (parseInt(r.pax) || 0) + (parseInt(r.ninos) || 0);
+      const pax = totalPax || r.pax || "?";
       const precio = r.precio || "";
 
       const zoneId = `zone_${space}_${rDateStr}_${turno}`;
@@ -530,7 +534,7 @@
                     <tbody>`;
 
         groups[dateStr].forEach(r => {
-          const pax = parseInt(r.pax) || 0;
+          const pax = (parseInt(r.pax) || 0) + (parseInt(r.ninos) || 0);
           dailyPax += pax;
           const clientName = r.nombre || r.cliente || "Sin Nombre";
           const time = r.hora || "00:00";
@@ -600,12 +604,20 @@
   function updateTotalDisplay() {
     const price = parseFloat(document.getElementById("campoPrecio").value) || 0;
     const pax = parseInt(document.getElementById("campoPax").value) || 0;
-    const total = price * pax;
+    const priceKids = parseFloat(document.getElementById("campoPrecioNinos")?.value) || 0;
+    const kids = parseInt(document.getElementById("campoNinos").value) || 0;
+
+    const total = (price * pax) + (priceKids * kids);
     const el = document.getElementById("displayTotal");
-    if (el) el.innerText = total.toFixed(2) + " €";
+    if (el) el.innerText = total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
   }
 
   window.openBooking = function (space, dateStr, turno, data) {
+    // [NEW] Initialize Global State for Sync Context
+    window.state = {
+      currentReserva: data || null
+    };
+
     if (!data) {
       const isLocked = loadedReservations.some(r =>
         r.type === 'lock' &&
@@ -621,6 +633,17 @@
 
     const modal = document.getElementById("modalReserva");
     if (!modal) return;
+
+    // --- PAST DATE CHECK (NEW & EDIT) ---
+    const checkDate = data ? (data.fecha && data.fecha.toDate ? utils.toIsoDate(data.fecha.toDate()) : data.fecha) : dateStr;
+    const isPast = checkDate < utils.toIsoDate(new Date());
+
+    if (!data && isPast) {
+      alert("⚠️ No se pueden crear reservas en fechas pasadas.");
+      return;
+    }
+    // ------------------------------------
+
     modal.classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -629,16 +652,25 @@
 
     document.getElementById("campoEstado").value = "confirmada";
     const btnAnular = document.getElementById("btnAnular");
+    const btnGuardar = document.getElementById("btnGuardar"); // Assuming ID 'btnGuardar' exists for Save button
+
+    // Reset visibility first
     if (btnAnular) btnAnular.style.display = data ? 'block' : 'none';
+    if (btnGuardar) btnGuardar.style.display = 'block';
+
+    // Inputs to disable/enable
+    const inputs = document.querySelectorAll("#modalReserva input, #modalReserva select, #modalReserva textarea");
 
     if (data) {
+      // ... population logic ...
       document.getElementById("campoReferencia").value = data.referencia || data.id || "SIN REF";
       document.getElementById("campoNombre").value = data.nombre || data.cliente || "";
       document.getElementById("campoTelefono").value = data.telefono || "";
       document.getElementById("campoHora").value = data.hora || "";
       document.getElementById("campoPrecio").value = data.precio || "";
       document.getElementById("campoPax").value = data.pax || "";
-      document.getElementById("campoNinos").value = data.ninos || 0; // Added: Populate campoNinos
+      document.getElementById("campoNinos").value = data.ninos || 0;
+      if (document.getElementById("campoPrecioNinos")) document.getElementById("campoPrecioNinos").value = data.precioNinos || "";
       document.getElementById("campoNotas").value = typeof data.notas === 'object' ? Object.values(data.notas).join(". ") : (data.notas || "");
       document.getElementById("campoNotaCliente").value = data.notaCliente || "";
       if (data.espacio) document.getElementById("campoEspacio").value = data.espacio;
@@ -650,10 +682,26 @@
       document.getElementById("campoFecha").value = dVal;
       document.getElementById("campoId").value = data.id;
 
-      const title = document.getElementById("modalTitle");
-      if (title) title.innerText = "Editar Reserva";
+      // READ ONLY MODE
+      if (isPast) {
+        const title = document.getElementById("modalTitle");
+        if (title) title.innerText = "Reserva Pasada (Solo Lectura)";
+
+        inputs.forEach(inp => inp.disabled = true);
+        if (btnGuardar) btnGuardar.style.display = 'none';
+        if (btnAnular) btnAnular.style.display = 'none';
+      } else {
+        const title = document.getElementById("modalTitle");
+        if (title) title.innerText = "Editar Reserva";
+
+        inputs.forEach(inp => inp.disabled = false);
+        // Buttons valid (already set above)
+      }
+
     } else {
+      // NEW
       document.getElementById("campoId").value = "";
+      inputs.forEach(inp => inp.disabled = false); // Ensure enabled
 
       // Defaults from arguments (Restored)
       if (space) document.getElementById("campoEspacio").value = space;
@@ -668,6 +716,7 @@
       document.getElementById("campoPrecio").value = "";
       document.getElementById("campoPax").value = "";
       document.getElementById("campoNinos").value = "";
+      document.getElementById("campoPrecioNinos").value = "";
       document.getElementById("campoNotas").value = "";
       document.getElementById("campoNotaCliente").value = "";
 
@@ -823,12 +872,37 @@
       payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
     }
 
+    // --- CONFIRMATION FOR LINKED BUDGETS ---
+    // --- CONFIRMATION FOR LINKED BUDGETS ---
+    if (window.state && window.state.currentReserva && window.state.currentReserva.presupuestoId) {
+      // Skip if cancelling (handled by anularReservation) - though usually save is not used for cancel here
+      if (payload.estado !== 'cancelada' && payload.estado !== 'anulada') {
+        if (!confirm(`⚠️ ATENCIÓN:\nEsta reserva está vinculada al presupuesto ${window.state.currentReserva.referenciaPresupuesto || "Linked"}.\n\nCualquier cambio que guardes aquí se sincronizará automáticamente con el presupuesto.\n\n¿Estás seguro de que quieres continuar?`)) {
+          return;
+        }
+      }
+    }
+    // Fallback: verify if we have budget ID from somewhere else if state is empty? 
+    // No, state should be populated on edit.
+
     try {
       const id = document.getElementById("campoId").value;
       if (id) {
         await db.collection("reservas_restaurante").doc(id).update(payload);
+        // [NEW] 2-Way Sync
+        // [NEW] 2-Way Sync
+        if (window.state && window.state.currentReserva && window.state.currentReserva.presupuestoId) {
+          // We need to pass the full object with ID
+          // But payload doesn't have ID or budget ID.
+          // We should merge or use window.state.currentReserva.presupuestoId
+          payload.presupuestoId = window.state.currentReserva.presupuestoId;
+          await syncPresupuestoFromRestaurante(payload);
+        }
       } else {
-        await db.collection("reservas_restaurante").add(payload);
+        const ref = await db.collection("reservas_restaurante").add(payload);
+        // If we want to sync NEW reservations that came from nowhere??
+        // Usually creation comes FROM budget.
+        // But if manually linked (future feature), we'd need budget ID in form.
       }
       closeModal();
     } catch (err) {
@@ -837,18 +911,101 @@
     }
   };
 
+  // [NEW] 2-Way Sync Helper
+  async function syncPresupuestoFromRestaurante(reserva) {
+    if (!reserva.presupuestoId) return;
+    // console.log("Syncing Budget from Rte...", reserva.presupuestoId);
+
+    try {
+      const pRef = db.collection("presupuestos").doc(reserva.presupuestoId);
+      const pSnap = await pRef.get();
+      if (!pSnap.exists) return;
+
+      const pData = pSnap.data();
+      let lines = pData.lines || [];
+
+      // In Restaurante, we don't have "Lines" in the reservation object exactly like Salones.
+      // We have "pax" (Adults) and "ninos".
+      // We must update the CORRESPONDING lines in the budget.
+      // Strategy: Find lines that look like "Menú Rte..." or match the shift/concepts.
+
+      // Update Pax Headers
+      let newPaxA = reserva.pax || 0;
+      let newPaxN = reserva.ninos || 0;
+
+      // We need to update lines intelligently.
+      // If we have "Menú Adulto", set uds = newPaxA.
+      // If we have "Menú Niño", set uds = newPaxN.
+
+      lines = lines.map(l => {
+        const c = l.concepto.toLowerCase();
+        if (c.includes("adulto") && (c.includes("menú") || c.includes("menu"))) {
+          l.uds = newPaxA;
+          l.total = l.uds * l.precio;
+        }
+        else if (c.includes("niño") || c.includes("infantil")) {
+          l.uds = newPaxN;
+          l.total = l.uds * l.precio;
+        }
+
+        return l;
+      });
+
+      const newTotal = lines.reduce((sum, l) => sum + (l.total || 0), 0);
+
+      await pRef.update({
+        paxAdultos: newPaxA,
+        paxNinos: newPaxN,
+        pax: newPaxA + newPaxN,
+        lines: lines,
+        importeTotal: newTotal,
+        fecha: reserva.fecha, // Sync Date
+        cliente: reserva.nombre, // Sync Client Name
+        lastModifiedSource: 'Restaurante 🍽️', // Audit Trail
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log("✅ Budget Synced from Restaurante!");
+
+    } catch (e) {
+      console.error("Error syncing Budget from Rte:", e);
+    }
+  }
+
   async function anularReservation() {
     const id = document.getElementById("campoId").value;
     if (!id) return;
-    if (!confirm("¿Estás seguro de querer ANULAR esta reserva?")) return;
+    if (!confirm("⚠️ ¿Estás seguro de que quieres ANULAR esta reserva?")) return;
+
     try {
+      // 1. Fetch the reservation first to see if it has a linked budget
+      // We need to do this BEFORE updating because we need the presupuestoId
+      const resDoc = await db.collection("reservas_restaurante").doc(id).get();
+      const resData = resDoc.exists ? resDoc.data() : null;
+
+      // 2. Update Reservation Status
       await db.collection("reservas_restaurante").doc(id).update({
-        estado: 'anulada',
+        estado: 'cancelada',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+
+      // 3. Sync to Linked Budget (if exists)
+      if (resData && resData.presupuestoId) {
+        try {
+          // console.log("Syncing Cancellation to Budget from Rte:", resData.presupuestoId);
+          await db.collection("presupuestos").doc(resData.presupuestoId).update({
+            estado: 'rechazada',
+            lastModifiedSource: 'Restaurante 🍽️', // Audit Trail
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch (e) {
+          console.error("Error syncing Rte Cancellation to Budget:", e);
+        }
+      }
+
       closeModal();
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error(err);
+      alert("Error al anular: " + err.message);
     }
   }
 

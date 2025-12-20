@@ -686,3 +686,14 @@ select {
     opacity: 0.4;
   }
 }
+
+.flash-warning {
+  color: #ef4444;
+  /* red-500 */
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  animation: blink 1s infinite;
+  display: inline-block;
+  margin-left: 5px;
+}

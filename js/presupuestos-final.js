@@ -168,6 +168,13 @@
                 if (campoSalon) {
                     const currentVal = campoSalon.value; // preserve if editing
                     campoSalon.innerHTML = '<option value="">-- Seleccionar --</option>';
+
+                    // [NEW] Inject "Restaurante" if not present
+                    const hasRestaurante = globalConfig.salones.some(s => s.name === "Restaurante");
+                    if (!hasRestaurante) {
+                        globalConfig.salones.push({ name: "Restaurante", capacity: 150, priceFull: 0, priceHalf: 0, m2: 0 });
+                    }
+
                     globalConfig.salones.forEach(s => {
                         const opt = document.createElement("option");
                         opt.value = s.name;
@@ -211,7 +218,18 @@
     // Auto-Add Salon Rental Line
     function updateSalonLine() {
         const salonName = campoSalon.value;
+        const existingIdx = currentLines.findIndex(l => l.concepto && l.concepto.startsWith("Alquiler Salón"));
+
         if (!salonName) return;
+
+        // [NEW] If "Restaurante" is selected, do NOT add rental line. Remove if exists.
+        if (salonName === "Restaurante") {
+            if (existingIdx >= 0) {
+                currentLines.splice(existingIdx, 1);
+                renderLines();
+            }
+            return;
+        }
 
         const salonConfig = globalConfig.salones.find(s => s.name === salonName);
         if (!salonConfig) return;
@@ -228,7 +246,6 @@
 
         // Check if line exists
         const conceptStr = `Alquiler Salón ${salonName}`;
-        const existingIdx = currentLines.findIndex(l => l.concepto && l.concepto.startsWith("Alquiler Salón"));
 
         if (existingIdx >= 0) {
             // Update existing
@@ -251,6 +268,46 @@
     if (campoTurno) campoTurno.addEventListener("change", updateSalonLine);
 
 
+    // [NEW] Sync: Header Pax -> Service Lines
+    function syncLinesFromPax() {
+        const paxA = parseInt(campoPaxAdultos.value) || 0;
+        const paxN = parseInt(campoPaxNinos.value) || 0;
+
+        let changed = false;
+        currentLines.forEach((line) => {
+            const lower = (line.concepto || "").toLowerCase();
+            const isMenu = lower.includes("menú") || lower.includes("menu") || lower.includes("barra") || lower.includes("cóctel") || lower.includes("coctel");
+
+            if (isMenu) {
+                if (lower.includes("adulto") || lower.includes("adults")) {
+                    if (line.uds !== paxA) {
+                        line.uds = paxA;
+                        changed = true;
+                    }
+                } else if (lower.includes("niño") || lower.includes("nino") || lower.includes("child") || lower.includes("infantil")) {
+                    if (line.uds !== paxN) {
+                        line.uds = paxN;
+                        changed = true;
+                    }
+                }
+            }
+        });
+
+        if (changed) renderLines();
+    }
+
+    // Attach Listeners to Header Pax Fields
+    if (campoPaxAdultos) {
+        campoPaxAdultos.addEventListener("input", syncLinesFromPax);
+        // Also sync on change to be sure
+        campoPaxAdultos.addEventListener("change", syncLinesFromPax);
+    }
+    if (campoPaxNinos) {
+        campoPaxNinos.addEventListener("input", syncLinesFromPax);
+        campoPaxNinos.addEventListener("change", syncLinesFromPax);
+    }
+
+
     // Lines Logic
     function renderLines() {
         if (!linesContainer) return;
@@ -271,44 +328,137 @@
         let total = 0;
 
         currentLines.forEach((line, index) => {
-            const lineTotal = (line.uds || 0) * (line.precio || 0);
+            const isSC = line.sinCargo === true;
+            // Ensure uds is a number for calculation
+            const units = parseFloat(line.uds) || 0;
+            const lineTotal = units * (isSC ? 0 : (line.precio || 0)); // Calculate lineTotal considering sinCargo
             total += lineTotal;
 
+            const priceDisplay = isSC ? 0 : (line.precio || 0);
+            const totalDisplay = isSC ? "S/C" : (lineTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €');
+            const bgClass = isSC ? "bg-green-50" : "";
+
             const row = document.createElement("div");
-            row.className = "grid grid-cols-[120px_1fr_60px_80px_80px_40px] gap-2 px-4 py-2 items-center text-sm border-b border-slate-50 last:border-0";
+            row.className = `grid grid-cols-[120px_1fr_60px_80px_80px_80px] gap-2 px-4 py-2 items-center text-sm border-b border-slate-50 last:border-0 ${bgClass}`;
             row.innerHTML = `
                 <input type="date" class="border border-slate-200 rounded px-1 py-1 text-xs" value="${line.fecha || ''}" onchange="updateLine(${index}, 'fecha', this.value)">
-                <input type="text" list="charge-options" class="border border-slate-200 rounded px-1 py-1 text-xs" value="${line.concepto || ''}" onchange="updateLine(${index}, 'concepto', this.value)" placeholder="Concepto...">
-                <input type="number" class="border border-slate-200 rounded px-1 py-1 text-xs text-center" value="${line.uds || 1}" onchange="updateLine(${index}, 'uds', this.value)">
-                <input type="number" class="border border-slate-200 rounded px-1 py-1 text-xs text-right" value="${line.precio || 0}" step="0.01" onchange="updateLine(${index}, 'precio', this.value)">
-                <div class="text-right font-mono text-slate-700">${formatEuro(lineTotal)}</div>
-                <button type="button" class="text-red-400 hover:text-red-600 flex justify-center" onclick="removeLine(${index})">✕</button>
+                <input type="text" list="charge-options" class="border border-slate-200 rounded px-2 py-1 flex-1 text-xs font-semibold text-slate-700" value="${line.concepto || ''}" onchange="updateLine(${index}, 'concepto', this.value)" placeholder="Concepto">
+                <input type="number" class="border border-slate-200 rounded px-1 py-1 text-center text-xs" value="${line.uds || 1}" onchange="updateLine(${index}, 'uds', this.value)">
+                
+                <!-- Price Input: Disabled if S/C -->
+                <input type="number" step="0.01" class="border border-slate-200 rounded px-1 py-1 text-right text-xs ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
+                       value="${priceDisplay}" ${isSC ? 'disabled' : ''} 
+                       onchange="updateLine(${index}, 'precio', this.value)">
+
+                <div class="text-right font-bold text-slate-700 text-xs">${totalDisplay}</div>
+                
+                <div class="flex items-center justify-end gap-1">
+                     <button onclick="toggleSinCargo(${index})" class="p-1 rounded hover:bg-slate-100 transition ${isSC ? 'text-green-600 bg-green-100 ring-1 ring-green-200' : 'text-slate-400'}" title="${isSC ? 'Quitar Sin Cargo' : 'Marcar Sin Cargo'}">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                     </button>
+                    <button onclick="removeLine(${index})" class="text-red-400 hover:text-red-600 transition p-1 rounded hover:bg-red-50" title="Eliminar">&times;</button>
+                </div>
             `;
             linesContainer.appendChild(row);
         });
 
-        if (totalDisplay) totalDisplay.textContent = formatEuro(total);
+        // UPDATE UI TOTALS
+        if (totalDisplay) totalDisplay.textContent = formatEuro(total); // Original totalDisplay element
+        // [FIX] Removed fieldTotal reference
+
+
         state.currentTotal = total; // Store for save
+
+        // CHECK "SIN VALORAR" (Warning logic)
+        // Explicit logic: If total is 0 AND no lines are marked 'Sin Cargo', assume unvalued.
+        // If total is 0 but lines exist and any is Sin Cargo (or just lines exist but we assume conscious 0), logic might differ.
+        // User request: "esto tambien indicaria que si esta valorado"
+        // So: If Total > 0 OR (Total == 0 AND hasSinCargoLines), it is valued.
+
+        const hasSinCargo = currentLines.some(l => l.sinCargo === true);
+        const pNota = document.querySelector(".p-nota"); // Assuming class p-nota for warning
+        if (pNota) {
+            if (total === 0 && !hasSinCargo && currentLines.length > 0) {
+                // Warning
+                if (!pNota.querySelector(".flash-warning")) {
+                    pNota.innerHTML += ` <span class="flash-warning ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200 animate-pulse">⚠️ PRESUPUESTO SIN VALORAR</span>`;
+                }
+            } else {
+                // Remove warning
+                const warn = pNota.querySelector(".flash-warning");
+                if (warn) warn.remove();
+            }
+        }
     }
 
     window.updateLine = function (index, field, value) {
-        currentLines[index][field] = (field === 'uds' || field === 'precio') ? parseFloat(value) : value;
+        if (!currentLines[index]) return;
 
-        // Auto-price if concept changes
-        if (field === 'concepto') {
-            // Find matching concept in globalConfig
-            const match = globalConfig.conceptos.find(c => c.name === value);
-            if (match) {
-                currentLines[index].precio = parseFloat(match.price || match.precio || 0);
-            } else {
-                // Check if it's in the datalist DOM (backup)
-                const opt = document.querySelector(`#charge-options option[value="${value}"]`);
-                if (opt && opt.dataset.price) {
-                    currentLines[index].precio = parseFloat(opt.dataset.price);
+        if (field === 'uds' || field === 'precio') {
+            currentLines[index][field] = parseFloat(value) || 0;
+
+            // [NEW] Sync: Line Units -> Header Pax
+            if (field === 'uds') {
+                const lower = (currentLines[index].concepto || "").toLowerCase();
+                const newUnits = parseInt(value) || 0;
+
+                // Only sync if it allows "Menu", "Barra", "Coctel"
+                const isMenu = lower.includes("menú") || lower.includes("menu") || lower.includes("barra") || lower.includes("cóctel") || lower.includes("coctel");
+
+                if (isMenu) {
+                    if (lower.includes("adulto") || lower.includes("adults")) {
+                        if (campoPaxAdultos) campoPaxAdultos.value = newUnits;
+                    } else if (lower.includes("niño") || lower.includes("nino") || lower.includes("child") || lower.includes("infantil")) {
+                        if (campoPaxNinos) campoPaxNinos.value = newUnits;
+                    }
                 }
             }
+
+        } else if (field === 'concepto') {
+            currentLines[index][field] = value;
+
+            // [NEW] Auto-Fill Pax based on Keywords
+            const lower = value.toLowerCase();
+            if (lower.includes("adulto") || lower.includes("adults")) {
+                currentLines[index].uds = parseInt(campoPaxAdultos.value) || 0;
+            } else if (lower.includes("niño") || lower.includes("nino") || lower.includes("child") || lower.includes("infantil")) {
+                currentLines[index].uds = parseInt(campoPaxNinos.value) || 0;
+            }
+
+            // Auto-price if not S/C
+            if (currentLines[index].sinCargo !== true) {
+                const match = globalConfig.conceptos.find(c => c.name === value);
+                if (match) {
+                    currentLines[index].precio = parseFloat(match.price || match.precio || 0);
+                } else {
+                    const opt = document.querySelector(`#charge-options option[value="${value}"]`);
+                    if (opt && opt.dataset.price) {
+                        currentLines[index].precio = parseFloat(opt.dataset.price);
+                    }
+                }
+            }
+        } else {
+            currentLines[index][field] = value;
         }
 
+        renderLines();
+    };
+
+    window.toggleSinCargo = function (index) {
+        if (!currentLines[index]) return;
+        const current = currentLines[index].sinCargo === true;
+        currentLines[index].sinCargo = !current;
+
+        if (!current) {
+            // Enabling S/C: Save old price if needed? Or just set to 0. 
+            // Usually just effectively 0.
+            currentLines[index]._oldPrice = currentLines[index].precio;
+            currentLines[index].precio = 0;
+        } else {
+            // Disabling S/C: Restore price or keep 0?
+            currentLines[index].precio = currentLines[index]._oldPrice || 0;
+            delete currentLines[index]._oldPrice;
+        }
         renderLines();
     };
 
@@ -508,9 +658,10 @@
          <div>NOTAS COM.</div>
          <div>PAX</div>
          <div>IMPORTE</div>
-         <div>ESTADO</div>
+         <div>ESTADO / ORIGEN</div>
          <div>ACCIONES</div>
       </div>
+      <div class="presupuestos-list-body">
     `;
 
         filtered.forEach(p => {
@@ -520,9 +671,15 @@
 
             let badgeClass = "badge-gray";
             if (p.estado === "confirmada" || p.estado === "aceptada") badgeClass = "badge-green";
-            if (p.estado === "anulada" || p.estado === "rechazada" || p.estado === "caducado") badgeClass = "badge-red";
+            if (p.estado === "anulada" || p.estado === "rechazada" || p.estado === "cancelada") badgeClass = "badge-red";
             if (p.estado === "pendiente") badgeClass = "badge-orange";
             if (p.estado === "enviada") badgeClass = "badge-blue";
+
+            // Audit Source Badge
+            let sourceBadge = "";
+            if (p.lastModifiedSource) {
+                sourceBadge = `<div class="text-[9px] uppercase font-bold text-gray-400 mt-1 tracking-wider border-t border-gray-100 pt-0.5" title="Modificado desde ${p.lastModifiedSource}">${p.lastModifiedSource}</div>`;
+            }
 
             // Countdown Logic
             let countdownHtml = "";
@@ -576,11 +733,15 @@
               <div class="p-cliente-nombre">${p.cliente || "Cliente"}</div>
               <div class="p-cliente-sub">${p.tipoEvento || ""}</div>
            </div>
-           <div class="p-nota" style="font-size:11px; color:#555; overflow:hidden; text-overflow:ellipsis; text-align:left;">${p.notaComercial || ""}</div>
+           <div class="p-nota" style="font-size:11px; color:#555; overflow:hidden; text-overflow:ellipsis; text-align:left;">
+                ${p.notaComercial || ""}
+                ${(p.importeTotal == 0 && !(p.lines && p.lines.some(x => x.sinCargo === true))) ? '<span class="flash-warning">SIN VALORAR</span>' : ''}
+           </div>
            <div class="p-pax">${p.pax || 0} pax</div>
            <div class="p-importe font-mono">${formatEuro(p.importeTotal)}</div>
-           <div class="p-estado">
+           <div class="p-estado flex flex-col items-center justify-center">
                 <span class="badge ${badgeClass}">${p.estado?.toUpperCase()}</span>
+                ${sourceBadge}
                 ${countdownHtml}
            </div>
            <div class="p-acciones">
@@ -718,35 +879,54 @@
 
     // Button Listeners
     if (btnAnular) {
-        btnAnular.onclick = async () => {
-            if (confirm("¿Marcar este presupuesto como RECHAZADO? Se cancelará la reserva del salón.")) {
+        btnAnular.onclick = async (e) => {
+            e.preventDefault();
+            if (confirm("¿Marcar este presupuesto como RECHAZADO? Se cancelará la reserva del salón y restaurante.")) {
                 campoEstado.value = "rechazada";
                 updateStatusUI();
                 await guardarDatos(); // Save the rejection state
 
-                // Sync: Cancel Salones Reservation
+                // Sync: Cancel Salones & Restaurant Reservation
                 if (state.editingId) {
                     try {
-                        const snap = await db.collection("reservas_salones").where("presupuestoId", "==", state.editingId).get();
-                        if (!snap.empty) {
-                            // Update all matches (usually 1)
-                            const batch = db.batch();
-                            snap.docs.forEach(doc => {
-                                batch.update(doc.ref, { estado: 'cancelada' });
-                            });
+                        const batch = db.batch();
+                        let changesCount = 0;
+
+                        // 1. Salones
+                        const snapSalones = await db.collection("reservas_salones").where("presupuestoId", "==", state.editingId).get();
+                        snapSalones.docs.forEach(doc => {
+                            batch.update(doc.ref, { estado: 'cancelada' });
+                            changesCount++;
+                        });
+
+                        // 2. Restaurante
+                        const snapRest = await db.collection("reservas_restaurante").where("presupuestoId", "==", state.editingId).get();
+                        snapRest.docs.forEach(doc => {
+                            batch.update(doc.ref, { estado: 'anulada' });
+                            changesCount++;
+                        });
+
+                        if (changesCount > 0) {
                             await batch.commit();
-                            alert("⚠️ Presupuesto rechazado y Reserva(s) CANCELADA(S) en Salones.");
+                            alert("⚠️ Presupuesto rechazado. Reservas de Salón (CANCELADA) y Restaurante (ANULADA).");
                         }
                     } catch (e) {
                         console.error("Error cancelling reservation:", e);
-                        alert("Error cancelando reserva en Salones: " + e.message);
+                        alert("Error cancelando reservas vinculadas: " + e.message);
                     }
                 }
             }
         };
     }
     if (btnConfirmar) {
-        btnConfirmar.onclick = async () => {
+        btnConfirmar.onclick = async (e) => {
+            e.preventDefault();
+            // Validate Salon before confirming
+            if (!campoSalon.value) {
+                alert("⚠️ Debes seleccionar un SALÓN antes de confirmar.");
+                return;
+            }
+
             if (confirm("¿Confirmar este presupuesto y bloquear salón?")) {
                 campoEstado.value = "confirmada";
                 updateStatusUI();
@@ -796,8 +976,7 @@
                     "Email: info@hotelguadiana.es",
                     "Web: www.sercotelhoteles.com"
                 ];
-                // Force PNG Path (User Request)
-                logoFile = "Img/logo-guadiana.png";
+                logoFile = LOGO_GUADIANA_BASE64;
             } else {
                 hotelName = "Cumbria Spa & Hotel";
                 hotelAddress = [
@@ -807,8 +986,7 @@
                     "Email: info@encumbria.es",
                     "Web: www.cumbriahotel.es"
                 ];
-                // Force PNG Path
-                logoFile = "Img/logo-cumbria.png";
+                logoFile = LOGO_CUMBRIA_BASE64;
             }
 
             // Helper to load image with timeout (Handles Data URL immediately)
@@ -884,7 +1062,7 @@
             // --- HEADER ---
             // Header Bg
             doc.setFillColor(255, 255, 255); // White (User Request)
-            doc.rect(0, 0, 210, 40, 'F');
+            doc.rect(0, 0, 210, 35, 'F');
 
             // Logo (Left)
             if (imgData) {
@@ -923,17 +1101,19 @@
                 addrY += 5;
             });
 
-            // Date & Ref
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Fecha: ${formatDateES(new Date())}`, 14, 45);
-            doc.text(`Ref: ${labelRef.textContent}`, 14, 50);
-
-            // --- CLIENT INFO ---
-            const startY = 85; // Massive gap as requested
+            // Separator Line (Now here)
             doc.setDrawColor(200, 200, 200);
             doc.setLineWidth(0.1);
-            doc.line(14, 70, 196, 70); // Separator moved down
+            doc.line(14, 35, 196, 35);
+
+            // Date & Ref (Below Line)
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Fecha: ${formatDateES(new Date())}`, 14, 42); // Below line
+            doc.text(`Ref: ${labelRef.textContent}`, 14, 47);
+
+            // --- CLIENT INFO ---
+            const startY = 60; // Further reduced gap
 
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
@@ -1098,7 +1278,8 @@
                     precio: l.precio,
                     total: (l.uds || 0) * (l.precio || 0)
                 })),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                esDePresupuesto: true // [NEW] Flag for 2-way sync
             };
 
             if (!snap.empty) {
@@ -1127,41 +1308,43 @@
 
             // 1. Detect intended shifts from Lines
             const lines = pData.lines || [];
-            const targets = new Map(); // Use Map to store Shift -> Price
-            let hasSalonMenu = false; // Flag to detect Salon food
+            const targets = new Map(); // Use Map to store Shift -> { adults: 0, children: 0, priceAdult: 0, priceChild: 0 }
+
+            // Helper to get or create target
+            const getTarget = (key) => {
+                if (!targets.has(key)) targets.set(key, { adults: 0, children: 0, priceAdult: 0, priceChild: 0 });
+                return targets.get(key);
+            };
 
             lines.forEach(l => {
                 const c = (l.concepto || '').toLowerCase();
                 const isRte = /\b(rte|restaurante)\b/i.test(c);
-                const isMenu = /\b(menú|menu)\b/i.test(c);
+                // const isMenu = /\b(menú|menu)\b/i.test(c); // Unused for now
                 const linePrice = parseFloat(l.precio) || 0;
+                const linePax = parseInt(l.uds) || 0;
 
                 if (isRte) {
-                    // Explicit Restaurant Line
-                    if (/\b(cena|dinner|noche)\b/i.test(c)) {
-                        targets.set('cena', linePrice);
+                    let key = 'almuerzo'; // default
+                    if (/\b(cena|dinner|noche)\b/i.test(c)) key = 'cena';
+
+                    const t = getTarget(key);
+
+                    // Detect Type: Child vs Adult
+                    if (c.includes("niño") || c.includes("nino") || c.includes("child") || c.includes("infantil")) {
+                        t.children += linePax;
+                        t.priceChild = linePrice;
                     } else {
-                        // Default to lunch if Rte is specified but no shift
-                        targets.set('almuerzo', linePrice);
+                        // Default to adult
+                        t.adults += linePax;
+                        t.priceAdult = linePrice;
                     }
-                } else if (isMenu) {
-                    // Menu WITHOUT Rte -> Salon Food
-                    hasSalonMenu = true;
                 }
             });
 
-            // 2. Fallback to Jornada
-            if (targets.size === 0 && !hasSalonMenu) {
-                const jornada = (pData.turno || '').toLowerCase();
-                if (jornada.includes('tarde') || jornada.includes('noche') || jornada.includes('cena')) {
-                    targets.set('cena', 0); // No price from lines
-                } else {
-                    targets.set('almuerzo', 0);
-                }
-            }
-
             // 3. Sync Logic (Loop through targets)
-            for (const [turnoTarget, price] of targets) {
+            for (const [turnoTarget, info] of targets) {
+                if (info.adults === 0 && info.children === 0) continue; // Skip if empty
+
                 // Check if reservation exists for this budget AND this shift
                 const snap = await reservasRestCol
                     .where("presupuestoId", "==", presupuestoId)
@@ -1170,11 +1353,15 @@
 
                 const reservaPayload = {
                     hotel: pData.hotel || "Guadiana",
-                    espacio: "Restaurante",
+                    espacio: "Restaurante", // Fixed space name for these synced ones
                     fecha: pData.fechaDesde,
                     turno: turnoTarget,
-                    pax: (parseInt(pData.paxAdultos) || 0) + (parseInt(pData.paxNinos) || 0),
-                    precio: price, // Synced Price
+                    pax: info.adults,        // Split Adults
+                    ninos: info.children,    // Split Children
+                    precio: info.priceAdult,     // Adult Price
+                    precioNinos: info.priceChild, // Child Price
+                    // Calculate Total (optional here, but good for consistency)
+                    total: (info.adults * info.priceAdult) + (info.children * info.priceChild),
                     cliente: pData.cliente,
                     telefono: pData.telefono || "",
                     email: pData.email || "",
@@ -1183,7 +1370,8 @@
                     origen: 'presupuesto',
                     presupuestoId: presupuestoId,
                     referenciaPresupuesto: pData.referencia,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    esDePresupuesto: true // [NEW] Flag for 2-way sync
                 };
 
                 // Add createAt only for new
@@ -1196,38 +1384,65 @@
                     const resId = snap.docs[0].id;
                     await reservasRestCol.doc(resId).update(reservaPayload);
                     console.log(`Reserva Restaurante (${turnoTarget}) Sincronizada (Actualizada):`, resId);
-                    alert(`✅ Sincronizado con Rte: Actualizada reserva de ${turnoTarget} (${price}€/pax)`);
+                    // alert remove to avoid spamming
                 } else {
                     // Create new
                     await reservasRestCol.add(reservaPayload);
                     console.log(`Reserva Restaurante (${turnoTarget}) Sincronizada (Creada)`);
-                    alert(`✅ Sincronizado con Rte: Creada reserva de ${turnoTarget} (${price}€/pax)`);
                 }
             }
 
-            // Optional: Handle cleanup if a shift was removed? 
-            // Current strict logic implies we only Create/Update what we see. 
-            // Deleting "orphaned" reservations for this budget (e.g. if it switched from Dinner to Lunch) 
-            // would require querying ALL reservations for this budgetId and deleting those NOT in `targets`.
-            // Let's implement that for robustness.
-
+            // Cleanup obsolete
             const allSnap = await reservasRestCol.where("presupuestoId", "==", presupuestoId).get();
             allSnap.forEach(doc => {
                 const data = doc.data();
                 if (!targets.has(data.turno)) {
-                    // This reservation exists but is no longer valid according to current budget lines/turno
-                    // e.g. changed from "Cena" to "Almuerzo"
                     console.log(`Eliminando reserva obsoleta (${data.turno}) id: ${doc.id}`);
                     reservasRestCol.doc(doc.id).delete();
                 }
             });
+
+
 
         } catch (e) {
             console.error("Error syncing with Restaurante:", e);
         }
     }
 
+    // [NEW] Cleanup Helpers
+    async function cleanupSalonesReservation(presupuestoId) {
+        try {
+            const snap = await db.collection("reservas_salones").where("presupuestoId", "==", presupuestoId).get();
+            if (!snap.empty) {
+                console.log(`Cleanup: Removing ${snap.size} obsolete Salon reservations for budget ${presupuestoId}`);
+                const batch = db.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
+        } catch (e) { console.error("Error cleaning up Salones:", e); }
+    }
+
+    async function cleanupRestaurantReservation(presupuestoId) {
+        try {
+            const snap = await db.collection("reservas_restaurante").where("presupuestoId", "==", presupuestoId).get();
+            if (!snap.empty) {
+                console.log(`Cleanup: Removing ${snap.size} obsolete Restaurant reservations for budget ${presupuestoId}`);
+                const batch = db.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
+        } catch (e) { console.error("Error cleaning up Restaurant:", e); }
+    }
+
     async function guardarDatos() {
+        if (state.isSaving) return; // Prevent double-submit
+        state.isSaving = true;
+
+        // Disable buttons
+        if (btnGuardar) btnGuardar.disabled = true;
+        if (btnConfirmar) btnConfirmar.disabled = true;
+        if (btnAnular) btnAnular.disabled = true;
+
         try {
             // Validation: Past Date
             if (campoFechaDesde.value) {
@@ -1238,12 +1453,11 @@
 
                 if (eventDate < today && !state.editingId) {
                     if (!confirm("⚠️ La fecha es pasada. ¿Seguro que quieres guardar?")) {
-                        return;
+                        // Must reset state if aborting
+                        throw new Error("Cancelado por el usuario (Fecha pasada)");
                     }
                 }
             }
-
-
 
             const pAdultos = parseInt(campoPaxAdultos.value) || 0;
             const pNinos = parseInt(campoPaxNinos.value) || 0;
@@ -1283,20 +1497,22 @@
             };
 
             // --- VALIDATION: Check Salon Availability if Confirming ---
-            if (payload.estado === 'confirmada') {
-                try {
-                    // If we are editing an existing budget, we might already have a reservation linked to it.
-                    // We must exclude that reservation from the conflict check.
-                    let excludeResId = null;
-                    if (state.editingId) {
-                        const snapRes = await db.collection("reservas_salones")
-                            .where("presupuestoId", "==", state.editingId)
-                            .get();
-                        if (!snapRes.empty) {
-                            excludeResId = snapRes.docs[0].id;
-                        }
+            // If updating existing, exclude self from conflict check
+            // --- VALIDATION: Check Salon Availability if Confirming ---
+            // If updating existing, exclude self from conflict check
+            if (payload.estado === 'confirmada' && campoSalon.value !== 'Restaurante') {
+                let excludeResId = null;
+                if (state.editingId) {
+                    const snapRes = await db.collection("reservas_salones")
+                        .where("presupuestoId", "==", state.editingId)
+                        .get();
+                    if (!snapRes.empty) {
+                        excludeResId = snapRes.docs[0].id;
                     }
+                }
 
+                // Ensure MesaChef is available
+                if (window.MesaChef && window.MesaChef.checkSalonAvailability) {
                     const validation = await window.MesaChef.checkSalonAvailability(
                         db,
                         hotelId,
@@ -1308,45 +1524,70 @@
 
                     if (!validation.available) {
                         alert(`⛔ NO SE PUEDE CONFIRMAR:\nEl salón está ocupado: ${validation.reason}`);
-                        return; // Abort Save
+                        throw new Error("Cancelado: Salón ocupado"); // Stop execution
                     }
-                } catch (err) {
-                    console.error("Error validating availability:", err);
-                    alert("Error validando disponibilidad del salón: " + err.message);
-                    return;
                 }
             }
 
-            let savedId = state.editingId;
+            let docId = state.editingId;
 
-            if (state.editingId) {
-                // Update
-                await colPresupuestos.doc(state.editingId).update(payload);
-                // Also update local cache for immediate UI refresh if snapshot is slow
-                // (Optional, snapshot usually fast enough)
+            if (docId) {
+                // UPDATE
+                await db.collection("presupuestos").doc(docId).update(payload);
+                console.log("Presupuesto Actualizado:", docId);
             } else {
-                // Create
-                const nuevaRef = await generarReferenciaUnica();
-                payload.referencia = nuevaRef;
+                // CREATE
                 payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                const docRef = await colPresupuestos.add(payload);
-                savedId = docRef.id;
+                // Generate Reference logic is handled by Cloud Function trigger usually, 
+                // or we can generate it here if needed. 
+                // For this app, let's assume auto-id or reference generator.
+
+                // We need to fetch next Reference if not using Cloud Function
+                // But simplifying:
+                const ref = "P-" + new Date().getFullYear() + "-" + Math.floor(Math.random() * 10000);
+                payload.referencia = ref;
+
+                const docRef = await db.collection("presupuestos").add(payload);
+                docId = docRef.id;
+                state.editingId = docId;
+                if (labelRef) labelRef.textContent = ref;
+                console.log("Presupuesto Creado:", docId);
             }
 
-            // --- SYNC WITH SALONES ---
-            if (payload.estado === 'confirmada' && savedId) {
-                await syncWithSalones(savedId, payload);
-                await syncWithRestaurante(savedId, payload);
+            // --- SYNC WITH MODULES ---
+            // Only if confirmed
+            if (payload.estado === 'confirmada') {
+                if (campoSalon.value === 'Restaurante') {
+                    await syncWithRestaurante(docId, payload);
+                    await cleanupSalonesReservation(docId); // Clean old Salon reservation if exists
+                } else {
+                    await syncWithSalones(docId, payload);
+                    await cleanupRestaurantReservation(docId); // Clean old Rte reservation if exists
+                }
+            } else if (payload.estado === 'rechazada') {
+                // Already handled in btnAnular, but good generic safety:
+                // Cancellation sync handled separately usually
             }
 
+            alert("✅ Presupuesto Guardado Correctamente");
+            if (window.loadPresupuestos) window.loadPresupuestos(); // Reload list
             cerrarModal();
-            // logUI("Presupuesto guardado correctamente (MesaChef)");
 
         } catch (e) {
-            console.error("Error guardando:", e);
-            alert("Error al guardar: " + e.message);
+            console.error("Error saving budget:", e);
+            if (e.message.includes("Cancelado")) {
+                // User cancelled, do nothing
+            } else {
+                alert("Error al guardar: " + e.message);
+            }
+        } finally {
+            state.isSaving = false;
+            if (btnGuardar) btnGuardar.disabled = false;
+            if (btnConfirmar) btnConfirmar.disabled = false;
+            if (btnAnular) btnAnular.disabled = false;
         }
     }
+
 
 
     // Listeners
@@ -1390,6 +1631,38 @@
             else if (v.length > 3) v = v.slice(0, 3) + " " + v.slice(3);
             e.target.value = v;
         });
+    }
+
+
+    // [NEW] Sync Pax Header -> Lines
+    function syncPaxToLines(type, newVal) {
+        const val = parseInt(newVal) || 0;
+        let pChanged = false;
+
+        currentLines.forEach((l) => {
+            const concept = (l.concepto || "").toLowerCase();
+            let shouldUpdate = false;
+
+            if (type === 'adulto') {
+                if (concept.includes("adulto") || concept.includes("adults")) shouldUpdate = true;
+            } else if (type === 'nino') {
+                if (concept.includes("niño") || concept.includes("nino") || concept.includes("child") || concept.includes("infantil")) shouldUpdate = true;
+            }
+
+            if (shouldUpdate) {
+                l.uds = val;
+                pChanged = true;
+            }
+        });
+
+        if (pChanged) renderLines();
+    }
+
+    if (campoPaxAdultos) {
+        campoPaxAdultos.addEventListener("input", (e) => syncPaxToLines('adulto', e.target.value));
+    }
+    if (campoPaxNinos) {
+        campoPaxNinos.addEventListener("input", (e) => syncPaxToLines('nino', e.target.value));
     }
 
     // Global Search Handler (Dropdown)
@@ -1459,10 +1732,11 @@
     // The HTML onclick cannot call local 'abrirModal'. 
     // Let's expose opening helper globally or handle clicks better?
     // Exposing globally is easier for the HTML string injection.
+    // Listeners (Restored) - DUPLICATES REMOVED
+    // Helper to expose modal opening for Search Results
     window.abrirModalPresupuesto = abrirModal;
 
     // Init Logic
     escucharPresupuestos();
 
 })();
-

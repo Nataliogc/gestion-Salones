@@ -354,12 +354,12 @@
                             </div>
                             <div class="col-span-2">
                                 <label class="text-[10px] uppercase font-bold text-gray-500">Pax Adultos</label>
-                                <input type="number" id="evt-pax-a" placeholder="0"
+                                <input type="number" id="evt-pax-a" placeholder="0" oninput="syncPaxFromHeaderToLines()"
                                     class="w-full text-xs border-gray-200 rounded h-9 text-center">
                             </div>
                             <div class="col-span-2">
                                 <label class="text-[10px] uppercase font-bold text-gray-500">Pax Niños</label>
-                                <input type="number" id="evt-pax-n" placeholder="0"
+                                <input type="number" id="evt-pax-n" placeholder="0" oninput="syncPaxFromHeaderToLines()"
                                     class="w-full text-xs border-gray-200 rounded h-9 text-center">
                             </div>
                         </div>
@@ -424,8 +424,8 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-2 flex justify-between items-center border-t">
-                        <button class="text-red-400 hover:text-red-600 text-xs font-bold"
-                            onclick="if(confirm('¿Eliminar?')) alert('Función pendiente')">🗑️ Eliminar</button>
+                        <button class="text-red-400 hover:text-red-600 text-xs font-bold" onclick="deleteBooking()">🗑️
+                            Eliminar</button>
                         <div class="flex gap-2">
                             <button
                                 class="bg-white text-gray-700 font-bold py-1 px-3 border rounded text-xs hover:bg-gray-50"
@@ -443,6 +443,7 @@
     <!-- Datalist for Concepts -->
     <datalist id="charge-options"></datalist>
 
+    <script src="js/app-common.js"></script>
     <script src="js/salones.js?v=9.6"></script>
 </body>
 

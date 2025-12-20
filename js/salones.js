@@ -256,29 +256,43 @@
                                     <span class="text-[9px] text-red-600 font-bold uppercase mt-1 text-center leading-tight">${blockReason}</span>
                                </div>`;
                     } else {
-                        // DATA ATTRIBUTES for easy reset
-                        html += `<div id="${getCellId(hotel, salon.name, dateStr)}"
-                                    data-salon="${safeName}" data-date="${dateStr}"
-                                    class="bg-white min-h-[120px] border-r border-slate-100 last:border-r-0 relative group grid grid-rows-2 gap-[1px]">
-                                    
-                                    <!-- Slot Mañana -->
-                                    <div onclick="window.openBooking('${safeName}', '${dateStr}', null, 'mañana')" 
-                                         class="relative flex items-center justify-center text-[10px] text-slate-200 hover:text-slate-400 font-bold uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition border-b border-transparent hover:border-slate-100">
-                                         LIBRE
-                                    </div>
+                        // Past check
+                        const isPast = dateStr < utils.toIsoDate(new Date());
+                        const cellBg = isPast ? "bg-slate-100" : "bg-white";
 
-                                    <!-- Slot Tarde -->
-                                    <div onclick="window.openBooking('${safeName}', '${dateStr}', null, 'tarde')" 
-                                         class="relative flex items-center justify-center text-[10px] text-slate-200 hover:text-slate-400 font-bold uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition">
-                                         LIBRE
-                                    </div>
-                                    
-                                    <!-- Floating Add Button (Universal) -->
+                        // Interaction Classes
+                        const interactionClass = isPast
+                            ? "cursor-default text-slate-300"
+                            : "cursor-pointer hover:bg-slate-50 text-slate-200 hover:text-slate-400";
+
+                        const maOnClick = isPast ? "" : `onclick="window.openBooking('${safeName}', '${dateStr}', null, 'mañana')"`;
+                        const taOnClick = isPast ? "" : `onclick="window.openBooking('${safeName}', '${dateStr}', null, 'tarde')"`;
+                        const addButton = isPast ? "" : `
                                     <button onclick="window.openBooking('${safeName}', '${dateStr}')" 
                                         class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition z-30 hover:bg-blue-600 hover:text-white font-bold pb-0.5"
                                         title="Añadir evento">
                                         +
-                                    </button>
+                                    </button>`;
+
+                        // DATA ATTRIBUTES for easy reset
+                        html += `<div id="${getCellId(hotel, salon.name, dateStr)}"
+                                    data-salon="${safeName}" data-date="${dateStr}"
+                                    class="${cellBg} min-h-[120px] border-r border-slate-100 last:border-r-0 relative group grid grid-rows-2 gap-[1px]">
+                                    
+                                    <!-- Slot Mañana -->
+                                    <div ${maOnClick}
+                                         class="relative flex items-center justify-center text-[10px] font-bold uppercase tracking-widest transition border-b border-transparent hover:border-slate-100 ${interactionClass}">
+                                         ${isPast ? '-' : 'LIBRE'}
+                                    </div>
+
+                                    <!-- Slot Tarde -->
+                                    <div ${taOnClick}
+                                         class="relative flex items-center justify-center text-[10px] font-bold uppercase tracking-widest transition ${interactionClass}">
+                                         ${isPast ? '-' : 'LIBRE'}
+                                    </div>
+                                    
+                                    <!-- Floating Add Button (Universal) -->
+                                    ${addButton}
                                   </div>`;
                     }
                 });
@@ -413,10 +427,20 @@
             const safeName = sample._canonicalSalon.replace(/'/g, "\\'");
             const dateStr = sample.fecha;
 
-            // Re-generate "Libre" slots
-            const slotMañana = `<div onclick="window.openBooking('${safeName}', '${dateStr}', null, 'mañana')" class="relative flex items-center justify-center text-[10px] text-slate-200 hover:text-slate-400 font-bold uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition border-b border-transparent hover:border-slate-100">LIBRE</div>`;
-            const slotTarde = `<div onclick="window.openBooking('${safeName}', '${dateStr}', null, 'tarde')" class="relative flex items-center justify-center text-[10px] text-slate-200 hover:text-slate-400 font-bold uppercase tracking-widest cursor-pointer hover:bg-slate-50 transition">LIBRE</div>`;
-            const staticAddBtn = `<button onclick="window.openBooking('${safeName}', '${dateStr}')" class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition z-30 hover:bg-blue-600 hover:text-white font-bold pb-0.5" title="Añadir evento">+</button>`;
+            // Re-generate "Libre" slots with Past Logic
+            const isPast = dateStr < utils.toIsoDate(new Date());
+
+            const interactionClass = isPast
+                ? "cursor-default text-slate-300"
+                : "cursor-pointer hover:bg-slate-50 text-slate-200 hover:text-slate-400";
+
+            const maOnClick = isPast ? "" : `onclick="window.openBooking('${safeName}', '${dateStr}', null, 'mañana')"`;
+            const taOnClick = isPast ? "" : `onclick="window.openBooking('${safeName}', '${dateStr}', null, 'tarde')"`;
+
+            const slotMañana = `<div ${maOnClick} class="relative flex items-center justify-center text-[10px] font-bold uppercase tracking-widest transition border-b border-transparent hover:border-slate-100 ${interactionClass}">${isPast ? '-' : 'LIBRE'}</div>`;
+            const slotTarde = `<div ${taOnClick} class="relative flex items-center justify-center text-[10px] font-bold uppercase tracking-widest transition ${interactionClass}">${isPast ? '-' : 'LIBRE'}</div>`;
+
+            const staticAddBtn = isPast ? "" : `<button onclick="window.openBooking('${safeName}', '${dateStr}')" class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition z-30 hover:bg-blue-600 hover:text-white font-bold pb-0.5" title="Añadir evento">+</button>`;
 
             let htmlFinal = "";
 
@@ -645,6 +669,15 @@
             const salonRaw = salonName.replace(/\s/g, '').toLowerCase();
 
             // Find existing for this salon/date
+            // --- CONFIRMATION FOR LINKED BUDGETS ---
+            if (window.currentEventBudgetID && payload.estado !== 'cancelada') {
+                if (!confirm(`⚠️ ATENCIÓN:\nEste evento está vinculado a un Presupuesto.\n\nCualquier cambio que guardes aquí se sincronizará automáticamente con el presupuesto, modificando sus líneas y totales.\n\n¿Estás seguro de que quieres continuar?`)) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
             const conflictCandidates = loadedReservations.filter(r => {
                 if (r.hotel !== currentHotel) return false;
                 // Check status
@@ -755,9 +788,12 @@
         // Default Jornada
         document.getElementById("evt-jornada").value = defaultJornada;
 
+        window.currentEventBudgetID = null; // [RESET] Ensure we don't carry over IDs from previous opens
+
         // POPULATE
         if (existing) {
             currentBookingId = existing.id;
+            window.currentEventBudgetID = existing.presupuestoId || null; // [NEW] Store Budget ID for sync
             document.getElementById("evt-fecha").value = existing.fecha;
             window.currentViewDate = dateStr || existing.fecha; // Store view date
 
@@ -790,6 +826,40 @@
                 document.getElementById("evt-nota-cliente").value = existing.notas.cliente || "";
             }
 
+            // READ ONLY CHECK (Salones)
+            const isPast = (dateStr || existing.fecha) < utils.toIsoDate(new Date());
+            if (isPast) {
+                const mt = document.getElementById("modalTitle");
+                if (mt) mt.innerText = "Reserva Pasada (Solo Lectura)";
+
+                // Disable Inputs
+                const inputs = document.querySelectorAll("#modalReserva input, #modalReserva select, #modalReserva textarea");
+                inputs.forEach(inp => inp.disabled = true);
+
+                // Hide Buttons
+                const btnGuardar = document.getElementById("btnGuardar"); // Assuming ID, check HTML if needed or use querySelector
+                const btnAnular = document.getElementById("btnAnular");
+
+                // We can just hide the footer buttons or specific ones
+                if (btnGuardar) btnGuardar.style.display = 'none';
+                if (btnAnular) btnAnular.style.display = 'none';
+
+                // But ensure "Close" works (it's usually X or separate button)
+            } else {
+                const mt = document.getElementById("modalTitle");
+                if (mt) mt.innerText = "Editar Reserva";
+                // Ensure enabled if reused
+                const inputs = document.querySelectorAll("#modalReserva input, #modalReserva select, #modalReserva textarea");
+                inputs.forEach(inp => inp.disabled = false);
+
+                const btnGuardar = document.getElementById("btnGuardar"); // Re-show
+                const btnAnular = document.getElementById("btnAnular");
+                if (btnGuardar) btnGuardar.style.display = 'inline-block'; // Or block/flex
+                if (btnAnular) btnAnular.style.display = 'block';
+            }
+
+
+
             if (existing.servicios) {
                 window.currentFullServices = existing.servicios; // Keep full copy
 
@@ -812,6 +882,14 @@
                 calcTotal();
             }
         } else {
+            // NEW BOOKING: Check Past Date
+            const isPast = dateStr < utils.toIsoDate(new Date());
+            if (isPast) {
+                alert("No se pueden crear eventos en fechas pasadas.");
+                window.closeModal();
+                return;
+            }
+
             document.getElementById("evt-fecha").value = dateStr || new Date().toISOString().split('T')[0];
             if (salonName) {
                 sSel.value = salonName;
@@ -846,15 +924,67 @@
 
     window.calcTotal = function () {
         let total = 0;
+        let calcPaxA = 0;
+        let calcPaxN = 0;
+
         document.querySelectorAll("#services-list tr").forEach(row => {
-            const uds = parseFloat(row.querySelector(".row-uds").value) || 0;
-            const price = parseFloat(row.querySelector(".row-price").value) || 0;
+            const inputs = row.querySelectorAll("input");
+            // inputs[0]=date, [1]=desc, [2]=uds, [3]=price
+            const concept = (inputs[1].value || "").toLowerCase();
+            const uds = parseFloat(inputs[2].value) || 0;
+            const price = parseFloat(inputs[3].value) || 0;
             const sub = uds * price;
+
             // Update row total
             row.querySelector(".row-total").innerText = sub.toFixed(2) + " €";
             total += sub;
+
+            // Auto-Calc Pax Logic
+            // Ignore Rental or Extras
+            if (concept.includes("alquiler") || concept.includes("barra libre") || concept.includes("extra")) return;
+
+            // Simple heuristic
+            if (concept.includes("niño") || concept.includes("nino") || concept.includes("infantil")) {
+                calcPaxN += uds;
+            } else if (concept.includes("adulto") || concept.includes("menú") || concept.includes("menu")) {
+                calcPaxA += uds;
+            }
         });
+
         document.getElementById("evt-total").innerText = total.toFixed(2) + " €";
+
+        // Update Headers if calculated > 0 (Optional: could force 0)
+        // Only update if lines have meaningful pax data to avoid clearing manual entry for simple events?
+        // Let's trust the lines if they exist.
+        if (calcPaxA > 0 || calcPaxN > 0) {
+            // Avoid circular update loop -> check existing values?
+            // Actually, if we type in header, we don't want calcTotal to overwrite us back immediately
+            // But calcTotal scans lines.
+            // If we type "7" in header -> syncPaxFromHeaderToLines -> updates lines -> calcTotal.
+            // This is fine.
+        }
+    };
+
+    // [NEW] Sync Pax form Header to Lines (Uni-directional on input)
+    window.syncPaxFromHeaderToLines = function () {
+        const paxA = parseFloat(document.getElementById("evt-pax-a").value) || 0;
+        const paxN = parseFloat(document.getElementById("evt-pax-n").value) || 0;
+
+        document.querySelectorAll("#services-list tr").forEach(row => {
+            const inputs = row.querySelectorAll("input");
+            const concept = (inputs[1].value || "").toLowerCase();
+
+            // Only update "Menu" lines to match Pax
+            // Heuristic must be safe
+            if ((concept.includes("menú") || concept.includes("menu")) && concept.includes("adulto")) {
+                inputs[2].value = paxA;
+            }
+            else if ((concept.includes("menú") || concept.includes("menu")) && (concept.includes("niño") || concept.includes("infantil"))) {
+                inputs[2].value = paxN;
+            }
+        });
+        // Recalculate totals after update
+        calcTotal();
     };
 
     window.updateRentalPrice = function () {
@@ -938,6 +1068,7 @@
                 interna: document.getElementById("evt-nota-interna").value,
                 cliente: document.getElementById("evt-nota-cliente").value
             },
+            presupuestoId: window.currentEventBudgetID || (currentBookingId ? window._resRegistry[currentBookingId]?.presupuestoId : null),
             servicios: []
         };
 
@@ -1029,13 +1160,34 @@
                 return; // ABORT SAVE
             }
 
+            // --- CONFIRMATION FOR LINKED BUDGETS ---
+            if (currentBookingId && (payload.presupuestoId || window.currentEventBudgetID)) {
+                if (payload.estado !== 'cancelada' && payload.estado !== 'anulada') {
+                    if (!confirm(`⚠️ ATENCIÓN: EVENTO VINCULADO\n\nEste evento está vinculado a un presupuesto.\nCualquier cambio se sincronizará automáticamente.\n\n¿Seguro que deseas guardar los cambios?`)) {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+            }
+
             if (currentBookingId) {
                 // Update existing
                 await db.collection("reservas_salones").doc(currentBookingId).set(payload, { merge: true });
             } else {
                 // Create new
-                await db.collection("reservas_salones").add(payload);
+                // Create new
+                // We typically don't create new reservations from Salones that LINK to budgets manually yet?
+                // But if they did (e.g. manually set budget ID), logic applies.
+                const ref = await db.collection("reservas_salones").add(payload);
+                currentBookingId = ref.id; // Update for sync
             }
+
+            // [NEW] 2-Way Sync: Update Budget if this is linked
+            if (payload.presupuestoId) {
+                await syncPresupuestoFromSalon(payload);
+            }
+
             closeModal();
             // alert("Evento guardado exitosamente."); // Removed to be less intrusive, UI updates automatically via snapshot
         } catch (e) {
@@ -1046,6 +1198,44 @@
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
+        }
+    };
+
+    window.deleteBooking = async function () {
+        if (!currentBookingId) return;
+
+        if (!confirm("⚠️ ¿Estás seguro de que quieres ANULAR este evento?\nSe marcará como CANCELADO pero no se borrará del historial.")) {
+            return;
+        }
+
+        try {
+            // SOFT DELETE (Update status to 'cancelada')
+            // This allows it to appear in filters as "Cancelados"
+            await db.collection("reservas_salones").doc(currentBookingId).update({
+                estado: 'cancelada',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Sync Cancellation to Linked Budget
+            if (window.currentEventBudgetID) {
+                try {
+                    console.log("Syncing Cancellation to Budget:", window.currentEventBudgetID);
+                    await db.collection("presupuestos").doc(window.currentEventBudgetID).update({
+                        estado: 'anulada', // Updated to 'anulada' per user preference
+                        lastModifiedSource: 'Salones 🏛️', // Audit Trail
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (errSync) {
+                    console.error("Error cancelling linked budget:", errSync);
+                }
+            }
+
+            closeModal();
+            // Trigger grid refresh if needed
+            if (window.renderGrid) window.renderGrid();
+        } catch (e) {
+            console.error("Error deleting:", e);
+            alert("Error al anular: " + e.message);
         }
     };
 
@@ -1228,6 +1418,58 @@
         const picker = document.getElementById("currentDate");
         if (picker && currentWeekStart) {
             picker.value = utils.toIsoDate(currentWeekStart);
+        }
+    }
+
+    // Helper for 2-Way Sync
+    async function syncPresupuestoFromSalon(reserva) {
+        if (!reserva.presupuestoId) return;
+        try {
+            console.log("Syncing Budget from Salon update...", reserva.presupuestoId);
+            const pRef = db.collection("presupuestos").doc(reserva.presupuestoId);
+
+            // Map Salon Services to Budget Lines
+            // We assume Salon Services are the master when editing from Salon
+            const budgetLines = (reserva.servicios || []).map(s => ({
+                fecha: s.fecha,
+                concepto: s.concepto,
+                uds: s.uds,
+                precio: s.precio,
+                total: (s.uds || 0) * (s.precio || 0)
+            }));
+
+            // Calc Totals
+            const newTotal = budgetLines.reduce((acc, curr) => acc + (curr.total || 0), 0);
+
+            // Heuristic for Pax: Sum of Uds for items that look like Menus/OpenBar, ignored for Rental
+            let newPax = 0;
+            budgetLines.forEach(l => {
+                const c = (l.concepto || "").toLowerCase();
+                if (!c.includes("alquiler") && !c.includes("montaje")) {
+                    newPax += (l.uds || 0);
+                }
+            });
+            // Validation: if newPax is 0 but we have valid pax in form details, maybe use that?
+            // But let's stick to lines to be consistent with Budget logic.
+
+            await pRef.update({
+                lines: budgetLines,
+                pax: newPax,
+                paxAdultos: reserva.detalles.pax_adultos || 0,
+                paxNinos: reserva.detalles.pax_ninos || 0,
+                importeTotal: newTotal,
+                fecha: reserva.fecha, // Sync Date
+                cliente: reserva.cliente, // Sync Client Name
+                montaje: reserva.detalles.montaje || "", // Sync Montaje
+                turno: reserva.detalles.jornada || "", // Sync Turno/Jornada
+                horaInicio: reserva.detalles.hora || "", // Sync Time
+                lastModifiedSource: 'Salones 🏛️', // Audit Trail
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("✅ Budget Synced from Salon!");
+
+        } catch (e) {
+            console.error("Error syncing Budget from Salon:", e);
         }
     }
 
