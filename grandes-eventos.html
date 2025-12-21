@@ -3,44 +3,734 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>MesaChef Matrix · Grandes eventos</title>
+  <title>MesaChef Matrix · Grandes Eventos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="Img/mesa-chef-192.png" />
-  <link rel="apple-touch-icon" href="Img/mesa-chef-192.png" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/grandes-eventos-map.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#475569',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Reusing existing styles but might need specific ones -->
+  <style>
+    .event-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Card styles matching other modules */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .form-input:read-only {
+      background-color: #f1f5f9;
+      color: #64748b;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-open {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-closed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background: #f8fafc;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .btn-action {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #dbeafe;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      background: #dbeafe;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 
-<body>
-  <header class="topbar">
-    <div class="topbar-left">
-      <span class="breadcrumb">Inicio</span>
-      <span class="crumb-sep">·</span>
-      <span class="breadcrumb strong">Grandes eventos</span>
-    </div>
-    <div class="topbar-right">
-      <span class="estado-conexion estado-pendiente">
-        Módulo en construcción
-      </span>
-    </div>
-  </header>
+<body class="bg-slate-50 text-slate-800">
 
-  <main class="page">
-    <section class="planning-section">
-      <div class="planning-wrapper">
-        <div
-          style="max-width: 520px; margin: 40px auto; background: #ffffff; border-radius: 16px; padding: 16px 18px; border: 1px solid #e5e7eb; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); text-align: center;">
-          <h1 style="margin-top: 0; margin-bottom: 6px; font-size: 20px;">Grandes eventos</h1>
-          <p style="margin: 4px 0 8px; font-size: 14px;">
-            Este módulo estará disponible próximamente.
-          </p>
-          <p style="margin: 0; font-size: 13px; color: #6b7280;">
-            La lógica de planificación y conexión con Firestore se activará en la siguiente iteración.
-          </p>
+  <!-- NAV -->
+  <nav class="bg-white shadow-sm sticky top-0 z-30 border-b border-gray-200 h-14">
+    <div class="max-w-[98%] mx-auto px-4 h-full">
+      <div class="flex justify-between items-center h-full">
+
+        <!-- LEFT: SYSTEM IDENTITY -->
+        <div class="flex items-center gap-4">
+          <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="Img/logo_mesa_chef.png" class="h-8 w-auto object-contain drop-shadow-sm" alt="MesaChef">
+            <div class="flex flex-col leading-none">
+              <h1 class="text-slate-800 font-bold text-lg tracking-tight">MesaChef</h1>
+              <span class="text-[10px] text-blue-600 font-bold uppercase tracking-widest -mt-0.5">Matrix</span>
+            </div>
+          </a>
+          <div class="h-6 w-px bg-slate-200"></div>
+          <span class="text-slate-500 font-semibold text-sm tracking-wide uppercase">Grandes Eventos</span>
+        </div>
+
+        <!-- RIGHT: HOTEL & USER -->
+        <div class="flex items-center gap-6">
+          <!-- Back Link -->
+          <!-- Back Link -->
+          <a href="index.html" id="linkHeaderBack"
+            class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver al Inicio
+          </a>
+
+          <div class="flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
+            <img id="headerHotelLogo" src="Img/logo-guadiana.png" class="h-6 w-auto object-contain" alt="Hotel Logo">
+            <span id="headerHotelName" class="text-sm font-bold text-slate-700">Sercotel Guadiana</span>
+          </div>
+
+          <div class="h-6 w-px bg-slate-200"></div>
+
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs border border-blue-200">
+              AD
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </nav>
+
+  <main class="event-container">
+
+    <!-- === VIEW: LIST (Pantalla Inicial) === -->
+    <div id="view-list" class="hidden">
+      <div class="card" style="padding: 16px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Toolbar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <!-- Date & Filters -->
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="date" id="listDateFilter" class="form-input" style="width: auto;">
+            <select id="listStatusFilter" class="form-input" style="width: auto;">
+              <option value="todos">Ver todos</option>
+              <option value="abierto" selected>Ver activos</option>
+              <option value="completo">Completos</option>
+            </select>
+            <div class="relative" style="width: 250px;">
+              <input type="text" id="listSearch" class="form-input" placeholder="Buscar evento..."
+                style="padding-left: 30px;">
+              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);">🔍</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div>
+            <button id="btnNewEventParams" class="btn-primary" style="background-color: #0f172a;">+ Gran Evento</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Table -->
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Ref</th>
+              <th style="width: 100px;">Fecha</th>
+              <th>Nombre Evento</th>
+              <th style="width: 150px;">Salón</th>
+              <th style="width: 80px;">Aforo</th>
+              <th style="width: 100px;">Pax</th>
+              <th style="width: 100px;">Estado</th>
+              <th style="width: 100px;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="eventsListBody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- === VIEW: DETAIL (Ficha Evento) === -->
+    <div id="view-detail" class="hidden">
+      <!-- 1. EVENT HEADER / CONFIG -->
+      <!-- 1. EVENT HEADER / CONFIG (Structurally Improved) -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+
+        <!-- Top Bar: Title + Reference Badge, Status -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold text-slate-800">Configuración del Evento</h2>
+            <div class="bg-slate-100 px-3 py-1 rounded-lg flex items-center gap-1.5">
+              <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Ref:</span>
+              <input type="text" id="inputRef" readonly
+                class="bg-transparent border-none p-0 w-32 text-sm font-mono text-slate-700 focus:outline-none"
+                placeholder="Auto">
+            </div>
+          </div>
+          <span id="eventStatusBadge"
+            class="status-badge status-open px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">Abierto</span>
+        </div>
+
+        <!-- Form Grid - Single Logical Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+          <!-- Event Name (Span 4) -->
+          <div class="lg:col-span-4">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre del
+              Evento</label>
+            <input type="text" id="inputName"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition shadow-sm"
+              placeholder="Ej: Cena Nochevieja 2025">
+          </div>
+
+          <!-- Date (Span 2) -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Fecha</label>
+            <input type="date" id="inputDate"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-slate-700">
+          </div>
+
+          <!-- Salon (Span 2) -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Salón</label>
+            <input type="text" id="inputSalon" readonly
+              class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 font-medium shadow-sm">
+          </div>
+
+          <!-- Capacity (Span 2) -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Aforo Máx.</label>
+            <input type="number" id="inputCapacity"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-slate-700"
+              placeholder="0">
+          </div>
+
+          <!-- Adult Price (Span 1) -->
+          <div class="lg:col-span-1">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">€ Adulto</label>
+            <div class="relative">
+              <input type="number" id="inputPriceAdult"
+                class="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none transition text-right"
+                placeholder="0" step="0.01">
+              <div class="absolute right-2 top-2.5 text-slate-400 text-xs">€</div>
+            </div>
+          </div>
+
+          <!-- Child Price (Span 1) -->
+          <div class="lg:col-span-1">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">€ Niño</label>
+            <div class="relative">
+              <input type="number" id="inputPriceChild"
+                class="w-full pl-3 pr-8 py-2 text-sm border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none transition text-right"
+                placeholder="0" step="0.01">
+              <div class="absolute right-2 top-2.5 text-slate-400 text-xs">€</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons Row -->
+        <div class="flex flex-wrap gap-3 mt-6 pt-5 border-t border-slate-100">
+          <button id="btnOpenMapWindow"
+            class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200">
+            <span class="text-lg">✨</span> Abrir Plano
+          </button>
+          <button id="btnSaveEventConfig"
+            class="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200">
+            Guardar
+          </button>
+          <button id="btnToggleStatus"
+            class="px-6 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-all duration-200">
+            Marcar Completo
+          </button>
+
+          <!-- Print Button with Dropdown -->
+          <div class="relative">
+            <button id="btnPrintMenu"
+              class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white font-semibold rounded-lg shadow-md hover:bg-emerald-700 hover:shadow-lg transition-all duration-200">
+              <span>🖨️</span> Imprimir
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div id="printDropdown"
+              class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden">
+              <div class="py-2">
+                <button data-print-type="participants"
+                  class="print-option w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100">
+                  <span class="text-xl">📋</span>
+                  <div>
+                    <div class="font-semibold text-slate-800 text-sm">Lista de Participantes</div>
+                    <div class="text-xs text-slate-500">Listado completo con datos</div>
+                  </div>
+                </button>
+                <button data-print-type="tables"
+                  class="print-option w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100">
+                  <span class="text-xl">🪑</span>
+                  <div>
+                    <div class="font-semibold text-slate-800 text-sm">Asignación de Mesas</div>
+                    <div class="text-xs text-slate-500">Organizados por mesa</div>
+                  </div>
+                </button>
+                <button data-print-type="financial"
+                  class="print-option w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-center gap-3 border-b border-slate-100">
+                  <span class="text-xl">💰</span>
+                  <div>
+                    <div class="font-semibold text-slate-800 text-sm">Resumen Financiero</div>
+                    <div class="text-xs text-slate-500">Totales y desglose</div>
+                  </div>
+                </button>
+                <button data-print-type="complete"
+                  class="print-option w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-center gap-3">
+                  <span class="text-xl">📄</span>
+                  <div>
+                    <div class="font-semibold text-slate-800 text-sm">Reporte Completo</div>
+                    <div class="text-xs text-slate-500">Informe integral del evento</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. DASHBOARD STATS -->
+      <!-- 2. DASHBOARD STATS (Premium UI) -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <!-- Total Pax -->
+        <div
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4 transition hover:shadow-md">
+          <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-2xl">👥</div>
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Total Pax</div>
+            <div class="text-2xl font-bold text-slate-800" id="statTotalPax">0</div>
+            <div class="text-xs text-slate-400">Adultos / Niños</div>
+          </div>
+        </div>
+
+        <!-- Ocupación -->
+        <div id="statCardOccupancy"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4 transition hover:shadow-md">
+          <div class="w-12 h-12 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-2xl">📊
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Ocupación</div>
+            <div class="text-2xl font-bold text-slate-800" id="statOccupancy">0%</div>
+            <div class="text-xs text-slate-400">de <span id="lblCapacity">0</span> plazas</div>
+          </div>
+        </div>
+
+        <!-- Recaudado -->
+        <div
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4 transition hover:shadow-md">
+          <div class="w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">💰
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Recaudado</div>
+            <div class="text-2xl font-bold text-emerald-600" id="statCollected">0.00 €</div>
+            <div class="text-xs text-slate-400">Pagado</div>
+          </div>
+        </div>
+
+        <!-- Pendiente -->
+        <div
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4 transition hover:shadow-md">
+          <div class="w-12 h-12 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-2xl">⏳
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Pendiente</div>
+            <div class="text-2xl font-bold text-orange-600" id="statPending">0.00 €</div>
+            <div class="text-xs text-slate-400">Por cobrar</div>
+          </div>
+        </div>
+
+        <!-- Anulaciones -->
+        <div
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-4 transition hover:shadow-md">
+          <div class="w-12 h-12 rounded-lg bg-red-100 text-red-600 flex items-center justify-center text-2xl">🚫</div>
+          <div>
+            <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Anulaciones</div>
+            <div class="text-2xl font-bold text-red-600" id="statCancelledAmount">0.00 €</div>
+            <div class="text-xs text-slate-400">Retenido</div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- 3. PARTICIPANTS LIST -->
+      <section class="card" style="margin-top:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <h2 style="margin:0; font-size:18px; color:#0f172a;">Listado de Participantes</h2>
+            <select id="filterParticipants" class="form-input"
+              style="width:140px; font-size:14px; padding:4px 8px; height:34px;">
+              <option value="activo">Activos</option>
+              <option value="anulado">Anulados</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+          <button id="btnAddParticipant" class="btn-primary">+ Añadir Participante</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mesa</th>
+                <th>Titular</th>
+                <th>Contacto</th>
+                <th>Pax (Ad/Ni)</th>
+                <th>Total</th>
+                <th>Pagado</th>
+                <th>Pendiente</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="participantsTableBody">
+              <!-- Rows will be injected here -->
+              <tr>
+                <td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">
+                  No hay participantes registrados.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </main>
+
+  <!-- NEW MODAL for Pre-Config (Date/Salon) -->
+  <div id="modalNewEvent" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3>Nuevo Gran Evento</h3>
+      <div style="display:flex; flex-direction:column; gap:16px; margin-top:20px;">
+        <div class="form-group">
+          <label class="form-label">Nombre del Evento</label>
+          <input type="text" id="newEvtName" class="form-input" placeholder="Nombre del Evento">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha del Evento</label>
+          <input type="date" id="newEvtDate" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Salón</label>
+          <select id="newEvtSalon" class="form-input">
+            <!-- Populated via JS -->
+            <option value="Guadiana">Guadiana</option> <!-- Hardcoded fallback, JS should populate -->
+            <option value="Cumbria">Cumbria</option>
+          </select>
+        </div>
+        <div style="display:flex; justify-content:end; gap:10px;">
+          <button id="btnCloseNewEvent" class="btn-action">Cancelar</button>
+          <button id="btnCreateNewEvent" class="btn-primary">Crear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARTICIPANT -->
+  <div id="modalParticipant" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 600px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="margin:0;">Gestionar Participante</h3>
+        <span id="pStatusBadge" class="status-badge status-open" style="display:none;">Activo</span>
+      </div>
+
+      <form id="formParticipant" style="display:flex; flex-direction:column; gap:16px;">
+        <input type="hidden" id="pId">
+
+        <!-- ROW 1: NAME & PHONE -->
+        <div class="header-grid" style="grid-template-columns: 2fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Nombre Titular</label>
+            <input type="text" id="pName" class="form-input" required placeholder="Nombre completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" id="pPhone" class="form-input" placeholder="600 000 000" pattern="[0-9\s]+"
+              title="Números y espacios">
+          </div>
+        </div>
+
+        <!-- ROW 2: EMAIL & PAX -->
+        <div class="header-grid" style="grid-template-columns: 2fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="pEmail" class="form-input" placeholder="@">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adultos</label>
+            <input type="number" id="pAdults" class="form-input" value="1" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Niños</label>
+            <input type="number" id="pKids" class="form-input" value="0" min="0">
+          </div>
+        </div>
+
+        <!-- ROW 4: PAYMENTS HISTORY (bg-gray) -->
+        <div
+          style="background-color:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0; margin-top:4px;">
+          <div class="header-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label text-slate-500">Total (€)</label>
+              <input type="text" id="pTotalCalc" class="form-input" readonly
+                style="background:#f1f5f9; font-weight:bold; color:#0f172a; text-align:right;" value="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label text-slate-500">Pagado (€)</label>
+              <input type="text" id="pPaidSummary" class="form-input" readonly
+                style="background:#f1f5f9; font-weight:bold; color:#166534; text-align:right;" value="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label text-slate-500">Pendiente (€)</label>
+              <input type="text" id="pPendingCalc" class="form-input" readonly
+                style="background:#f1f5f9; font-weight:bold; color:#c2410c; text-align:right;" value="0.00">
+            </div>
+          </div>
+
+          <!-- PAYMENTS TABLE -->
+          <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:12px;">
+            <label class="form-label" style="margin-bottom:8px;">Historial de Pagos</label>
+
+            <!-- List -->
+            <div id="paymentsList"
+              style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px; max-height:180px; overflow-y:auto; padding-right:4px;">
+              <!-- Dynamic Rows Here -->
+            </div>
+
+            <!-- Add Payment -->
+            <!-- Add Payment (Compact) -->
+            <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <input type="date" id="newPayDate" class="form-input text-xs" style="flex:1;">
+              <input type="number" id="newPayAmount" class="form-input text-xs" style="width:100px;" step="0.01"
+                placeholder="Importe (€)">
+              <button type="button" id="btnAddPayment" class="btn-primary"
+                style="height:34px; padding:0 12px; font-size:12px; white-space:nowrap;">+ Añadir</button>
+            </div>
+          </div>
+
+          <!-- Hidden Date (Synced) -->
+          <input type="hidden" id="pCollectionDate">
+        </div>
+
+        <div
+          style="display:flex; justify-content:space-between; gap:10px; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0;">
+          <!-- Cancel Logic -->
+          <div id="cancelSection" style="flex:1;">
+            <button type="button" id="btnShowCancel" class="btn-action"
+              style="color:#ef4444; border-color:#fee2e2; display:none;" onclick="toggleCancelForm()">Anular
+              Participación</button>
+
+            <!-- Cancel Form (Compact) -->
+            <div id="divCancelForm" class="hidden"
+              style="position:absolute; bottom:55px; left:10px; right:10px; background:#fef2f2; padding:12px; border-radius:8px; border:1px solid #fee2e2; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index:20;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h4 style="margin:0; color:#b91c1c; font-size:13px; font-weight:700;">Confirmar Baja</h4>
+                <button type="button" onclick="toggleCancelForm()"
+                  style="background:none; border:none; font-size:16px; line-height:1; color:#991b1b; cursor:pointer;">&times;</button>
+              </div>
+
+              <div style="margin-bottom:8px;">
+                <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px;">Motivo *</label>
+                <input type="text" id="txtCancelReason" class="form-input text-xs" style="border-color:#fecaca;"
+                  placeholder="Especifique motivo...">
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:end; gap:8px;">
+                <div style="flex:1;">
+                  <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px;">Pagos:</label>
+                  <select id="selCancelAction" class="form-input text-xs"
+                    style="border-color:#fecaca; padding:4px; height:28px;">
+                    <option value="refund">Devolver (Borrar)</option>
+                    <option value="keep">Retener (Gastos)</option>
+                  </select>
+                </div>
+                <button type="button" id="btnConfirmCancel" class="btn-primary"
+                  style="background:#dc2626; border:none; padding:0 16px; font-size:12px; height:28px;">Confirmar</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" id="btnCloseModal" class="btn-action"
+              style="border:none; background:transparent;">Cancelar</button>
+            <button type="submit" class="btn-primary">Guardar Ficha</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-init.js"></script>
+  <script src="js/app-common.js"></script>
+  <script src="js/grandes-eventos.js?v=1.2"></script>
 </body>
 
 </html>

@@ -280,7 +280,13 @@
                 <input type="date" class="border border-slate-200 rounded px-1 py-1 text-xs" value="${line.fecha || ''}" onchange="updateLine(${index}, 'fecha', this.value)">
                 <input type="text" list="charge-options" class="border border-slate-200 rounded px-1 py-1 text-xs" value="${line.concepto || ''}" onchange="updateLine(${index}, 'concepto', this.value)" placeholder="Concepto...">
                 <input type="number" class="border border-slate-200 rounded px-1 py-1 text-xs text-center" value="${line.uds || 1}" onchange="updateLine(${index}, 'uds', this.value)">
-                <input type="number" class="border border-slate-200 rounded px-1 py-1 text-xs text-right" value="${line.precio || 0}" step="0.01" onchange="updateLine(${index}, 'precio', this.value)">
+                <div class="relative w-full">
+                    <input type="text" class="border border-slate-200 rounded pl-1 pr-6 py-1 text-xs text-right w-full" 
+                           value="${window.MesaChef.formatEuroValue(line.precio || 0)}" 
+                           onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
+                           onchange="updateLine(${index}, 'precio', window.MesaChef.parseEuroInput(this.value))">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
+                </div>
                 <div class="text-right font-mono text-slate-700">${formatEuro(lineTotal)}</div>
                 <button type="button" class="text-red-400 hover:text-red-600 flex justify-center" onclick="removeLine(${index})">✕</button>
             `;

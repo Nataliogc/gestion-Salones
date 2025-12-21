@@ -542,8 +542,24 @@
                     <td class="p-2"><input value="${s.name}" onchange="updS(${i},'name',this.value)" class="w-full bg-transparent outline-none font-bold text-slate-700"></td>
                     <td class="p-2"><input type="number" value="${s.pax || 0}" onchange="updS(${i},'pax',this.value)" class="w-full bg-transparent outline-none text-center"></td>
                     <td class="p-2"><input type="number" value="${s.m2 || 0}" onchange="updS(${i},'m2',this.value)" class="w-full bg-transparent outline-none text-center"></td>
-                    <td class="p-2"><input type="number" value="${s.priceHalf || 0}" onchange="updS(${i},'priceHalf',this.value)" class="w-full bg-transparent outline-none text-right"></td>
-                    <td class="p-2"><input type="number" value="${s.priceFull || 0}" onchange="updS(${i},'priceFull',this.value)" class="w-full bg-transparent outline-none text-right"></td>
+                    <td class="p-2">
+                        <div class="relative w-full">
+                             <input type="text" value="${window.MesaChef.formatEuroValue(s.priceHalf || 0)}" 
+                                    onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)" 
+                                    onchange="updS(${i},'priceHalf',window.MesaChef.parseEuroInput(this.value))" 
+                                    class="w-full bg-transparent outline-none text-right pr-6 font-mono text-sm">
+                             <span class="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
+                        </div>
+                    </td>
+                    <td class="p-2">
+                        <div class="relative w-full">
+                             <input type="text" value="${window.MesaChef.formatEuroValue(s.priceFull || 0)}" 
+                                    onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)" 
+                                    onchange="updS(${i},'priceFull',window.MesaChef.parseEuroInput(this.value))" 
+                                    class="w-full bg-transparent outline-none text-right pr-6 font-mono text-sm">
+                             <span class="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
+                        </div>
+                    </td>
                     <td class="p-2 text-center"><input type="checkbox" ${s.active !== false ? 'checked' : ''} onchange="updS(${i},'active',this.checked)" style="width:auto;"></td>
                     <td class="p-2 text-center"><button onclick="openCapacities(${i},'${hotel}')" class="text-blue-500 hover:text-blue-700" title="Configurar Capacidades">⚙️</button></td>
                     <td class="p-2"><button onclick="delItem(${i})" class="text-gray-400 hover:text-red-500 font-bold">&times;</button></td>
@@ -569,7 +585,15 @@
             list.forEach((e, i) => {
                 html += `<tr>
                     <td class="p-2"><input value="${e.name}" onchange="updArr('extras',${i},'name',this.value)" class="w-full bg-transparent outline-none font-bold"></td>
-                    <td class="p-2"><input type="number" value="${e.price || 0}" onchange="updArr('extras',${i},'price',this.value)" class="w-full bg-transparent outline-none"></td>
+                    <td class="p-2">
+                        <div class="relative w-full">
+                             <input type="text" value="${window.MesaChef.formatEuroValue(e.price || 0)}" 
+                                    onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)" 
+                                    onchange="updArr('extras',${i},'price',window.MesaChef.parseEuroInput(this.value))" 
+                                    class="w-full bg-transparent outline-none text-right pr-6 font-mono text-sm">
+                             <span class="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">€</span>
+                        </div>
+                    </td>
                     <td class="p-2"><input value="${e.type || ''}" placeholder="Ej: AV" onchange="updArr('extras',${i},'type',this.value)" class="w-full bg-transparent outline-none text-gray-400"></td>
                     <td class="p-2"><button onclick="delItem(${i})" class="text-red-400 font-bold">&times;</button></td></tr>`;
             });

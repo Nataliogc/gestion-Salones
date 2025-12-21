@@ -112,8 +112,7 @@
     }
 
     function formatEuro(n) {
-        if (!n || isNaN(n)) return "0,00 €";
-        return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+        return window.MesaChef.formatEuroValue(n) + " €";
     }
 
     function actualizarEstadoConexion(status) {
@@ -346,9 +345,14 @@
                 <input type="number" class="border border-slate-200 rounded px-1 py-1 text-center text-xs" value="${line.uds || 1}" onchange="updateLine(${index}, 'uds', this.value)">
                 
                 <!-- Price Input: Disabled if S/C -->
-                <input type="number" step="0.01" class="border border-slate-200 rounded px-1 py-1 text-right text-xs ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
-                       value="${priceDisplay}" ${isSC ? 'disabled' : ''} 
-                       onchange="updateLine(${index}, 'precio', this.value)">
+                <div class="relative w-full">
+                    <input type="text" class="border border-slate-200 rounded pl-1 pr-6 py-1 text-right text-xs w-full ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
+                           value="${window.MesaChef.formatEuroValue(line.precio || 0)}" ${isSC ? 'disabled' : ''} 
+                           onfocus="window.MesaChef.unformatEuroInput(this)"
+                           onblur="window.MesaChef.formatEuroInput(this)"
+                           onchange="updateLine(${index}, 'precio', window.MesaChef.parseEuroInput(this.value))">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
+                </div>
 
                 <div class="text-right font-bold text-slate-700 text-xs">${totalDisplay}</div>
                 

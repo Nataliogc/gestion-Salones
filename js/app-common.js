@@ -139,6 +139,37 @@
                 // Let's return error so caller decides.
                 throw e;
             }
+        },
+        // --- SPANISH INPUT FORMATTERS ---
+        // 0. Format Number -> "1.234,56"
+        formatEuroValue: (num) => {
+            if (num === null || num === undefined) return "0,00";
+            let val = parseFloat(num);
+            if (isNaN(val)) return "0,00";
+            return val.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
+        },
+        parseEuroInput: (val) => {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            // Remove dots (thousands), replace comma with dot
+            // Example: "1.234,56" -> "1234.56"
+            let clean = val.toString().replace(/\./g, 'TEMP').replace(/,/g, '.').replace(/TEMP/g, '');
+            // Also safer: remove any non-digit/minus/dot
+            clean = clean.replace(/[^\d.-]/g, '');
+            return parseFloat(clean) || 0;
+        },
+        formatEuroInput: (input) => {
+            let val = input.value;
+            let num = window.MesaChef.parseEuroInput(val);
+            if (isNaN(num)) num = 0;
+            input.value = num.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        unformatEuroInput: (input) => {
+            let val = input.value;
+            let num = window.MesaChef.parseEuroInput(val);
+            if (num === 0 && val === "") return;
+            // Editing format: Use Comma for decimal, No dots
+            input.value = num.toString().replace('.', ',');
         }
     };
 })();

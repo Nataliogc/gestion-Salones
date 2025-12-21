@@ -49,7 +49,12 @@
       }
       return dates;
     },
-    toIsoDate: (d) => d.toISOString().split('T')[0],
+    toIsoDate: (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
     formatDateES: (d) => d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
     formatDateShort: (d) => d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
   };
@@ -141,7 +146,7 @@
     // SERVICE INCLUDED TOGGLE
     document.getElementById("checkServicioIncluido").addEventListener("change", function () {
       if (this.checked) {
-        document.getElementById("campoPrecio").value = 0;
+        document.getElementById("campoPrecio").value = "0,00"; // [MODIFIED] ES Format
         document.getElementById("campoPrecio").disabled = true;
       } else {
         document.getElementById("campoPrecio").disabled = false;
@@ -602,9 +607,9 @@
   // RESTORED FUNCTIONS
 
   function updateTotalDisplay() {
-    const price = parseFloat(document.getElementById("campoPrecio").value) || 0;
+    const price = window.MesaChef.parseEuroInput(document.getElementById("campoPrecio")?.value);
     const pax = parseInt(document.getElementById("campoPax").value) || 0;
-    const priceKids = parseFloat(document.getElementById("campoPrecioNinos")?.value) || 0;
+    const priceKids = window.MesaChef.parseEuroInput(document.getElementById("campoPrecioNinos")?.value);
     const kids = parseInt(document.getElementById("campoNinos").value) || 0;
 
     const total = (price * pax) + (priceKids * kids);
@@ -667,10 +672,10 @@
       document.getElementById("campoNombre").value = data.nombre || data.cliente || "";
       document.getElementById("campoTelefono").value = data.telefono || "";
       document.getElementById("campoHora").value = data.hora || "";
-      document.getElementById("campoPrecio").value = data.precio || "";
+      document.getElementById("campoPrecio").value = window.MesaChef.formatEuroValue(data.precio || 0); // [MODIFIED]
       document.getElementById("campoPax").value = data.pax || "";
       document.getElementById("campoNinos").value = data.ninos || 0;
-      if (document.getElementById("campoPrecioNinos")) document.getElementById("campoPrecioNinos").value = data.precioNinos || "";
+      if (document.getElementById("campoPrecioNinos")) document.getElementById("campoPrecioNinos").value = window.MesaChef.formatEuroValue(data.precioNinos || 0); // [MODIFIED]
       document.getElementById("campoNotas").value = typeof data.notas === 'object' ? Object.values(data.notas).join(". ") : (data.notas || "");
       document.getElementById("campoNotaCliente").value = data.notaCliente || "";
       if (data.espacio) document.getElementById("campoEspacio").value = data.espacio;
@@ -846,7 +851,7 @@
     // -----------------------------
 
     const isServiceIncluded = document.getElementById("checkServicioIncluido").checked;
-    let precio = parseFloat(document.getElementById("campoPrecio").value) || 0;
+    let precio = window.MesaChef.parseEuroInput(document.getElementById("campoPrecio").value); // [MODIFIED]
     if (isServiceIncluded) precio = 0;
 
     const payload = {

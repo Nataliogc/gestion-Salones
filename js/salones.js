@@ -873,7 +873,14 @@
                     <td class="p-2 border-b"><input type="date" value="${s.fecha}" class="text-xs bg-gray-50 w-24 rounded border-gray-200"></td>
                         <td class="p-2 border-b"><input type="text" value="${s.concepto}" list="charge-options" onchange="updateRowPrice(this)" class="text-xs font-bold w-full rounded border-gray-200"></td>
                         <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="${s.uds}" class="text-xs text-center row-uds w-full rounded border-gray-200"></td>
-                        <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="${s.precio}" class="text-xs text-right row-price w-full rounded border-gray-200"></td>
+                        <td class="p-2 border-b">
+                            <div class="relative w-full">
+                                <input type="text" onchange="calcTotal()" value="${window.MesaChef.formatEuroValue(s.precio)}" 
+                                       onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
+                                       class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
+                            </div>
+                        </td>
                         <td class="p-2 border-b text-right font-bold text-xs row-total text-slate-600">${s.total.toFixed(2)} €</td>
                         <td class="p-2 border-b text-center"><button onclick="this.closest('tr').remove(); calcTotal()" class="text-red-400 hover:text-red-600 font-bold">&times;</button></td>
                 `;
@@ -915,8 +922,15 @@
             <td class="p-2 border-b"><input type="date" value="${defaultDate}" class="text-xs bg-gray-50 w-24 rounded border-gray-200"></td>
             <td class="p-2 border-b"><input type="text" placeholder="Concepto" list="charge-options" onchange="updateRowPrice(this)" class="text-xs font-bold w-full rounded border-gray-200"></td>
             <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="1" class="text-xs text-center row-uds w-full rounded border-gray-200"></td>
-            <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="0" class="text-xs text-right row-price w-full rounded border-gray-200"></td>
-            <td class="p-2 border-b text-right font-bold text-xs row-total text-slate-600">0.00 €</td>
+            <td class="p-2 border-b">
+                <div class="relative w-full">
+                    <input type="text" onchange="calcTotal()" value="0,00" 
+                           onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
+                           class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
+                </div>
+            </td>
+            <td class="p-2 border-b text-right font-bold text-xs row-total text-slate-600">0,00 €</td>
             <td class="p-2 border-b text-center"><button onclick="this.closest('tr').remove(); calcTotal()" class="text-red-400 hover:text-red-600 font-bold">&times;</button></td>
                 `;
         document.getElementById("services-list").appendChild(row);
@@ -932,11 +946,12 @@
             // inputs[0]=date, [1]=desc, [2]=uds, [3]=price
             const concept = (inputs[1].value || "").toLowerCase();
             const uds = parseFloat(inputs[2].value) || 0;
-            const price = parseFloat(inputs[3].value) || 0;
+            // [MODIFIED] Helper for Spanish Inputs
+            const price = window.MesaChef.parseEuroInput(inputs[3].value);
             const sub = uds * price;
 
             // Update row total
-            row.querySelector(".row-total").innerText = sub.toFixed(2) + " €";
+            row.querySelector(".row-total").innerText = window.MesaChef.formatEuroValue(sub) + " €";
             total += sub;
 
             // Auto-Calc Pax Logic
@@ -951,7 +966,7 @@
             }
         });
 
-        document.getElementById("evt-total").innerText = total.toFixed(2) + " €";
+        document.getElementById("evt-total").innerText = window.MesaChef.formatEuroValue(total) + " €";
 
         // Update Headers if calculated > 0 (Optional: could force 0)
         // Only update if lines have meaningful pax data to avoid clearing manual entry for simple events?
@@ -1016,7 +1031,7 @@
             // Check if it looks like a rental line (starts with Alquiler Salón)
             if (inp && inp.value.startsWith("Alquiler Salón")) {
                 found = true;
-                row.querySelector(".row-price").value = price;
+                row.querySelector(".row-price").value = window.MesaChef.formatEuroValue(price);
                 inp.value = `Alquiler Salón ${salonName} - ${jornada}`;
                 calcTotal(); // Update totals
             }
@@ -1030,8 +1045,15 @@
                 <td class="p-2 border-b"><input type="date" value="${dateStr}" class="text-xs bg-gray-50 w-24 rounded border-gray-200"></td>
                 <td class="p-2 border-b"><input type="text" value="Alquiler Salón ${salonName} - ${jornada}" list="charge-options" onchange="updateRowPrice(this)" class="text-xs font-bold w-full rounded border-gray-200"></td>
                 <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="1" class="text-xs text-center row-uds w-full rounded border-gray-200"></td>
-                <td class="p-2 border-b"><input type="number" onchange="calcTotal()" value="${price}" class="text-xs text-right row-price w-full rounded border-gray-200"></td>
-                <td class="p-2 border-b text-right font-bold text-xs row-total text-slate-600">${price.toFixed(2)} €</td>
+                <td class="p-2 border-b">
+                    <div class="relative w-full">
+                        <input type="text" onchange="calcTotal()" value="${window.MesaChef.formatEuroValue(price)}" 
+                               onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
+                               class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
+                    </div>
+                </td>
+                <td class="p-2 border-b text-right font-bold text-xs row-total text-slate-600">${window.MesaChef.formatEuroValue(price)} €</td>
                 <td class="p-2 border-b text-center"><button onclick="this.closest('tr').remove(); calcTotal()" class="text-red-400 hover:text-red-600 font-bold">&times;</button></td>
             `;
             document.getElementById("services-list").prepend(row);
@@ -1079,7 +1101,7 @@
                 fecha: inputs[0].value,
                 concepto: inputs[1].value,
                 uds: parseFloat(inputs[2].value) || 0,
-                precio: parseFloat(inputs[3].value) || 0,
+                precio: window.MesaChef.parseEuroInput(inputs[3].value),
                 total: parseFloat(row.querySelector(".row-total").innerText)
             });
         });
@@ -1473,6 +1495,23 @@
         }
     }
 
+    window.createGrandEvent = function () {
+        // Redirect to Grandes Eventos with current Salon and Date
+        const salon = document.getElementById("evt-salon").value;
+        // Use currentViewDate if set (from openBooking), otherwise from input
+        const date = window.currentViewDate || document.getElementById("evt-fecha").value;
+
+        if (!salon || !date) {
+            alert("Por favor selecciona Salón y Fecha primero.");
+            return;
+        }
+
+        // Confirmation?
+        if (!confirm(`¿Quieres crear un Gran Evento en ${salon} para el ${date}?\nEsto te llevará al módulo de gestión de Grandes Eventos.`)) return;
+
+        window.location.href = `grandes-eventos.html?salonId=${encodeURIComponent(salon)}&date=${encodeURIComponent(date)}`;
+    };
+
     // Initialize
     ensureFirebase(() => {
         startApp();
@@ -1480,3 +1519,4 @@
         setTimeout(updateDatePicker, 500);
     });
 })();
+
