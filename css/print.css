@@ -1,0 +1,76 @@
+/* Global Print Styles */
+@media print {
+    @page {
+        margin: 1.5cm;
+    }
+
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .print-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .print-subtitle {
+        font-size: 14px;
+        color: #64748b;
+        margin-top: 5px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    th {
+        background-color: #f8fafc !important;
+        color: #475569;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .font-bold {
+        font-weight: 700;
+    }
+
+    .whitespace-nowrap {
+        white-space: nowrap;
+    }
+}

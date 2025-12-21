@@ -1,0 +1,16 @@
+{
+    "name": "mesa-chef-matrix",
+    "version": "10.0.0",
+    "description": "Gestión de Eventos y Restaurante",
+    "main": "index.html",
+    "scripts": {
+        "build:css": "tailwindcss -i ./css/input.css -o ./css/output.css --minify",
+        "watch:css": "tailwindcss -i ./css/input.css -o ./css/output.css --watch"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "tailwindcss": "^3.4.1"
+    }
+}

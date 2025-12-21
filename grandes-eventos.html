@@ -465,7 +465,7 @@
           <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-2xl">👥</div>
           <div>
             <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Total Pax</div>
-            <div class="text-2xl font-bold text-slate-800" id="statTotalPax">0</div>
+            <div class="text-2xl font-bold text-slate-800 whitespace-nowrap" id="statTotalPax">0</div>
             <div class="text-xs text-slate-400">Adultos / Niños</div>
           </div>
         </div>
@@ -477,7 +477,7 @@
           </div>
           <div>
             <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Ocupación</div>
-            <div class="text-2xl font-bold text-slate-800" id="statOccupancy">0%</div>
+            <div class="text-2xl font-bold text-slate-800 whitespace-nowrap" id="statOccupancy">0%</div>
             <div class="text-xs text-slate-400">de <span id="lblCapacity">0</span> plazas</div>
           </div>
         </div>
@@ -489,7 +489,7 @@
           </div>
           <div>
             <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Recaudado</div>
-            <div class="text-2xl font-bold text-emerald-600" id="statCollected">0.00 €</div>
+            <div class="text-2xl font-bold text-emerald-600 whitespace-nowrap" id="statCollected">0.00 €</div>
             <div class="text-xs text-slate-400">Pagado</div>
           </div>
         </div>
@@ -501,7 +501,7 @@
           </div>
           <div>
             <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Pendiente</div>
-            <div class="text-2xl font-bold text-orange-600" id="statPending">0.00 €</div>
+            <div class="text-2xl font-bold text-orange-600 whitespace-nowrap" id="statPending">0.00 €</div>
             <div class="text-xs text-slate-400">Por cobrar</div>
           </div>
         </div>
@@ -512,7 +512,7 @@
           <div class="w-12 h-12 rounded-lg bg-red-100 text-red-600 flex items-center justify-center text-2xl">🚫</div>
           <div>
             <div class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Anulaciones</div>
-            <div class="text-2xl font-bold text-red-600" id="statCancelledAmount">0.00 €</div>
+            <div class="text-2xl font-bold text-red-600 whitespace-nowrap" id="statCancelledAmount">0.00 €</div>
             <div class="text-xs text-slate-400">Retenido</div>
           </div>
         </div>
@@ -531,6 +531,10 @@
               <option value="anulado">Anulados</option>
               <option value="todos">Todos</option>
             </select>
+            <div
+              style="font-size:13px; color:#64748b; font-weight:500; border-left:1px solid #e2e8f0; padding-left:16px;">
+              Plazas disponibles: <span id="lblAvailableSeats" style="color:#0f172a; font-weight:bold;">--</span>
+            </div>
           </div>
           <button id="btnAddParticipant" class="btn-primary">+ Añadir Participante</button>
         </div>
@@ -580,8 +584,7 @@
           <label class="form-label">Salón</label>
           <select id="newEvtSalon" class="form-input">
             <!-- Populated via JS -->
-            <option value="Guadiana">Guadiana</option> <!-- Hardcoded fallback, JS should populate -->
-            <option value="Cumbria">Cumbria</option>
+            <option value="">Seleccione un salón...</option>
           </select>
         </div>
         <div style="display:flex; justify-content:end; gap:10px;">
@@ -594,10 +597,17 @@
 
   <!-- MODAL PARTICIPANT -->
   <div id="modalParticipant" class="modal-overlay hidden">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content" style="max-width: 600px; position: relative;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h3 style="margin:0;">Gestionar Participante</h3>
         <span id="pStatusBadge" class="status-badge status-open" style="display:none;">Activo</span>
+      </div>
+
+      <!-- Capacity Warning -->
+      <div id="pWarningCapacity" class="hidden"
+        style="background-color:#fee2e2; color:#991b1b; padding:10px; border-radius:6px; margin-bottom:15px; font-size:13px; font-weight:600; border:1px solid #fca5a5; display:none; align-items:center; gap:10px;">
+        <span style="font-size:16px;">⚠️</span>
+        <span>¡Atención! Se ha superado el aforo máximo del evento.</span>
       </div>
 
       <form id="formParticipant" style="display:flex; flex-direction:column; gap:16px;">
@@ -687,31 +697,37 @@
               Participación</button>
 
             <!-- Cancel Form (Compact) -->
+            <!-- Cancel Form (Compact) -->
             <div id="divCancelForm" class="hidden"
-              style="position:absolute; bottom:55px; left:10px; right:10px; background:#fef2f2; padding:12px; border-radius:8px; border:1px solid #fee2e2; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index:20;">
+              style="position:absolute; bottom:0; left:0; right:0; background:#fef2f2; padding:16px; border-radius:0 0 16px 16px; border-top:1px solid #fee2e2; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); z-index:20;">
+
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h4 style="margin:0; color:#b91c1c; font-size:13px; font-weight:700;">Confirmar Baja</h4>
+                <h4 style="margin:0; color:#b91c1c; font-size:12px; font-weight:700;">Confirmar Baja</h4>
                 <button type="button" onclick="toggleCancelForm()"
                   style="background:none; border:none; font-size:16px; line-height:1; color:#991b1b; cursor:pointer;">&times;</button>
               </div>
 
               <div style="margin-bottom:8px;">
-                <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px;">Motivo *</label>
-                <input type="text" id="txtCancelReason" class="form-input text-xs" style="border-color:#fecaca;"
-                  placeholder="Especifique motivo...">
+                <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px; font-size:10px;">Motivo
+                  *</label>
+                <input type="text" id="txtCancelReason" class="form-input text-xs"
+                  style="border-color:#fecaca; padding:6px; font-size:12px;" placeholder="Especifique motivo...">
               </div>
 
-              <div style="display:flex; justify-content:space-between; align-items:end; gap:8px;">
-                <div style="flex:1;">
-                  <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px;">Pagos:</label>
-                  <select id="selCancelAction" class="form-input text-xs"
-                    style="border-color:#fecaca; padding:4px; height:28px;">
-                    <option value="refund">Devolver (Borrar)</option>
-                    <option value="keep">Retener (Gastos)</option>
-                  </select>
-                </div>
+              <div id="divCancelPaymentAction" style="margin-bottom:8px;">
+                <label class="form-label text-xs" style="color:#7f1d1d; margin-bottom:2px; font-size:10px;">Pagos
+                  realizados:</label>
+                <select id="selCancelAction" class="form-input text-xs"
+                  style="border-color:#fecaca; padding:4px; height:28px; font-size:12px;">
+                  <option value="refund">Devolver (Borrar)</option>
+                  <option value="keep">Retener (Gastos)</option>
+                </select>
+              </div>
+
+              <div style="text-align:right;">
                 <button type="button" id="btnConfirmCancel" class="btn-primary"
-                  style="background:#dc2626; border:none; padding:0 16px; font-size:12px; height:28px;">Confirmar</button>
+                  style="background:#dc2626; border:none; padding:4px 12px; font-size:11px; height:26px;">Confirmar
+                  Baja</button>
               </div>
             </div>
           </div>
@@ -730,7 +746,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
   <script src="js/firebase-init.js"></script>
   <script src="js/app-common.js"></script>
-  <script src="js/grandes-eventos.js?v=1.2"></script>
+  <script src="js/grandes-eventos-bundled.js"></script>
 </body>
 
 </html>

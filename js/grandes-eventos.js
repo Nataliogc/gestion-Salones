@@ -642,6 +642,14 @@
         const capacity = parseInt(document.getElementById("inputCapacity").value) || 0;
         document.getElementById("lblCapacity").textContent = capacity;
 
+        const available = capacity - totalPax;
+        const elAvailable = document.getElementById("lblAvailableSeats");
+        if (elAvailable) {
+            elAvailable.textContent = available;
+            if (available < 0) elAvailable.style.color = "#ef4444"; // Red if negative
+            else elAvailable.style.color = "#0f172a";
+        }
+
         const occupancy = capacity > 0 ? ((totalPax / capacity) * 100).toFixed(0) : 0;
         document.getElementById("statOccupancy").textContent = `${occupancy}%`;
 
@@ -769,6 +777,31 @@
         const adults = parseInt(document.getElementById("pAdults").value) || 0;
         const kids = parseInt(document.getElementById("pKids").value) || 0;
 
+        // --- CAPACITY CHECK ---
+        const pId = document.getElementById("pId").value;
+        const currentPaxInModal = adults + kids;
+        let othersPax = 0;
+        if (typeof currentParticipants !== 'undefined' && currentParticipants) {
+            currentParticipants.forEach(p => {
+                if ((!p.estado || p.estado === 'activo') && p.id !== pId) {
+                    othersPax += (p.adultos || 0) + (p.ninos || 0);
+                }
+            });
+        }
+        const totalPotential = othersPax + currentPaxInModal;
+        const capacity = parseInt(document.getElementById("inputCapacity").value) || 0;
+        const warnEl = document.getElementById("pWarningCapacity");
+
+        if (warnEl) {
+            if (capacity > 0 && totalPotential > capacity) {
+                warnEl.classList.remove("hidden");
+                warnEl.style.display = "flex";
+            } else {
+                warnEl.classList.add("hidden");
+                warnEl.style.display = "none";
+            }
+        }
+
         // Sum Payments
         const paid = modalPagos.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
 
@@ -845,7 +878,7 @@
                     btnCancel.style.borderColor = "#bbf7d0";
                     btnCancel.onclick = recoverParticipant;
                 } else {
-                    btnCancel.textContent = "Anular ParticipaciÃ³n";
+                    btnCancel.textContent = "Anular Participación";
                     btnCancel.style.color = "#ef4444";
                     btnCancel.style.borderColor = "#fee2e2";
                     btnCancel.onclick = window.toggleCancelForm;
@@ -867,6 +900,18 @@
         if (!form.classList.contains("hidden")) {
             document.getElementById("txtCancelReason").value = "";
             document.getElementById("selCancelAction").value = "refund";
+
+            // Conditional Logic for Payments
+            const containerPayAction = document.getElementById("divCancelPaymentAction");
+            const totalPaid = modalPagos.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+
+            if (containerPayAction) {
+                if (totalPaid > 0) {
+                    containerPayAction.style.display = "block";
+                } else {
+                    containerPayAction.style.display = "none";
+                }
+            }
         }
     };
 
@@ -874,7 +919,7 @@
         const pId = document.getElementById("pId").value;
         if (!pId) return;
 
-        if (!confirm("Â¿Recuperar esta participaciÃ³n? VolverÃ¡ a estado ACTIVO.")) return;
+        if (!confirm("¿Recuperar esta participación? Volverá a estado ACTIVO.")) return;
 
         try {
             await participantesRef.doc(pId).update({
@@ -954,11 +999,11 @@
 
         if (!pId) return;
         if (!reason) {
-            alert("Es necesario indicar un motivo de anulaciÃ³n.");
+            alert("Es necesario indicar un motivo de anulación.");
             return;
         }
 
-        if (!confirm("Â¿EstÃ¡s seguro de ANULAR esta participaciÃ³n? Esta acciÃ³n es irreversible.")) return;
+        if (!confirm("¿Estás seguro de ANULAR esta participación? Esta acción es irreversible.")) return;
 
         let finalStatus = "anulado";
         let finalPagos = [...modalPagos];
@@ -982,7 +1027,7 @@
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            alert("ParticipaciÃ³n anulada correctamente.");
+            alert("Participación anulada correctamente.");
             closeParticipantModal();
             loadParticipants(currentEventId);
         } catch (e) {
@@ -994,7 +1039,7 @@
     async function handleParticipantSubmit(e) {
         e.preventDefault();
         if (!currentEventId) {
-            alert("Guarda la configuraciÃ³n del evento antes.");
+            alert("Guarda la configuración del evento antes.");
             return;
         }
 
@@ -1083,15 +1128,15 @@
     function getHotelLogo() {
         const curHotel = window.MesaChef?.getCurrentHotel() || "Guadiana";
         const logoMap = {
-            "Guadiana": "/Img/logo-guadiana.png",
-            "Cumbria": "/Img/logo-cumbria.jpg"
+            "Guadiana": "Img/logo-guadiana.png",
+            "Cumbria": "Img/logo-cumbria.jpg"
         };
         const nameMap = {
             "Guadiana": "Sercotel Guadiana",
             "Cumbria": "Cumbria Spa&Hotel"
         };
         return {
-            url: logoMap[curHotel] || "/Img/logo_mesa_chef.png",
+            url: logoMap[curHotel] || "Img/logo_mesa_chef.png",
             name: nameMap[curHotel] || curHotel
         };
     }
@@ -1109,9 +1154,9 @@
                     body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
                     h1 { font-size: 18px; margin-bottom: 5px; }
                     h2 { font-size: 14px; color: #666; margin-bottom: 15px; font-weight: normal; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                    th { background: #f0f0f0; padding: 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
-                    td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #f0f0f0; padding: 10px 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
+                    td { padding: 8px 12px; border-bottom: 1px solid #ddd; vertical-align: middle; }
                     .header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
                     .ref { font-family: monospace; font-size: 14px; color: #666; }
                     @media print { body { padding: 10px; } }
@@ -1153,9 +1198,9 @@
                                     <td><strong>${p.titular}</strong><br><span style="font-size: 10px; color: #666;">${p.referencia || ''}</span></td>
                                     <td><span style="font-size: 11px;">${p.telefono || '-'}</span></td>
                                     <td style="text-align: center;">${pax}</td>
-                                    <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} €</td>
-                                    <td style="text-align: right; color: #166534;">${window.MesaChef.formatEuroValue(paid)} €</td>
-                                    <td style="text-align: right; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} €</td>
+                                    <td style="text-align: right; white-space: nowrap;">${window.MesaChef.formatEuroValue(total)} €</td>
+                                    <td style="text-align: right; color: #166534; white-space: nowrap;">${window.MesaChef.formatEuroValue(paid)} €</td>
+                                    <td style="text-align: right; white-space: nowrap; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} €</td>
                                 </tr>
                             `;
         }).join('')}
@@ -1268,9 +1313,9 @@
                     .summary-row.total { font-weight: bold; font-size: 14px; background: #e9ecef; margin: 10px -15px 0; padding: 12px 15px; }
                     .label { font-weight: 600; }
                     .value { text-align: right; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                    th { background: #f0f0f0; padding: 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
-                    td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #f0f0f0; padding: 10px 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
+                    td { padding: 8px 12px; border-bottom: 1px solid #ddd; }
                     @media print { body { padding: 10px; } }
                 </style>
             </head>
@@ -1331,9 +1376,9 @@
                                 <tr>
                                     <td>${p.titular}</td>
                                     <td style="text-align: center;">${pax}</td>
-                                    <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} €</td>
-                                    <td style="text-align: right; color: #166534;">${window.MesaChef.formatEuroValue(paid)} €</td>
-                                    <td style="text-align: right; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} €</td>
+                                    <td style="text-align: right; white-space: nowrap;">${window.MesaChef.formatEuroValue(total)} €</td>
+                                    <td style="text-align: right; color: #166534; white-space: nowrap;">${window.MesaChef.formatEuroValue(paid)} €</td>
+                                    <td style="text-align: right; white-space: nowrap; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} €</td>
                                 </tr>
                             `;
         }).join('')}
@@ -1383,9 +1428,9 @@
                     .info-box { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; }
                     .info-label { font-size: 10px; color: #666; text-transform: uppercase; }
                     .info-value { font-size: 14px; font-weight: bold; margin-top: 3px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; page-break-inside: avoid; }
-                    th { background: #333; color: white; padding: 6px 8px; text-align: left; font-size: 10px; }
-                    td { padding: 5px 8px; border-bottom: 1px solid #ddd; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; page-break-inside: avoid; }
+                    th { background: #333; color: white; padding: 8px 12px; text-align: left; font-size: 10px; }
+                    td { padding: 8px 12px; border-bottom: 1px solid #ddd; }
                     @media print { body { padding: 10px; } }
                 </style>
             </head>
@@ -1448,8 +1493,8 @@
                                         <td><strong>${p.titular}</strong><br><span style="font-size: 9px; color: #666;">${p.referencia || ''}</span></td>
                                         <td style="font-size: 10px;">${p.telefono || '-'}</td>
                                         <td style="text-align: center;">${pax}</td>
-                                        <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} €</td>
-                                        <td style="text-align: right; ${pending > 0 ? 'color: #c2410c;' : 'color: #166534;'}">${window.MesaChef.formatEuroValue(pending)} €</td>
+                                        <td style="text-align: right; white-space: nowrap;">${window.MesaChef.formatEuroValue(total)} €</td>
+                                        <td style="text-align: right; white-space: nowrap; ${pending > 0 ? 'color: #c2410c;' : 'color: #166534;'}">${window.MesaChef.formatEuroValue(pending)} €</td>
                                     </tr>
                                 `;
             }).join('')}
@@ -1457,392 +1502,6 @@
                     </table>
                 `;
         }).join('')}
-                <script>window.print();</script>
-            </body>
-            </html >
-            `;
-        openPrintWindow(html);
-    }
-
-    function formatDateES(isoDate) {
-        if (!isoDate) return "";
-        const [y, m, d] = isoDate.split("-");
-        return `${d} /${m}/${y} `;
-    }
-
-    function openPrintWindow(html) {
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        printWindow.document.write(html);
-        printWindow.document.close();
-    }
-
-
-
-    // === PRINT FUNCTIONS ===
-
-    function handlePrint(printType) {
-        if (!currentEvent || !currentEventId) {
-            alert("No hay evento cargado");
-            return;
-        }
-
-        const active = currentParticipants.filter(p => !p.estado || p.estado === 'activo');
-
-        switch (printType) {
-            case 'participants':
-                printParticipantsList(active);
-                break;
-            case 'tables':
-                printTableAssignments(active);
-                break;
-            case 'financial':
-                printFinancialSummary(active);
-                break;
-            case 'complete':
-                printCompleteReport(active);
-                break;
-        }
-    }
-
-    function printParticipantsList(participants) {
-        const html = `
-            < html >
-            <head>
-                <title>Lista de Participantes - ${currentEvent.nombre}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-                    h1 { font-size: 18px; margin-bottom: 5px; }
-                    h2 { font-size: 14px; color: #666; margin-bottom: 15px; font-weight: normal; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                    th { background: #f0f0f0; padding: 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
-                    td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
-                    .header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
-                    .ref { font-family: monospace; font-size: 14px; color: #666; }
-                    .total-row { font-weight: bold; background: #f9f9f9; }
-                    @media print { body { padding: 10px; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <h1>${currentEvent.nombre}</h1>
-                        <h2>${formatDateES(currentEvent.fecha)} | ${currentEvent.salonId}</h2>
-                    </div>
-                    <div class="ref">Ref: ${currentEvent.referencia || '-'}</div>
-                </div>
-                <h3 style="margin-bottom: 10px;">LISTA DE PARTICIPANTES (${participants.length})</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">Mesa</th>
-                            <th>Titular</th>
-                            <th>Contacto</th>
-                            <th style="width: 60px; text-align: center;">Pax</th>
-                            <th style="width: 70px; text-align: right;">Total</th>
-                            <th style="width: 70px; text-align: right;">Pagado</th>
-                            <th style="width: 70px; text-align: right;">Pendiente</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${participants.map(p => {
-            const total = p.total || 0;
-            const paid = p.pagado || 0;
-            const pending = total - paid;
-            const pax = (p.adultos || 0) + (p.ninos || 0);
-            return `
-                                <tr>
-                                    <td style="text-align: center; font-weight: bold;">${p.mesa || '-'}</td>
-                                    <td><strong>${p.titular}</strong><br><span style="font-size: 10px; color: #666;">${p.referencia || ''}</span></td>
-                                    <td><span style="font-size: 11px;">${p.telefono || '-'}</span></td>
-                                    <td style="text-align: center;">${pax}</td>
-                                    <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} â‚¬</td>
-                                    <td style="text-align: right; color: #166534;">${window.MesaChef.formatEuroValue(paid)} â‚¬</td>
-                                    <td style="text-align: right; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} â‚¬</td>
-                                </tr>
-                            `;
-        }).join('')}
-                    </tbody>
-                </table>
-                <script>window.print();</script>
-            </body>
-            </html >
-            `;
-        openPrintWindow(html);
-    }
-
-    function printTableAssignments(participants) {
-        const hotel = getHotelLogo();
-        // Group by mesa
-        const byTable = {};
-        participants.forEach(p => {
-            const mesa = p.mesa || 'Sin asignar';
-            if (!byTable[mesa]) byTable[mesa] = [];
-            byTable[mesa].push(p);
-        });
-
-        const tables = Object.keys(byTable).sort((a, b) => {
-            if (a === 'Sin asignar') return 1;
-            if (b === 'Sin asignar') return -1;
-            return parseInt(a) - parseInt(b);
-        });
-
-        const html = `
-            < html >
-            <head>
-                <title>AsignaciÃ³n de Mesas - ${currentEvent.nombre}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-                    h1 { font-size: 18px; margin-bottom: 5px; }
-                    h2 { font-size: 14px; color: #666; margin-bottom: 15px; font-weight: normal; }
-                    .header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
-                    .ref { font-family: monospace; font-size: 14px; color: #666; }
-                    .table-group { margin-bottom: 20px; page-break-inside: avoid; }
-                    .table-header { background: #333; color: white; padding: 8px 12px; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-                    .participant { padding: 6px 12px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-                    .participant:hover { background: #f9f9f9; }
-                    .name { font-weight: bold; }
-                    .ref-small { font-size: 10px; color: #666; font-family: monospace; }
-                    .pax { color: #666; font-size: 11px; }
-                    @media print { body { padding: 10px; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <h1>${currentEvent.nombre}</h1>
-                        <h2>${formatDateES(currentEvent.fecha)} | ${currentEvent.salonId}</h2>
-                    </div>
-                    <div class="ref">Ref: ${currentEvent.referencia || '-'}</div>
-                </div>
-                <h3 style="margin-bottom: 15px;">ASIGNACIÃ“N DE MESAS</h3>
-                ${tables.map(mesa => `
-                    <div class="table-group">
-                        <div class="table-header">MESA ${mesa} (${byTable[mesa].length} ${byTable[mesa].length === 1 ? 'participante' : 'participantes'})</div>
-                        ${byTable[mesa].map(p => {
-            const pax = (p.adultos || 0) + (p.ninos || 0);
-            return `
-                                <div class="participant">
-                                    <div>
-                                        <span class="name">${p.titular}</span><br>
-                                        <span class="ref-small">${p.referencia || ''}</span>
-                                    </div>
-                                    <span class="pax">${pax} pax (${p.adultos || 0}Ad / ${p.ninos || 0}Ni)</span>
-                                </div>
-                            `;
-        }).join('')}
-                    </div>
-                `).join('')}
-                <script>window.print();</script>
-            </body>
-            </html >
-            `;
-        openPrintWindow(html);
-    }
-
-    function printFinancialSummary(participants) {
-        const totalPax = participants.reduce((sum, p) => sum + (p.adultos || 0) + (p.ninos || 0), 0);
-        const totalAmount = participants.reduce((sum, p) => sum + (p.total || 0), 0);
-        const totalPaid = participants.reduce((sum, p) => sum + (p.pagado || 0), 0);
-        const totalPending = totalAmount - totalPaid;
-
-        const html = `
-            < html >
-            <head>
-                <title>Resumen Financiero - ${currentEvent.nombre}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-                    h1 { font-size: 18px; margin-bottom: 5px; }
-                    h2 { font-size: 14px; color: #666; margin-bottom: 15px; font-weight: normal; }
-                    .header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
-                    .ref { font-family: monospace; font-size: 14px; color: #666; }
-                    .summary-box { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; }
-                    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
-                    .summary-row:last-child { border-bottom: none; }
-                    .summary-row.total { font-weight: bold; font-size: 14px; background: #e9ecef; margin: 10px -15px 0; padding: 12px 15px; }
-                    .label { font-weight: 600; }
-                    .value { text-align: right; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                    th { background: #f0f0f0; padding: 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; font-size: 11px; }
-                    td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
-                    @media print { body { padding: 10px; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <h1>${currentEvent.nombre}</h1>
-                        <h2>${formatDateES(currentEvent.fecha)} | ${currentEvent.salonId}</h2>
-                    </div>
-                    <div class="ref">Ref: ${currentEvent.referencia || '-'}</div>
-                </div>
-                <h3 style="margin-bottom: 15px;">RESUMEN FINANCIERO</h3>
-                
-                <div class="summary-box">
-                    <div class="summary-row">
-                        <span class="label">Total Participantes:</span>
-                        <span class="value">${participants.length}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="label">Total Pax:</span>
-                        <span class="value">${totalPax}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="label">Importe Total:</span>
-                        <span class="value">${window.MesaChef.formatEuroValue(totalAmount)} â‚¬</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="label">Total Cobrado:</span>
-                        <span class="value" style="color: #166534;">${window.MesaChef.formatEuroValue(totalPaid)} â‚¬</span>
-                    </div>
-                    <div class="summary-row total" style="${totalPending > 0 ? 'color: #c2410c;' : 'color: #166534;'}">
-                        <span class="label">Total Pendiente:</span>
-                        <span class="value">${window.MesaChef.formatEuroValue(totalPending)} â‚¬</span>
-                    </div>
-                </div>
-
-                <h4 style="margin-top: 20px; margin-bottom: 10px;">DESGLOSE POR PARTICIPANTE</h4>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Titular</th>
-                            <th style="width: 60px; text-align: center;">Pax</th>
-                            <th style="width: 80px; text-align: right;">Total</th>
-                            <th style="width: 80px; text-align: right;">Pagado</th>
-                            <th style="width: 80px; text-align: right;">Pendiente</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${participants.map(p => {
-            const total = p.total || 0;
-            const paid = p.pagado || 0;
-            const pending = total - paid;
-            const pax = (p.adultos || 0) + (p.ninos || 0);
-            return `
-                                <tr>
-                                    <td>${p.titular}</td>
-                                    <td style="text-align: center;">${pax}</td>
-                                    <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} â‚¬</td>
-                                    <td style="text-align: right; color: #166534;">${window.MesaChef.formatEuroValue(paid)} â‚¬</td>
-                                    <td style="text-align: right; ${pending > 0 ? 'color: #c2410c; font-weight: bold;' : ''}">${window.MesaChef.formatEuroValue(pending)} â‚¬</td>
-                                </tr>
-                            `;
-        }).join('')}
-                    </tbody>
-                </table>
-                <script>window.print();</script>
-            </body>
-            </html >
-            `;
-        openPrintWindow(html);
-    }
-
-    function printCompleteReport(participants) {
-        const totalPax = participants.reduce((sum, p) => sum + (p.adultos || 0) + (p.ninos || 0), 0);
-        const totalAmount = participants.reduce((sum, p) => sum + (p.total || 0), 0);
-        const totalPaid = participants.reduce((sum, p) => sum + (p.pagado || 0), 0);
-        const totalPending = totalAmount - totalPaid;
-
-        // Group by mesa
-        const byTable = {};
-        participants.forEach(p => {
-            const mesa = p.mesa || 'Sin asignar';
-            if (!byTable[mesa]) byTable[mesa] = [];
-            byTable[mesa].push(p);
-        });
-
-        const tables = Object.keys(byTable).sort((a, b) => {
-            if (a === 'Sin asignar') return 1;
-            if (b === 'Sin asignar') return -1;
-            return parseInt(a) - parseInt(b);
-        });
-
-        const html = `
-            < html >
-            <head>
-                <title>Reporte Completo - ${currentEvent.nombre}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
-                    h1 { font-size: 18px; margin-bottom: 5px; }
-                    h2 { font-size: 14px; color: #666; margin-bottom: 15px; font-weight: normal; }
-                    h3 { font-size: 13px; margin: 15px 0 8px; }
-                    .header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
-                    .ref { font-family: monospace; font-size: 14px; color: #666; }
-                    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-                    .info-box { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; }
-                    .info-label { font-size: 10px; color: #666; text-transform: uppercase; }
-                    .info-value { font-size: 14px; font-weight: bold; margin-top: 3px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; page-break-inside: avoid; }
-                    th { background: #333; color: white; padding: 6px 8px; text-align: left; font-size: 10px; }
-                    td { padding: 5px 8px; border-bottom: 1px solid #ddd; }
-                    @media print { body { padding: 10px; } .page-break { page-break-before: always; } }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <h1>${currentEvent.nombre}</h1>
-                        <h2>${formatDateES(currentEvent.fecha)} | ${currentEvent.salonId} | Aforo: ${currentEvent.aforoMax || 0}</h2>
-                    </div>
-                    <div class="ref">Ref: ${currentEvent.referencia || '-'}</div>
-                </div>
-
-                <div class="info-grid">
-                    <div class="info-box">
-                        <div class="info-label">Reservas</div>
-                        <div class="info-value">${participants.length}</div>
-                    </div>
-                    <div class="info-box">
-                        <div class="info-label">Total Pax</div>
-                        <div class="info-value">${totalPax}</div>
-                    </div>
-                    <div class="info-box" style="${totalPaid > 0 ? 'background: #d1fae5;' : ''}">
-                        <div class="info-label">Recaudado</div>
-                        <div class="info-value" style="color: #166534;">${window.MesaChef.formatEuroValue(totalPaid)} â‚¬</div>
-                    </div>
-                    <div class="info-box" style="${totalPending > 0 ? 'background: #fee2e2;' : ''}">
-                        <div class="info-label">Pendiente</div>
-                        <div class="info-value" style="color: #c2410c;">${window.MesaChef.formatEuroValue(totalPending)} â‚¬</div>
-                    </div>
-                </div>
-
-                <h3>ASIGNACIÃ“N DE MESAS</h3>
-                ${tables.map(mesa => `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th colspan="5">MESA ${mesa} (${byTable[mesa].length} participantes)</th>
-                            </tr>
-                            <tr>
-                                <th>Titular</th>
-                                <th style="width: 100px;">Contacto</th>
-                                <th style="width: 50px; text-align: center;">Pax</th>
-                                <th style="width: 70px; text-align: right;">Total</th>
-                                <th style="width: 70px; text-align: right;">Pendiente</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${byTable[mesa].map(p => {
-            const total = p.total || 0;
-            const paid = p.pagado || 0;
-            const pending = total - paid;
-            const pax = (p.adultos || 0) + (p.ninos || 0);
-            return `
-                                    <tr>
-                                        <td><strong>${p.titular}</strong><br><span style="font-size: 9px; color: #666;">${p.referencia || ''}</span></td>
-                                        <td style="font-size: 10px;">${p.telefono || '-'}</td>
-                                        <td style="text-align: center;">${pax}</td>
-                                        <td style="text-align: right;">${window.MesaChef.formatEuroValue(total)} â‚¬</td>
-                                        <td style="text-align: right; ${pending > 0 ? 'color: #c2410c;' : 'color: #166534;'}">${window.MesaChef.formatEuroValue(pending)} â‚¬</td>
-                                    </tr>
-                                `;
-        }).join('')}
-                        </tbody>
-                    </table>
-                `).join('')}
                 <script>window.print();</script>
             </body>
             </html >

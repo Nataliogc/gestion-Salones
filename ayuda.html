@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Maestro - MesaChef Matrix</title>
+    <link rel="stylesheet" href="css/ayuda.css">
+    <style>
+        .screenshot-container {
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .screenshot-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .screenshot-caption {
+            background: #f8fafc;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="help-shell">
+        <!-- SIDEBAR -->
+        <nav class="help-sidebar">
+            <a href="index.html" class="help-brand">← Volver a MesaChef</a>
+            <div class="sidebar-menu">
+                <a href="#intro" class="nav-link active">Inicio & Filosofía</a>
+                <a href="#fundamentos" class="nav-link">Fundamentos</a>
+                <a href="#restaurante" class="nav-link">Restaurante</a>
+                <a href="#salones" class="nav-link">Planning Salones</a>
+                <a href="#presupuestos" class="nav-link">Presupuestos</a>
+                <a href="#grandes-eventos" class="nav-link">Grandes Eventos</a>
+                <a href="#admin" class="nav-link">Administración</a>
+                <a href="#faq" class="nav-link">FAQ y Soporte</a>
+            </div>
+            <div class="sidebar-footer">
+                Manual Maestro v10.0 Matrix
+            </div>
+        </nav>
+
+        <!-- CONTENT -->
+        <main class="help-content">
+            <div class="content-wrapper">
+
+                <!-- HERO SECTION -->
+                <div id="intro" class="hero-box">
+                    <img src="Img/Mesa chet.png" alt="MesaChef Logo" class="hero-logo">
+                    <h1 class="hero-title">Manual Maestro <span class="version-pill">v10.0</span></h1>
+                    <p class="hero-subtitle">MesaChef Matrix: Control Total de Operativa.</p>
+                </div>
+
+                <!-- MANIFIESTO CARD -->
+                <div class="manifesto-card">
+                    <h2 class="manifesto-title">Bienvenido a MesaChef Matrix</h2>
+
+                    <div class="manifesto-text">
+                        <p><strong>PROYECTO MESACHEF</strong><br>
+                            Bienvenido a MesaChef la suite integral diseñada para la gestión eficiente de hostelería en
+                            el Grupo. Esta guía está pensada para facilitar el uso de la versión 10.0, cubriendo sus
+                            operaciones principales y las novedades incorporadas.</p>
+
+                        <p><strong>VERSIÓN MATRIX</strong><br>
+                            MesaChef nace de una necesidad real: unificar, ordenar y dar coherencia a la gestión
+                            operativa de eventos, restauración y espacios en un entorno hotelero cada vez más complejo y
+                            dinámico.</p>
+
+                        <p>No es solo un software. MesaChef es una herramienta de control, visión y toma de decisiones,
+                            diseñada desde la operativa diaria, pensada para quienes están en primera línea y necesitan
+                            información clara, accesible y accionable.</p>
+
+                        <p>La versión Matrix representa el punto de partida del proyecto. Su objetivo es conectar los
+                            distintos elementos clave del negocio —eventos, salones, reservas, menús, participantes,
+                            importes y estados— en una única estructura lógica y visual. Una matriz donde cada dato
+                            tiene sentido por sí mismo, pero cobra verdadero valor cuando se relaciona con el resto.</p>
+
+                        <p>Matrix no busca aún la perfección, sino la solidez de los cimientos:</p>
+                        <ul style="margin: 1rem 0; padding-left: 1.5rem; color: #334155;">
+                            <li>Centraliza la información dispersa.</li>
+                            <li>Elimina duplicidades y dependencias externas.</li>
+                            <li>Aporta trazabilidad completa desde la creación del evento hasta su cierre económico.
+                            </li>
+                            <li>Facilita una lectura rápida del estado real de cada servicio.</li>
+                        </ul>
+
+                        <p>Esta versión inicial está pensada para ordenar el presente, pero sobre todo para preparar el
+                            futuro. Cada decisión técnica y funcional se ha tomado con una evolución clara en mente: más
+                            automatización, más análisis, más integración y una experiencia cada vez más fluida, también
+                            en movilidad.</p>
+
+                        <div class="manifesto-quote">
+                            "MesaChef Matrix es el primer nodo de un sistema vivo, escalable y adaptable, que crecerá al
+                            ritmo de la operativa real del hotel. Un proyecto construido desde dentro, para dar soporte
+                            al día a día, mejorar el control y anticiparse a lo que viene."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. FUNDAMENTOS -->
+                <section id="fundamentos" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">🚀 1. Fundamentos y Acceso</h2>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">A</div>
+                        <div class="step-body">
+                            <h3>Selección de Entorno</h3>
+                            <p>Al iniciar, localice el selector de hotel arriba a la izquierda. <strong>Es
+                                    vital</strong> confirmar dónde está trabajando:</p>
+                            <ul>
+                                <li><strong>Sercotel Guadiana:</strong> Operativa del centro.</li>
+                                <li><strong>Cumbria Spa&Hotel:</strong> Zona norte y eventos externos.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">B</div>
+                        <div class="step-body">
+                            <h3>Modos de Conexión</h3>
+                            <p>MesaChef es robusto ante fallos de red.</p>
+                            <ul class="status-list">
+                                <li>🟢 <strong>Online:</strong> Todo sincronizado en tiempo real.</li>
+                                <li>🟡 <strong>Offline / Reconectando:</strong> Puede seguir trabajando. Los datos se
+                                    guardan en local y se suben al volver la red. <strong>NO CIERRE LA PESTAÑA.</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. RESTAURANTE -->
+                <section id="restaurante" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">🍽️ 2. Módulo Restaurante (El Diario)</h2>
+                    </div>
+                    <p class="section-desc">Gestión de reservas a la carta, menús del día y pequeños grupos.</p>
+
+                    <div class="row">
+                        <div class="screenshot-container half">
+                            <img src="Img/ayuda/captura-restaurante.png" alt="Vista Grid Restaurante">
+                            <div class="screenshot-caption">Grid Semanal</div>
+                        </div>
+                        <div class="screenshot-container half">
+                            <img src="Img/ayuda/form_restaurante.png" alt="Ficha Reserva Restaurante">
+                            <div class="screenshot-caption">Ficha Nueva Reserva</div>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">1</div>
+                        <div class="step-body">
+                            <h3>Código de Colores (Estados)</h3>
+                            <div class="color-legend">
+                                <span class="badge white">⬜ Pendiente</span>
+                                <span class="badge green">🟢 Confirmada</span>
+                                <span class="badge blue">🔵 Sentado (Comiendo)</span>
+                                <span class="badge yellow">🟡 Cuenta Pedida</span>
+                                <span class="badge red">🔴 Anulada</span>
+                            </div>
+                            <p style="margin-top:0.5rem">El badge <strong>🚦 NUEVO</strong> parpadea 15 min para alertar
+                                al Maître de reservas recientes.</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-box">
+                        <h3>🔍 Detalle del Formulario</h3>
+                        <ul>
+                            <li><strong>Turno:</strong> Se autoselecciona según la hora (Almuerzo 13:00-16:00 / Cena
+                                20:00-23:00).</li>
+                            <li><strong>Zona:</strong> Elija entre "Restaurante" (Formal) o "Cafetería" (Casual).</li>
+                            <li><strong>Notas Cocina / Sala:</strong> Diferencie instrucciones. "Celiaco" va a Cocina;
+                                "Mesa
+                                ventana" va a Sala.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 3. PLANNING SALONES -->
+                <section id="salones" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">📅 3. Planning de Salones (Torre de Control)</h2>
+                    </div>
+                    <p class="section-desc">Autoridad suprema de disponibilidad. Si está aquí, existe.</p>
+
+                    <div class="screenshot-container">
+                        <img src="Img/ayuda/captura-salones.png" alt="Planning de Salones">
+                        <div class="screenshot-caption">Visión global de ocupación por salas y fechas.</div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">1</div>
+                        <div class="step-body">
+                            <h3>Semáforo de Disponibilidad</h3>
+                            <ul style="list-style:none; padding:0;">
+                                <li class="legend-item"><span class="dot orange"></span> <strong>TENTATIVO
+                                        (Opción):</strong> Cliente interesado. Se puede "desafiar".</li>
+                                <li class="legend-item"><span class="dot green"></span> <strong>CONFIRMADO
+                                        (Vendido):</strong> Contrato + Señal. Intocable.</li>
+                                <li class="legend-item"><span class="dot red"></span> <strong>BLOQUEO TÉCNICO:</strong>
+                                    Obras/Mantenimiento.</li>
+                                <li class="legend-item"><span class="dot white"></span> <strong>LIBRE:</strong>
+                                    Disponible para venta.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">2</div>
+                        <div class="step-body">
+                            <h3>Protocolo de Reserva</h3>
+                            <p>1. Click en celda vacía.</p>
+                            <p>2. Rellene <strong>Nombre Evento, Pax y Teléfono</strong> (Obligatorios).</p>
+                            <p>3. <strong>Montaje Supervisado:</strong> El sistema validará el aforo según el montaje
+                                elegido (Banquete, Escuela, Teatro, Cóctel).</p>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">3</div>
+                        <div class="step-body">
+                            <h3>Gestión de Conflictos</h3>
+                            <p>Si salta una <strong>ALERTA BLOQUEANTE</strong>, pare. Verifique quién tiene la reserva
+                                VERDE (válida) y contacte con el compañero de la reserva NARANJA para negociar.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. PRESUPUESTOS -->
+                <section id="presupuestos" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">📄 4. Presupuestos (Comercial)</h2>
+                    </div>
+                    <p class="section-desc">El corazón financiero. Sincronización inteligente con operaciones.</p>
+
+                    <div class="screenshot-container">
+                        <img src="Img/ayuda/captura-presupuestos.png" alt="Ficha de Presupuesto">
+                        <div class="screenshot-caption">Gestión detallada de menús, pax y estados comerciales.</div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">1</div>
+                        <div class="step-body">
+                            <h3>El "Gatillo" de Confirmación</h3>
+                            <p>El botón <strong>CONFIRMAR</strong> es la acción más potente:</p>
+                            <ol>
+                                <li>Bloquea el <strong>Salón en VERDE</strong> (nadie más puede venderlo).</li>
+                                <li>Si es en Restaurante, crea la reserva en el libro diario.</li>
+                                <li>Avisa a Cocina (Previsión de compras).</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">2</div>
+                        <div class="step-body">
+                            <h3>Sincronización Inteligente</h3>
+                            <p><strong>Pax Dinámicos:</strong> Si cambia los adultos en la cabecera (ej: 100 a 120), el
+                                sistema actualiza sola la cantidad de menús en las líneas.</p>
+                            <p><strong>Matrix Check:</strong> Al elegir salón y fecha, el sistema consulta
+                                disponibilidad en tiempo real.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. GRANDES EVENTOS -->
+                <section id="grandes-eventos" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">🎉 5. Grandes Eventos (Tickets)</h2>
+                    </div>
+                    <p class="section-desc">Para Nochevieja, Reyes y Congresos con venta de entrada individual.</p>
+
+                    <div class="row">
+                        <div class="screenshot-container half">
+                            <img src="Img/ayuda/captura-eventos.png" alt="Dashboard Eventos">
+                            <div class="screenshot-caption">Dashboard Control</div>
+                        </div>
+                        <div class="screenshot-container half">
+                            <img src="Img/ayuda/form_eventos.png" alt="Alta Gran Evento">
+                            <div class="screenshot-caption">Configuración Inicial</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-box">
+                        <h3>🔍 Gestión de Entradas</h3>
+                        <ul>
+                            <li><strong>Ref:</strong> Generada automáticamente (ej: CEN-241231). Úsela para búsquedas
+                                rápidas.</li>
+                            <li><strong>Pagos Parciales:</strong> Puede registrar "Señal" hoy y "Resto" el día del
+                                evento.
+                                El sistema calcula el pendiente.</li>
+                            <li><strong>Mesas:</strong> Asigne número de mesa. El sistema valida que no exceda el aforo
+                                de
+                                la mesa (si está configurado).</li>
+                        </ul>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">1</div>
+                        <div class="step-body">
+                            <h3>Motor de Venta</h3>
+                            <p>Alta rápida de participantes con gestión de <strong>Pagos Parciales</strong> (Señal +
+                                Resto).</p>
+                            <p>Permite visualizar quién está "Pagado" (Verde) y quién tiene "Pendiente" (Rojo).</p>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-circle">2</div>
+                        <div class="step-body">
+                            <h3>Plano Interactivo</h3>
+                            <p>Arrastre invitados a las mesas. El sistema le avisará si intenta sentar a alguien que no
+                                ha pagado.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. ADMIN -->
+                <section id="admin" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">⚙️ 6. Administración</h2>
+                    </div>
+
+                    <div class="screenshot-container">
+                        <img src="Img/ayuda/captura-admin.png" alt="Panel Admin">
+                        <div class="screenshot-caption">Configuración maestra del hotel.</div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-body">
+                            <h3>Funciones Clave</h3>
+                            <ul>
+                                <li><strong>Horarios Cocina:</strong> Defina apertura/cierre de turnos.</li>
+                                <li><strong>Capacidades Dinámicas:</strong> Ajuste el aforo legal de cada salón por tipo
+                                    de montaje.</li>
+                                <li><strong>Modo Mantenimiento:</strong> Cierre el sistema para actualizaciones
+                                    críticas.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section id="faq" class="module-section">
+                    <div class="module-header">
+                        <h2 class="module-title">❓ 8. FAQ y Casos Reales</h2>
+                    </div>
+
+                    <div class="faq-grid">
+                        <details class="faq-item">
+                            <summary>🚨 Se ha ido la luz/internet en medio de una reserva.</summary>
+                            <p><strong>No cierre la pestaña.</strong> Siga trabajando. Los datos se guardan en local y
+                                se sincronizarán al volver la conexión (badge verde).</p>
+                        </details>
+
+                        <details class="faq-item">
+                            <summary>📅 ¿Puedo reservar "Media Jornada"?</summary>
+                            <p><strong>Sí.</strong> El sistema permite vender Mañana, Tarde o Día Completo. Puede vender
+                                la mañana a un cliente y la tarde a otro sin conflicto.</p>
+                        </details>
+
+                        <details class="faq-item">
+                            <summary>💰 ¿Cómo facturo un evento?</summary>
+                            <p><strong>MesaChef NO factura.</strong> Es una herramienta operativa. La factura legal se
+                                emite desde el PMS (Navision/Oracle) introduciendo los datos manualmente.</p>
+                        </details>
+
+                        <details class="faq-item">
+                            <summary>🍽️ ¿Puedo reservar a las 17:00 (Tarde)?</summary>
+                            <p><strong>Sí.</strong> Se considera "Horario Especial". Avise a cocina ya que las partidas
+                                calientes pueden estar cerradas.</p>
+                        </details>
+
+                        <details class="faq-item">
+                            <summary>🚧 Necesito bloquear medio salón.</summary>
+                            <p>El sistema bloquea por unidad indivisible. Si necesita vender mitades, solicite a
+                                Gerencia crear los sub-salones (Sala A / Sala B).</p>
+                        </details>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+
+</html>
