@@ -664,6 +664,14 @@
     window.openBooking = function (salonName, dateStr, existing = null, defaultJornada = 'todo') {
         const currentHotel = localStorage.getItem(STORAGE_KEY) || "Guadiana";
 
+        // [NEW] Redirect Grand Events
+        if (existing && (existing.origen === 'grandes_eventos' || existing.tipoEvento === 'Gran Evento')) {
+            if (existing.eventoId) {
+                window.location.href = `grandes-eventos.html?id=${existing.eventoId}`;
+                return;
+            }
+        }
+
         // Check for existing reservations in this slot (if new)
         if (!existing && salonName && dateStr) {
             const salonRaw = salonName.replace(/\s/g, '').toLowerCase();

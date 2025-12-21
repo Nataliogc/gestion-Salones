@@ -346,7 +346,7 @@
                 
                 <!-- Price Input: Disabled if S/C -->
                 <div class="relative w-full">
-                    <input type="text" class="border border-slate-200 rounded pl-1 pr-6 py-1 text-right text-xs w-full ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
+                    <input type="text" class="border border-slate-200 rounded pl-1 pr-12 py-1 text-right text-xs w-full ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
                            value="${window.MesaChef.formatEuroValue(line.precio || 0)}" ${isSC ? 'disabled' : ''} 
                            onfocus="window.MesaChef.unformatEuroInput(this)"
                            onblur="window.MesaChef.formatEuroInput(this)"
@@ -1561,12 +1561,14 @@
             // --- SYNC WITH MODULES ---
             // Only if confirmed
             if (payload.estado === 'confirmada') {
+                // Always sync Restaurant (handles lines logic + internal cleanup)
+                await syncWithRestaurante(docId, payload);
+
                 if (campoSalon.value === 'Restaurante') {
-                    await syncWithRestaurante(docId, payload);
                     await cleanupSalonesReservation(docId); // Clean old Salon reservation if exists
                 } else {
                     await syncWithSalones(docId, payload);
-                    await cleanupRestaurantReservation(docId); // Clean old Rte reservation if exists
+                    // Do NOT clean restaurant here, as we might have mixed events (synced above)
                 }
             } else if (payload.estado === 'rechazada') {
                 // Already handled in btnAnular, but good generic safety:

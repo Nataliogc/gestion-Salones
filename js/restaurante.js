@@ -240,8 +240,20 @@
               ? `<button onclick="toggleLock('${space}', '${dateStr}', '${turno}')" class="text-red-500 hover:text-red-700 p-0.5" title="Desbloquear"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg></button>`
               : `<button onclick="toggleLock('${space}', '${dateStr}', '${turno}')" class="text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition p-0.5" title="Bloquear (Completo)"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 016 0v2h-1V7a2 2 0 00-2-2z"></path></svg></button>`;
 
-            const isPast = dateStr < utils.toIsoDate(new Date());
-            const shadeClass = isPast && !isLocked ? "bg-slate-100" : "";
+            // [MODIFIED] Logic for Past/Blocked
+            // Check if it is "Lunch" today and time is past 18:00
+            const now = new Date();
+            const todayIso = utils.toIsoDate(now);
+            const currentHour = now.getHours();
+
+            let istimeBlocked = false;
+            // Rule: Block "Almuerzo" if it is today and past 18:00
+            if (dateStr === todayIso && turno === 'almuerzo' && currentHour >= 18) {
+              istimeBlocked = true;
+            }
+
+            const isPast = dateStr < todayIso || istimeBlocked;
+            const shadeClass = isPast && !isLocked ? "bg-slate-100 text-slate-400" : ""; // Added text-slate-400 for better "disabled" look
             const bgClass = isLocked ? "bg-slate-50 border-red-100" : shadeClass;
 
             const addBtn = isLocked || isPast
@@ -686,23 +698,67 @@
       if (!dVal && data.fecha) dVal = data.fecha && data.fecha.toDate ? utils.toIsoDate(data.fecha.toDate()) : data.fecha;
       document.getElementById("campoFecha").value = dVal;
       document.getElementById("campoId").value = data.id;
+    }
 
-      // READ ONLY MODE
-      if (isPast) {
-        const title = document.getElementById("modalTitle");
-        if (title) title.innerText = "Reserva Pasada (Solo Lectura)";
+    // [NEW] Read-Only Mode for Past Reservations
+    const now = new Date();
+    const todayIso = utils.toIsoDate(now);
 
-        inputs.forEach(inp => inp.disabled = true);
-        if (btnGuardar) btnGuardar.style.display = 'none';
-        if (btnAnular) btnAnular.style.display = 'none';
-      } else {
-        const title = document.getElementById("modalTitle");
-        if (title) title.innerText = "Editar Reserva";
+    // Logic: Read-Only if:
+    // 1. Date is strictly in the past (< Today)
+    // 2. Date is Today AND Now >= 18:00 AND Reservation Time < 18:00 (Lunch passed)
 
-        inputs.forEach(inp => inp.disabled = false);
-        // Buttons valid (already set above)
+    let isReadOnly = dateStr < todayIso;
+
+    if (dateStr === todayIso && now.getHours() >= 18) {
+      // Check reservation time
+      if (data && data.hora) {
+        const [h, m] = data.hora.split(':').map(Number);
+        if (h < 18) isReadOnly = true;
+      } else if (turno === 'almuerzo') {
+        // For new/empty data, if turn is lunch, it's effectively < 18:00 default
+        isReadOnly = true;
       }
+    }
 
+    const readOnlyElements = [
+      "campoNombre", "campoTelefono", "campoHora", "campoPrecio",
+      "campoPax", "campoNinos", "campoPrecioNinos", "campoNotas",
+      "campoNotaCliente", "campoEstado", "campoEspacio", "campoTurno",
+      "btnAnular", "btnGuardar", "checkServicioIncluido"
+    ];
+
+    readOnlyElements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.disabled = isReadOnly;
+        if (isReadOnly) el.classList.add("opacity-50", "cursor-not-allowed");
+        else el.classList.remove("opacity-50", "cursor-not-allowed");
+      }
+    });
+
+    const modalTitle = document.getElementById("modalTitle");
+    if (modalTitle) {
+      if (isReadOnly) {
+        modalTitle.innerHTML = `Visualizar Reserva <span class="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200">HISTÓRICO (Solo Lectura)</span>`;
+      } else {
+        modalTitle.innerText = data ? "Editar Reserva" : "Nueva Reserva";
+      }
+    }
+
+    // --- POPULATE FORM ---
+    document.getElementById("modalReserva").classList.remove("hidden");
+    document.getElementById("campoEspacio").value = space;
+    document.getElementById("campoFecha").value = dateStr;
+    document.getElementById("campoTurno").value = turno;
+    // Date is always locked in modal
+    document.getElementById("campoFecha").disabled = true;
+
+    if (btnGuardar && isReadOnly) btnGuardar.style.display = 'none';
+    else if (btnGuardar) btnGuardar.style.display = 'block';
+
+    if (data) {
+      document.getElementById("campoId").value = data.id || "";
     } else {
       // NEW
       document.getElementById("campoId").value = "";
@@ -775,11 +831,33 @@
     const eventDate = new Date(fecha);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
+    const eventDateMidnight = new Date(eventDate);
+    eventDateMidnight.setHours(0, 0, 0, 0);
 
-    if (eventDate < today) {
+    if (eventDateMidnight < today) {
       alert("⚠️ No se puede crear una reserva en fecha pasada.");
       return;
+    }
+
+    // Strict Time Check for Today
+    if (eventDateMidnight.getTime() === today.getTime()) {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      const [selH, selM] = document.getElementById("campoHora").value.split(':').map(Number);
+
+      if (selH < currentHours || (selH === currentHours && selM < currentMinutes)) {
+        alert("⚠️ No se puede reservar en una hora pasada.");
+        return;
+      }
+
+      // [NEW] Rule: Block Lunch after 18:00
+      const turno = document.getElementById("campoTurno").value;
+      if (turno === 'almuerzo' && currentHours >= 18) {
+        alert("⚠️ El servicio de almuerzo ha finalizado (Hora límite 18:00).");
+        return;
+      }
     }
 
     // --- CHECK LOCK (COMPLETO) ---
@@ -814,19 +892,16 @@
         return;
       }
 
-      // 2. Robust Async Date Check (Server Side)
-      const baseDate = new Date(fecha);
-      const startRange = new Date(baseDate); startRange.setDate(startRange.getDate() - 2);
-      const endRange = new Date(baseDate); endRange.setDate(endRange.getDate() + 2);
-
+      // 2. Robust Async Date Check (Server Side - Simplified to avoid Index Error)
       try {
         const lockSnap = await db.collection("reservas_restaurante")
           .where("hotel", "==", currentHotel)
           .where("espacio", "==", targetSpace)
           .where("turno", "==", targetTurn)
           .where("type", "==", "lock")
-          .where("fecha", ">=", startRange)
-          .where("fecha", "<=", endRange)
+          // Removed date inequality filter to avoid composite index requirement
+          // .where("fecha", ">=", startRange) 
+          // .where("fecha", "<=", endRange)
           .get();
 
         let isLocked = false;
@@ -836,8 +911,10 @@
           if (data.fecha && data.fecha.toDate) dateStr = utils.toIsoDate(data.fecha.toDate());
           else if (typeof data.fecha === 'string') dateStr = data.fecha;
 
+          // Manual Date Check
           if (dateStr === fecha) isLocked = true;
         });
+
 
         if (isLocked) {
           alert(`⛔ EL TURNO ESTÁ CERRADO (COMPLETO).\nNo se permiten nuevas reservas en este turno.`);
@@ -989,7 +1066,7 @@
 
       // 2. Update Reservation Status
       await db.collection("reservas_restaurante").doc(id).update({
-        estado: 'cancelada',
+        estado: 'anulada',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 

@@ -270,7 +270,12 @@
     // --- UI.JS ---
     const $ = id => document.getElementById(id);
 
+    let eventsListenersInitialized = false;
+
     function initEventListeners() {
+        if (eventsListenersInitialized) return;
+        eventsListenersInitialized = true;
+
         $('btnSaveEventConfig')?.addEventListener('click', saveConfig);
         $('btnAddParticipant')?.addEventListener('click', () => openParticipantModal());
         $('btnCloseModal')?.addEventListener('click', closeParticipantModal);
@@ -468,14 +473,44 @@
 
     async function handleParticipantSubmit(e) {
         e.preventDefault();
+        const newAdults = parseInt($('pAdults').value) || 0;
+        const newKids = parseInt($('pKids').value) || 0;
+        const newTotal = newAdults + newKids;
+
+        // [FIX] Capacity Check
+        const currentCap = parseInt($('inputCapacity').value) || 0;
+        if (currentCap > 0) {
+            const currentStats = calculateStats(state.participants, currentCap);
+            // We need to subtract the *current* participant's OLD pax if editing, but state.participants has the old data.
+            // If editing, find old pax
+            let oldPax = 0;
+            const editingId = $('pId').value;
+            if (editingId) {
+                const oldP = state.participants.find(p => p.id === editingId);
+                if (oldP && (!oldP.estado || oldP.estado === 'activo')) {
+                    oldPax = (parseInt(oldP.adultos) || 0) + (parseInt(oldP.ninos) || 0);
+                }
+            }
+
+            const currentOccupied = currentStats.totalPax;
+            const futureOccupied = currentOccupied - oldPax + newTotal;
+
+            if (futureOccupied > currentCap) {
+                const overflow = futureOccupied - currentCap;
+                if (!confirm(`⚠️ AFORO EXCEDIDO\n\nEl evento tiene un aforo de ${currentCap} personas.\nCon estos cambios, se alcanzarán ${futureOccupied} personas (Exceso: ${overflow}).\n\n¿Deseas continuar de todas formas?`)) {
+                    return; // Abort
+                }
+            }
+        }
+
         const data = {
             id: $('pId').value || null,
             eventoId: state.currentEventId,
             titular: $('pName').value,
             telefono: $('pPhone').value,
             email: $('pEmail').value,
-            adultos: parseInt($('pAdults').value) || 0,
-            ninos: parseInt($('pKids').value) || 0,
+            adultos: newAdults,
+            ninos: newKids,
             pagos: state.modalPagos,
         };
         try {
@@ -573,22 +608,62 @@
 
     // Placeholders for creating event
     async function handleCreateNewEvent() {
+        const sName = $('newEvtSalon').value;
+        const salonObj = cachedSalonsForNewEvent.find(s => s.name === sName);
+        const defaultCap = salonObj ? (parseInt(salonObj.pax) || 0) : 0;
+
         const data = {
             nombre: $('newEvtName').value,
             fecha: $('newEvtDate').value,
-            salonId: $('newEvtSalon').value,
-            // defaults
-            capacidad: 0, precioAdulto: 0, precioNino: 0
+            hotel: state.hotelInfo.id || "Guadiana", // [FIX] Store Hotel
+            salonId: sName,
+            // [FIX] Auto-fill capacity
+            capacidad: defaultCap,
+            precioAdulto: 0,
+            precioNino: 0
         };
         if (!data.nombre || !data.fecha) return alert("Faltan datos");
         try {
             const id = await API.createEvent(data);
+
+            // [FIX] Create Blocking Reservation in Salones
+            if (window.db) {
+                console.log("Creando bloqueo de salón para Gran Evento...");
+                await window.db.collection("reservas_salones").add({
+                    hotel: state.hotelInfo.id || "Guadiana",
+                    salon: sName,
+                    cliente: data.nombre,
+                    fecha: data.fecha,
+                    estado: 'confirmada', // Blocked
+                    revisado: true,
+                    tipoEvento: "Gran Evento",
+                    eventoId: id,
+                    origen: 'grandes_eventos',
+                    referenciaPresupuesto: 'GE-' + id.substring(0, 4),
+                    contact: { tel: "", email: "" },
+                    detalles: {
+                        jornada: "todo", // Block full day
+                        montaje: "banquete",
+                        hora: "12:00",
+                        pax_adultos: 0,
+                        pax_ninos: 0
+                    },
+                    notas: {
+                        interna: "Bloqueo automático por Gran Evento",
+                        cliente: ""
+                    },
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
             $('modalNewEvent').classList.add('hidden');
             loadEventDetail(id);
         } catch (e) { console.error(e); alert("Error creando evento"); }
     }
 
     // Logic to open New Event Modal and Populate Salons
+    let cachedSalonsForNewEvent = []; // Store for lookup
+
     $('btnNewEventParams')?.addEventListener('click', async () => {
         $('modalNewEvent').classList.remove('hidden');
         // Populate Salons
@@ -608,15 +683,18 @@
 
             let salons = [];
             if (config && config[hotelKey]) {
-                salons = config[hotelKey];
+                // [FIX] Filter inactive and store logic
+                salons = config[hotelKey].filter(s => s.active !== false);
             } else {
                 // Fallback
                 if (hotelKey === "Cumbria") {
-                    salons = [{ name: "Salón A" }, { name: "Salón B" }, { name: "Terraza" }];
+                    salons = [{ name: "Salón A", pax: 100 }, { name: "Salón B", pax: 100 }, { name: "Terraza", pax: 50 }];
                 } else {
-                    salons = [{ name: "Gran Salón" }, { name: "Salón Venus" }, { name: "Salón Marte" }, { name: "Salón Júpiter" }];
+                    salons = [{ name: "Gran Salón", pax: 300 }, { name: "Salón Venus", pax: 150 }, { name: "Salón Marte", pax: 80 }, { name: "Salón Júpiter", pax: 80 }];
                 }
             }
+
+            cachedSalonsForNewEvent = salons; // Save for capacity lookup
 
             salons.forEach(s => {
                 const opt = document.createElement('option');
@@ -651,8 +729,22 @@
         } catch (e) { console.error(e); alert('Error al guardar.'); }
     }
 
-    function refreshEventsList() {
-        init(); // quick reload list
+    async function refreshEventsList() {
+        try {
+            const events = await API.fetchEvents();
+
+            // Simple Client Filter based on UI State
+            const statusFilter = $('listStatusFilter')?.value || 'todos';
+
+            const filtered = events.filter(e => {
+                if (statusFilter === 'abierto') return e.estado !== 'completo' && e.estado !== 'cerrado';
+                if (statusFilter === 'completo') return e.estado === 'completo' || e.estado === 'cerrado';
+                return true;
+            });
+
+            renderEventsList(filtered);
+
+        } catch (e) { console.warn("Error refreshing events", e); }
     }
 
 })();
