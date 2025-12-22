@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <title>MesaChef Matrix · Grandes Eventos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.json" />
+  <!-- <link rel="manifest" href="manifest.json" /> -->
   <link rel="icon" type="image/png" href="Img/mesa-chef-192.png" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/styles.css">
@@ -612,6 +612,7 @@
 
       <form id="formParticipant" style="display:flex; flex-direction:column; gap:16px;">
         <input type="hidden" id="pId">
+        <input type="hidden" id="pOldPax">
 
         <!-- ROW 1: NAME & PHONE -->
         <div class="header-grid" style="grid-template-columns: 2fr 1fr; gap:12px;">
@@ -640,6 +641,13 @@
             <label class="form-label">Niños</label>
             <input type="number" id="pKids" class="form-input" value="0" min="0">
           </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="form-group" style="margin-top: 8px;">
+          <label class="form-label">Observaciones</label>
+          <textarea id="pObservaciones" class="form-input" rows="2"
+            placeholder="Notas internas sobre el participante..." style="resize: vertical; font-size: 13px;"></textarea>
         </div>
 
         <!-- ROW 4: PAYMENTS HISTORY (bg-gray) -->
@@ -693,7 +701,7 @@
           <!-- Cancel Logic -->
           <div id="cancelSection" style="flex:1;">
             <button type="button" id="btnShowCancel" class="btn-action"
-              style="color:#ef4444; border-color:#fee2e2; display:none;" onclick="toggleCancelForm()">Anular
+              style="color:#ef4444; border-color:#fee2e2; display:none;">Anular
               Participación</button>
 
             <!-- Cancel Form (Compact) -->
@@ -703,7 +711,7 @@
 
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h4 style="margin:0; color:#b91c1c; font-size:12px; font-weight:700;">Confirmar Baja</h4>
-                <button type="button" onclick="toggleCancelForm()"
+                <button type="button" id="btnCloseCancelForm"
                   style="background:none; border:none; font-size:16px; line-height:1; color:#991b1b; cursor:pointer;">&times;</button>
               </div>
 

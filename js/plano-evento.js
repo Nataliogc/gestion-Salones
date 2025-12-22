@@ -58,7 +58,10 @@
             snap.forEach(d => {
                 const p = d.data();
                 p.id = d.id;
-                currentParticipants.push(p);
+                // [FIX] Exclude cancelled participants from seating plan
+                if (!p.estado || !p.estado.startsWith('anulado')) {
+                    currentParticipants.push(p);
+                }
             });
 
             // Load Salon Dimensions

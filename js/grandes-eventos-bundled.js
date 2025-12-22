@@ -24,6 +24,8 @@
         }
     };
 
+
+
     // Load initial state from LocalStorage
     const storedHotel = localStorage.getItem("mesaChef_hotel") || "Guadiana";
     state.hotelInfo.id = storedHotel;
@@ -55,6 +57,12 @@
         if (!dateString) return "";
         const [y, m, d] = dateString.split('-');
         return `${d}/${m}/${y}`;
+    }
+
+    // [FIX] Get hotel logo path
+    function getHotelLogo() {
+        const hotelId = state.hotelInfo?.id || 'Guadiana';
+        return hotelId === 'Cumbria' ? 'Img/logo-cumbria.png' : 'Img/logo-guadiana.png';
     }
 
     function getHotelLogo(salonName) {
@@ -150,9 +158,8 @@
         async function fetchParticipants(eventId) {
             if (!initAPI()) return [];
             const snapshot = await participantesRef.where("eventoId", "==", eventId).get();
-            let participants = [];
-            snapshot.forEach(doc => participants.push({ id: doc.id, ...doc.data() }));
-            return participants;
+            // [FIX] Extract ID from doc.id, not from data()
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
 
         async function fetchSalonConfig() {
@@ -196,16 +203,21 @@
 
         async function saveParticipant(participantData) {
             if (!initAPI()) return;
-            if (participantData.id) {
-                const ref = participantesRef.doc(participantData.id);
-                const { id, ...data } = participantData;
+
+            // [FIX] Remove 'id' from data to prevent overwriting doc.id when fetching
+            const { id, ...dataToSave } = participantData;
+
+            if (id) {
+                // Update existing
+                const ref = participantesRef.doc(id);
                 await ref.update({
-                    ...data,
+                    ...dataToSave,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             } else {
+                // Create new
                 await participantesRef.add({
-                    ...participantData,
+                    ...dataToSave,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
@@ -241,6 +253,7 @@
     })();
 
     // --- PRINT.JS ---
+    // --- PRINT.JS RECOVERY ---
     function printGeneric(title, content) {
         const w = window.open('', '_blank');
         w.document.write(`
@@ -249,22 +262,178 @@
             <head>
                 <meta charset="UTF-8">
                 <title>${title}</title>
+                <link rel="stylesheet" href="css/print.css">
                 <style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-                    th { background: #f1f5f9; text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; text-transform:uppercase; font-size:10px; color:#64748b; }
-                    td { padding: 8px; border-bottom: 1px solid #f1f5f9; color:#334155; }
+                    body { font-family: 'Segoe UI', system-ui, sans-serif; -webkit-print-color-adjust: exact; padding: 20px; }
+                     /* Fallback styles if CSS file fails to load */
+                    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; }
+                    .print-title { font-size: 24px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin: 0; }
+                    .print-subtitle { font-size: 14px; color: #64748b; margin-top: 5px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; }
+                    th { background-color: #f8fafc !important; color: #475569; font-weight: 700; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+                    td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
                     .text-right { text-align: right; }
-                    .font-bold { font-weight: bold; }
-                    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #0f172a; padding-bottom: 20px; }
+                    .text-center { text-align: center; }
+                    .font-bold { font-weight: 700; }
+                    .section-break { page-break-before: always; }
+                    .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin-top: 20px; page-break-inside: avoid; }
                 </style>
             </head>
-            <body>${content}</body>
+            <body>
+                ${content}
+                <script>
+                    window.onload = function() { setTimeout(() => window.print(), 500); };
+                </script>
+            </body>
             </html>
         `);
         w.document.close();
-        w.focus();
-        setTimeout(() => w.print(), 500);
+    }
+
+    function getPrintHeader(title) {
+        const evt = state.currentEvent;
+        return `
+            <div class="print-header">
+                <div>
+                    <h1 class="print-title">${title}</h1>
+                    <div class="print-subtitle">${evt.nombre} · ${formatDate(evt.fecha)}</div>
+                </div>
+                <img src="${state.hotelInfo.logo}" style="height: 60px;">
+            </div>
+         `;
+    }
+
+    function generateParticipantsPdf() {
+        const parts = [...state.participants].sort((a, b) => (a.secuencia || 0) - (b.secuencia || 0));
+        const rows = parts.map(p => {
+            const paid = (p.pagos || []).reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + (parseFloat(p.pagado) || 0);
+            const pending = (((parseInt(p.adultos) || 0) * state.currentEvent.precioAdulto + (parseInt(p.ninos) || 0) * state.currentEvent.precioNino) - paid);
+            return `<tr>
+                <td>${p.mesa || '-'}</td>
+                <td><span class="font-bold">${p.titular}</span><br><span style="font-size:10px;color:#64748b">${p.referencia || '-'}</span></td>
+                <td>${p.telefono || '-'}</td>
+                <td class="text-center">${p.adultos}</td>
+                <td class="text-center">${p.ninos}</td>
+                <td class="text-right">${formatCurrency(paid)}</td>
+                <td class="text-right ${pending > 0 ? 'text-red-600' : ''}">${pending > 0 ? formatCurrency(pending) : '-'}</td>
+             </tr>`;
+        }).join('');
+
+        return `
+            ${getPrintHeader("Listado de Participantes")}
+            <table>
+                <thead>
+                    <tr>
+                        <th width="10%">Mesa</th>
+                        <th>Titular</th>
+                        <th>Teléfono</th>
+                        <th class="text-center" width="5%">Ad</th>
+                        <th class="text-center" width="5%">Ni</th>
+                        <th class="text-right" width="12%">Pagado</th>
+                        <th class="text-right" width="12%">Pendiente</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    function generateTablesPdf() {
+        // Group by Table
+        const tables = {};
+        state.participants.forEach(p => {
+            const m = p.mesa || "Sin Asignar";
+            if (!tables[m]) tables[m] = [];
+            tables[m].push(p);
+        });
+
+        // Sort keys (Sin Asignar last)
+        const keys = Object.keys(tables).sort((a, b) => {
+            if (a === "Sin Asignar") return 1;
+            if (b === "Sin Asignar") return -1;
+            // Numeric sort if possible
+            const nA = parseInt(a), nB = parseInt(b);
+            if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
+            return a.localeCompare(b);
+        });
+
+        let content = getPrintHeader("Distribución de Mesas");
+        content += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">`;
+
+        keys.forEach(k => {
+            const group = tables[k];
+            const totalAd = group.reduce((a, c) => a + (parseInt(c.adultos) || 0), 0);
+            const totalCh = group.reduce((a, c) => a + (parseInt(c.ninos) || 0), 0);
+
+            let tableContent = `
+                <div class="summary-box">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e2e8f0; padding-bottom:5px; margin-bottom:10px;">
+                        <span class="font-bold" style="font-size:16px; color:#0f172a;">Mesa ${k}</span>
+                        <span style="font-size:12px; color:#64748b;">${totalAd + totalCh} Pax (${totalAd} Ad / ${totalCh} Ni)</span>
+                    </div>
+                    <table style="margin-top:0;">
+                        <tbody>
+                            ${group.map(p => `
+                                <tr>
+                                    <td style="padding:4px 0; border:none;">${p.titular}</td>
+                                    <td style="padding:4px 0; border:none; text-align:right;">${(parseInt(p.adultos) || 0) + (parseInt(p.ninos) || 0)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+             `;
+            content += tableContent;
+        });
+
+        content += `</div>`;
+        return content;
+    }
+
+    function generateFinancialPdf() {
+        const stats = calculateStats(state.participants, 0); // Re-calculate
+
+        return `
+            ${getPrintHeader("Informe Económico")}
+            
+            <div class="summary-box" style="margin-bottom:30px;">
+                <h3 style="margin-top:0;">Resumen Global</h3>
+                <table style="width: auto; min-width: 50%;">
+                    <tr><td style="border:none; padding:4px 0;">Total Participantes:</td><td style="border:none; padding:4px 0; font-weight:bold;">${stats.totalPax} (${stats.totalAdults} Ad / ${stats.totalKids} Ni)</td></tr>
+                    <tr><td style="border:none; padding:4px 0;">Recaudado:</td><td style="border:none; padding:4px 0; font-weight:bold; color:#15803d;">${formatCurrency(stats.totalCollected)}</td></tr>
+                    <tr><td style="border:none; padding:4px 0;">Pendiente:</td><td style="border:none; padding:4px 0; font-weight:bold; color:#b91c1c;">${formatCurrency(stats.totalPending)}</td></tr>
+                    <tr><td style="border:none; padding:4px 0;">Cancelado/Devuelto:</td><td style="border:none; padding:4px 0; font-weight:bold; color:#64748b;">${formatCurrency(stats.totalCancelledAmount)}</td></tr>
+                </table>
+            </div>
+
+            <h3>Desglose por Reserva</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Titular</th>
+                        <th class="text-center">Pax</th>
+                        <th class="text-right">Total</th>
+                        <th class="text-right">Pagado</th>
+                        <th class="text-right">Pendiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${state.participants.filter(p => !p.estado?.startsWith('anulado')).map(p => {
+            const paid = (p.pagos || []).reduce((a, c) => a + (parseFloat(c.amount) || 0), 0) + (parseFloat(p.pagado) || 0);
+            const cost = ((parseInt(p.adultos) || 0) * parseFloat($('inputPriceAdult').value) + (parseInt(p.ninos) || 0) * parseFloat($('inputPriceChild').value));
+            return `<tr>
+                            <td>${p.referencia || '-'}</td>
+                            <td>${p.titular}</td>
+                            <td class="text-center">${(parseInt(p.adultos) || 0) + (parseInt(p.ninos) || 0)}</td>
+                            <td class="text-right font-bold">${formatCurrency(cost)}</td>
+                            <td class="text-right text-green-700">${formatCurrency(paid)}</td>
+                            <td class="text-right ${cost - paid > 0 ? 'text-red-600' : ''}">${cost - paid > 0 ? formatCurrency(cost - paid) : '-'}</td>
+                        </tr>`;
+        }).join('')}
+                </tbody>
+            </table>
+        `;
     }
 
     // --- UI.JS ---
@@ -284,20 +453,89 @@
 
         $('listStatusFilter')?.addEventListener('change', refreshEventsList);
         $('listDateFilter')?.addEventListener('change', refreshEventsList);
+        $('filterParticipants')?.addEventListener('change', renderParticipantsTable);
         // $('listSearch')?.addEventListener('input', debounce(refreshEventsList, 500)); // Debounce manually implemented if needed
 
         ['pAdults', 'pKids', 'pCollectionDate'].forEach(id => {
             $(id)?.addEventListener('input', recalcModalFinancials);
         });
 
+        // [FIX] Real-time Dashboard Updates
+        ['inputCapacity', 'inputPriceAdult', 'inputPriceChild'].forEach(id => {
+            $(id)?.addEventListener('input', updateDashboard);
+        });
+
+        $('btnCloseCancelForm')?.addEventListener('click', () => window.toggleCancelForm());
         $('btnAddPayment')?.addEventListener('click', addPaymentToModal);
         $('paymentsList')?.addEventListener('click', handlePaymentListClick);
         $('btnConfirmCancel')?.addEventListener('click', confirmCancel);
-        $('btnShowCancel')?.addEventListener('click', () => window.toggleCancelForm());
+        $('btnShowCancel')?.addEventListener('click', () => {
+            const btn = $('btnShowCancel');
+            if (btn.dataset.action === 'recover') {
+                const id = $('pId').value;
+                handleRecover(id);
+            } else {
+                if (typeof window.toggleCancelForm === 'function') {
+                    window.toggleCancelForm();
+                } else {
+                    console.error("toggleCancelForm not found");
+                    // Fallback implementation
+                    const form = $('divCancelForm');
+                    form.classList.toggle('hidden');
+                    if (!form.classList.contains('hidden')) {
+                        $('txtCancelReason').value = '';
+                        const containerAction = $('divCancelPaymentAction');
+                        if (containerAction && state.modalPagos) {
+                            const totalPaid = state.modalPagos.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+                            containerAction.style.display = totalPaid > 0 ? 'block' : 'none';
+                        }
+                    }
+                }
+            }
+        });
 
         $('btnPrintMenu')?.addEventListener('click', (e) => {
             e.stopPropagation();
             $('printDropdown').classList.toggle('hidden');
+        });
+
+        // [FIX] Print Options Listeners
+        document.querySelectorAll('.print-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = btn.dataset.printType;
+                const eventId = state.currentEventId;
+                if (!eventId) return;
+
+                // Hide dropdown
+                $('printDropdown').classList.add('hidden');
+
+                // Logic to print
+                if (type === 'participants') {
+                    printGeneric(`Participantes - ${state.currentEvent.nombre}`, generateParticipantsPdf());
+                } else if (type === 'tables') {
+                    printGeneric(`Mesas - ${state.currentEvent.nombre}`, generateTablesPdf());
+                } else if (type === 'financial') {
+                    printGeneric(`Financiero - ${state.currentEvent.nombre}`, generateFinancialPdf());
+                } else if (type === 'complete') {
+                    const combined = generateParticipantsPdf() +
+                        `<div class="section-break"></div>` +
+                        generateTablesPdf() +
+                        `<div class="section-break"></div>` +
+                        generateFinancialPdf();
+                    printGeneric(`Reporte Completo - ${state.currentEvent.nombre}`, combined);
+                } else {
+                    alert("Opción desconocida");
+                }
+            });
+        });
+
+        // [FIX] Map Button
+        $('btnOpenMapWindow')?.addEventListener('click', () => {
+            if (state.currentEventId) {
+                window.open(`plano-evento.html?id=${state.currentEventId}`, '_blank');
+            } else {
+                alert("Primero debes guardar el evento o seleccionar uno.");
+            }
         });
 
         $('btnNewEventParams')?.addEventListener('click', () => $('modalNewEvent').classList.remove('hidden'));
@@ -317,6 +555,35 @@
                 }
             }
         };
+
+        // [FIX] Smart Back Button
+        const backLink = $('linkHeaderBack');
+        if (backLink) {
+            backLink.addEventListener('click', (e) => {
+                // If we are in Detail View, go back to List instead of Home
+                if (!$('view-detail').classList.contains('hidden')) {
+                    e.preventDefault();
+                    showListView();
+                }
+            });
+        }
+    }
+
+    function showListView() {
+        $('view-detail').classList.add('hidden');
+        $('view-list').classList.remove('hidden');
+
+        // Update Back Button Text
+        const backLink = $('linkHeaderBack');
+        if (backLink) backLink.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg> Volver al Inicio`;
+
+        // Clear URL param
+        try {
+            window.history.pushState({}, document.title, window.location.pathname);
+        } catch (e) { console.warn("History API restricted on file://"); }
     }
 
     async function renderEventsList(events) {
@@ -329,7 +596,7 @@
         events.forEach(e => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">${e.referencia}</span></td>
+                <td><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">${e.referencia || 'Auto'}</span></td>
                 <td>${formatDate(e.fecha)}</td>
                 <td class="font-semibold text-slate-700">${e.nombre}</td>
                 <td>${e.salonId}</td>
@@ -351,6 +618,13 @@
     async function loadEventDetail(eventId) {
         $('view-list').classList.add('hidden');
         $('view-detail').classList.remove('hidden');
+
+        // [FIX] Update Back Button Text
+        const backLink = $('linkHeaderBack');
+        if (backLink) backLink.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg> Volver a la Lista`;
 
         try {
             const event = await API.fetchEventDetails(eventId);
@@ -393,16 +667,22 @@
 
             const paid = (p.pagos || []).reduce((acc, pay) => acc + (parseFloat(pay.amount) || 0), 0) + (parseFloat(p.pagado) || 0);
 
+            // [FIX] Calculate total and pending
+            const priceAdult = parseFloat($('inputPriceAdult')?.value) || 0;
+            const priceChild = parseFloat($('inputPriceChild')?.value) || 0;
+            const total = ((parseInt(p.adultos) || 0) * priceAdult) + ((parseInt(p.ninos) || 0) * priceChild);
+            const pending = Math.max(0, total - paid);
+
             tr.innerHTML = `
                 <td class="font-mono text-xs">${p.mesa || '-'}</td>
                 <td class="font-medium ${isAnulado ? 'text-red-700 line-through' : 'text-slate-800'}">
-                    ${p.titular} <br> <span class="text-[10px] text-slate-500">${p.referencia}</span>
+                    ${p.titular} <br> <span class="text-[10px] text-slate-500">${p.referencia || (p.id ? 'P-' + p.id.slice(-6) : '-')}</span>
                 </td>
                 <td class="text-xs text-slate-500">${p.telefono || '-'}</td>
                 <td><span class="font-bold">${p.adultos}</span> / ${p.ninos}</td>
-                <td class="font-mono text-xs">-</td>
+                <td class="font-mono text-xs font-semibold">${total > 0 ? formatCurrency(total) : '-'}</td>
                 <td class="font-mono text-xs text-green-700">${formatCurrency(paid)}</td>
-                <td class="font-mono text-xs text-orange-600">-</td>
+                <td class="font-mono text-xs ${pending > 0 ? 'text-orange-600 font-semibold' : 'text-slate-400'}">${pending > 0 ? formatCurrency(pending) : '-'}</td>
                 <td><button class="btn-action edit-p" data-id="${p.id}">Editar</button></td>
             `;
             tr.querySelector('.edit-p').addEventListener('click', () => openParticipantModal(p));
@@ -416,6 +696,34 @@
 
         $('statTotalPax').textContent = stats.totalPax;
         $('statOccupancy').textContent = stats.occupancy + '%';
+
+        // [FIX] Update Context Label
+        const lblCap = $('lblCapacity');
+        if (lblCap) lblCap.textContent = capacity;
+
+        // [FIX] Color Logic (> 100% Red Background)
+        const occVal = parseFloat(stats.occupancy);
+        const occElem = $('statOccupancy');
+        const cardElem = $('statCardOccupancy');
+
+        if (occElem && cardElem) {
+            if (occVal > 100) {
+                // Warning State
+                occElem.classList.remove('text-slate-800');
+                occElem.classList.add('text-red-700');
+
+                cardElem.classList.remove('bg-white', 'border-slate-200');
+                cardElem.classList.add('bg-red-100', 'border-red-400', 'animate-pulse'); // Dramatic effect
+            } else {
+                // Normal State
+                occElem.classList.remove('text-red-700', 'text-red-600'); // Clean cleanup
+                occElem.classList.add('text-slate-800');
+
+                cardElem.classList.remove('bg-red-100', 'border-red-400', 'animate-pulse');
+                cardElem.classList.add('bg-white', 'border-slate-200');
+            }
+        }
+
         $('statCollected').textContent = formatCurrency(stats.totalCollected);
         $('statPending').textContent = formatCurrency(stats.totalPending);
         $('statCancelledAmount').textContent = formatCurrency(stats.totalCancelledAmount);
@@ -434,14 +742,23 @@
             $('pEmail').value = participant.email || '';
             $('pAdults').value = participant.adultos;
             $('pKids').value = participant.ninos;
+            $('pObservaciones').value = participant.observaciones || '';
+
+            // [FIX] Store Old Pax to avoid calculation errors on save
+            const oldTotal = (parseInt(participant.adultos) || 0) + (parseInt(participant.ninos) || 0);
+            $('pOldPax').value = oldTotal;
 
             const btnCancel = $('btnShowCancel');
-            if (participant.estado === 'anulado') {
+            if (participant.estado && participant.estado.startsWith('anulado')) {
                 btnCancel.textContent = "Recuperar Reserva";
-                btnCancel.onclick = () => handleRecover(participant.id);
+                // Check if listener already exists? No, just clone to strip old ones if necessary or handle state
+                // Simplest: just set usage in listener via state check or unique buttons.
+                // But here we're swapping behavior.
+                // Let's rely on a global state or class to switch logic in the event listener.
+                btnCancel.dataset.action = "recover";
             } else {
                 btnCancel.textContent = "Anular Participación";
-                btnCancel.onclick = () => window.toggleCancelForm();
+                btnCancel.dataset.action = "cancel";
             }
             btnCancel.style.display = 'block';
         } else {
@@ -451,7 +768,13 @@
             $('btnShowCancel').style.display = 'none';
             $('pCollectionDate').value = new Date().toISOString().split('T')[0];
             $('pAdults').value = 1;
+            $('pAdults').value = 1;
+            $('pOldPax').value = 0;
         }
+
+        // [FIX] Set Default Date to Today
+        $('newPayDate').value = new Date().toISOString().split('T')[0];
+
         renderModalPayments();
         recalcModalFinancials();
     }
@@ -480,20 +803,30 @@
         // [FIX] Capacity Check
         const currentCap = parseInt($('inputCapacity').value) || 0;
         if (currentCap > 0) {
-            const currentStats = calculateStats(state.participants, currentCap);
-            // We need to subtract the *current* participant's OLD pax if editing, but state.participants has the old data.
-            // If editing, find old pax
-            let oldPax = 0;
-            const editingId = $('pId').value;
-            if (editingId) {
-                const oldP = state.participants.find(p => p.id === editingId);
-                if (oldP && (!oldP.estado || oldP.estado === 'activo')) {
-                    oldPax = (parseInt(oldP.adultos) || 0) + (parseInt(oldP.ninos) || 0);
-                }
-            }
+            const pId = $('pId').value;
 
-            const currentOccupied = currentStats.totalPax;
-            const futureOccupied = currentOccupied - oldPax + newTotal;
+            // DEBUG: Log current state
+            console.log('=== CAPACITY CHECK DEBUG ===');
+            console.log('pId from input:', pId, 'Type:', typeof pId);
+            console.log('Total participants in state:', state.participants.length);
+            console.log('Participant IDs:', state.participants.map(p => ({ id: p.id, type: typeof p.id, titular: p.titular })));
+
+            // Calculate usage of ALL OTHER participants (excluding this one if editing)
+            const otherParticipants = state.participants.filter(p => {
+                const match = p.id !== pId;
+                console.log(`Comparing p.id="${p.id}" (${typeof p.id}) !== pId="${pId}" (${typeof pId}): ${match}`);
+                return match;
+            });
+
+            console.log('Filtered to', otherParticipants.length, 'other participants');
+
+            const statsOthers = calculateStats(otherParticipants, currentCap);
+
+            const currentOccupiedOther = statsOthers.totalPax;
+            const futureOccupied = currentOccupiedOther + newTotal;
+
+            console.log(`Capacity Check: Cap=${currentCap}, Others=${currentOccupiedOther}, New=${newTotal}, Future=${futureOccupied}`);
+            console.log('=== END DEBUG ===');
 
             if (futureOccupied > currentCap) {
                 const overflow = futureOccupied - currentCap;
@@ -511,12 +844,14 @@
             email: $('pEmail').value,
             adultos: newAdults,
             ninos: newKids,
+            observaciones: $('pObservaciones').value || '',
             pagos: state.modalPagos,
         };
         try {
             await API.saveParticipant(data);
             closeParticipantModal();
-            loadParticipants(state.currentEventId);
+            // [FIX] Reload participants immediately to get fresh IDs from Firebase
+            await loadParticipants(state.currentEventId);
         } catch (err) { console.error(err); alert("Error al guardar"); }
     }
 
@@ -537,34 +872,77 @@
         const amount = parseFloat($('newPayAmount').value);
         if (date && amount) {
             state.modalPagos.push({ date, amount });
-            $('newPayDate').value = '';
+
+            // [FIX] Reset key fields but keep date as today for convenience
+            $('newPayDate').value = new Date().toISOString().split('T')[0];
             $('newPayAmount').value = '';
             renderModalPayments();
             recalcModalFinancials();
         }
     }
 
-    function handlePaymentListClick(e) {
-        if (e.target.closest(".btn-remove-pay")) {
-            const idx = parseInt(e.target.closest(".btn-remove-pay").dataset.idx);
-            state.modalPagos.splice(idx, 1);
-            renderModalPayments();
-            recalcModalFinancials();
+    // [FIX] Cancellation Logic
+    $('btnConfirmCancel')?.addEventListener('click', confirmCancel);
+
+    async function confirmCancel() {
+        const id = $('pId').value;
+        const reason = $('txtCancelReason').value;
+        const action = $('selCancelAction').value; // refund | keep
+
+        if (!id) return alert("No se puede identificar al participante.");
+        if (!reason) return alert("Indica un motivo.");
+        if (!confirm("¿Confirmar anulación del participante?")) return;
+
+        const newState = action === 'keep' ? 'anulado-con-cargos' : 'anulado-sin-cargos';
+
+        try {
+            // [FIX] Use saveParticipant instead of non-existent updateParticipant
+            // Get current participant data first
+            const currentP = state.participants.find(p => p.id === id);
+            if (!currentP) throw new Error("Participante no encontrado en el estado");
+
+            await API.saveParticipant({
+                ...currentP,
+                id: id,
+                estado: newState,
+                observaciones: (currentP.observaciones || '') + ` [ANULADO: ${reason}]`
+            });
+
+            alert("Participante anulado correctamente.");
+            toggleCancelForm(); // Hide mini-form
+            closeParticipantModal(); // Hide main modal
+
+            // Refresh
+            if (state.currentEventId) {
+                state.participants = await API.fetchParticipants(state.currentEventId);
+                renderParticipantsTable();
+                updateDashboard();
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("Error al anular: " + e.message);
         }
     }
 
-    async function confirmCancel() {
-        const pId = $('pId').value;
-        const reason = $('txtCancelReason').value;
-        const action = $('selCancelAction').value;
-        if (!pId || !reason) { alert("Indica el motivo"); return; }
-        if (!confirm("¿Confirmar anulación?")) return;
-        try {
-            await API.cancelParticipant(pId, reason, action, state.modalPagos);
-            closeParticipantModal();
-            loadParticipants(state.currentEventId);
-        } catch (e) { console.error(e); alert("Error al anular"); }
+    function handlePaymentListClick(e) {
+        // [FIX] Robuster Event Delegation
+        const btn = e.target.closest(".btn-remove-pay");
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation(); // Stop bubbling
+            const idx = parseInt(btn.dataset.idx);
+            console.log("Deleting payment at index:", idx);
+
+            if (state.modalPagos[idx]) {
+                state.modalPagos.splice(idx, 1);
+                renderModalPayments();
+                recalcModalFinancials();
+            }
+        }
     }
+
+
 
     async function handleRecover(id) {
         if (!confirm("¿Recuperar?")) return;
@@ -574,7 +952,28 @@
     }
 
     function closeParticipantModal() { $('modalParticipant').classList.add('hidden'); }
-    function toggleStatus() { /* Implement logic */ }
+    function closeParticipantModal() { $('modalParticipant').classList.add('hidden'); }
+
+    // [FIX] Toggle Status Implementation
+    async function toggleStatus() {
+        if (!state.currentEventId) return;
+        const current = state.currentEvent.estado;
+        const newState = (current === 'completo' || current === 'cerrado') ? 'abierto' : 'completo';
+
+        if (!confirm(`¿Cambiar estado a ${newState.toUpperCase()}?`)) return;
+
+        try {
+            await API.updateEvent(state.currentEventId, { estado: newState });
+            state.currentEvent.estado = newState;
+            await API.updateEvent(state.currentEventId, { estado: newState });
+            state.currentEvent.estado = newState;
+            // Refresh UI
+            // [FIX] Correct ID: eventStatusBadge
+            $('eventStatusBadge').textContent = newState === 'completo' ? 'Completo' : 'Abierto';
+            $('eventStatusBadge').className = `px-3 py-1 rounded-full text-xs font-bold ${newState === 'completo' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+            alert(`Estado actualizado a ${newState}`);
+        } catch (e) { console.error(e); alert("Error actualizando estado"); }
+    }
 
     // --- MAIN.JS ---
     async function init() {
@@ -745,6 +1144,13 @@
             renderEventsList(filtered);
 
         } catch (e) { console.warn("Error refreshing events", e); }
+    }
+
+    // [FIX] Ensure init is called
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 
 })();

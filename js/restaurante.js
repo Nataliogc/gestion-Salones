@@ -486,12 +486,15 @@
       filterFn = (r, dateStr) => dateStr >= utils.toIsoDate(dates[0]) && dateStr <= utils.toIsoDate(dates[6]);
     }
 
-    const logoUrl = (hotel === "Guadiana") ? "Img/logo-guadiana.png" : "Img/logo-cumbria.png";
+    const logoPath = (hotel === "Guadiana") ? "Img/logo-guadiana.png" : "Img/logo-cumbria.png";
+    // Get base path from current document (works with file:// protocol)
+    const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+    const logoUrl = `${basePath}/${logoPath}`;
 
     let html = `
             <div style="font-family: sans-serif; padding: 20px;">
                 <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:15px;">
-                   <img src="${logoUrl}" style="height:60px; width:auto;">
+                   <img src="${logoUrl}" style="height:60px; width:auto;" onerror="this.style.display='none'">
                    <div>
                         <h1 style="font-size: 24px; font-weight: bold; margin:0; color:#333;">${hotel === "Guadiana" ? "Sercotel Guadiana" : "Cumbria Spa&Hotel"}</h1>
                         <h2 style="font-size: 16px; color: #666; margin:5px 0 0 0;">${title}</h2>
