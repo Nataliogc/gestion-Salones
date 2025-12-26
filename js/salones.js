@@ -97,7 +97,7 @@
         if (headerName) {
             const logoSrc = currentHotel === "Guadiana" ? "Img/logo-guadiana.svg" : "Img/logo-cumbria.svg";
             const displayName = currentHotel === "Guadiana" ? "Sercotel Guadiana" : "Cumbria Spa & Hotel";
-            headerName.innerHTML = `<div class="flex items-center"><img src="${logoSrc}" class="h-8 mr-2"> ${displayName}</div>`;
+            headerName.innerHTML = `<div class="flex items-center overflow-hidden"><img src="${logoSrc}" class="h-8 w-auto max-w-[120px] object-contain mr-2 shrink-0"> <span class="truncate whitespace-nowrap">${displayName}</span></div>`;
         }
 
         // 2. LOAD CONFIG

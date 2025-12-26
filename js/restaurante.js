@@ -56,7 +56,21 @@
       return `${year}-${month}-${day}`;
     },
     formatDateES: (d) => d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-    formatDateShort: (d) => d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
+    formatDateShort: (d) => d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }),
+    formatDateTime: (ts) => {
+      if (!ts) return "-";
+      let d;
+      if (ts.toDate) d = ts.toDate();
+      else if (ts instanceof Date) d = ts;
+      else d = new Date(ts);
+      if (isNaN(d.getTime())) return "-";
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
   };
 
   let restaurantConfig = {}; // Global Config
@@ -420,7 +434,7 @@
       // 3. Status Filter
       const rStatus = (r.estado || "pendiente").toLowerCase();
       if (filterStatus === 'activos') {
-        if (rStatus === 'anulada') return;
+        if (rStatus === 'anulada' || rStatus === 'no-presentado') return;
       } else if (filterStatus !== 'todas') {
         if (rStatus !== filterStatus) return;
       }
@@ -448,6 +462,7 @@
         let border = 'border-l-[3px] border-amber-300';
         if (rStatus === 'confirmada') border = 'border-l-[3px] border-green-500';
         if (rStatus === 'anulada') border = 'border-l-[3px] border-red-500';
+        if (rStatus === 'no-presentado') border = 'border-l-[3px] border-slate-400';
 
         // NEW: Check for recent creation (15 mins) -> Flashing Badge
         let badgeHTML = "";
@@ -745,9 +760,28 @@
       if (!dVal && data.fecha) dVal = data.fecha && data.fecha.toDate ? utils.toIsoDate(data.fecha.toDate()) : data.fecha;
       document.getElementById("campoFecha").value = dVal;
       document.getElementById("campoId").value = data.id;
+
+      const historySection = document.getElementById("sectionHistorial");
+      if (historySection) {
+        historySection.classList.remove("hidden");
+        document.getElementById("valCreada").innerText = utils.formatDateTime(data.createdAt);
+        document.getElementById("valModificada").innerText = utils.formatDateTime(data.updatedAt);
+        document.getElementById("valAnulada").innerText = utils.formatDateTime(data.cancelledAt);
+
+        // Styling for Anulada
+        const labelAnulada = document.getElementById("valAnulada").parentElement;
+        if (!data.cancelledAt) {
+          labelAnulada.classList.add("opacity-30");
+        } else {
+          labelAnulada.classList.remove("opacity-30");
+        }
+      }
+    } else {
+      // NEW
+      const historySection = document.getElementById("sectionHistorial");
+      if (historySection) historySection.classList.add("hidden");
     }
 
-    // [NEW] Read-Only Mode for Past Reservations
     const now = new Date();
     const todayIso = utils.toIsoDate(now);
 
@@ -1143,6 +1177,7 @@
       // 2. Update Reservation Status
       await db.collection("reservas_restaurante").doc(id).update({
         estado: 'anulada',
+        cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 

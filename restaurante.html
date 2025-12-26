@@ -290,6 +290,7 @@
                     <option value="confirmada">Confirmadas</option>
                     <option value="pendiente">Pendientes</option>
                     <option value="anulada">Anuladas</option>
+                    <option value="no-presentado">No Presentados</option>
                 </select>
             </div>
         </div>
@@ -398,6 +399,7 @@
                                 <option value="pendiente">⏳ Pendiente</option>
                                 <option value="confirmada" selected>✅ Confirmada</option>
                                 <option value="anulada">❌ Anulada</option>
+                                <option value="no-presentado">👤 No Presentado</option>
                             </select>
                         </div>
                     </div>
@@ -450,6 +452,28 @@
                         <textarea id="campoNotas" rows="2"
                             class="w-full border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-600 placeholder-slate-300 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
                             placeholder="Notas internas..."></textarea>
+                    </div>
+
+                    <!-- [NEW] Historial -->
+                    <div id="sectionHistorial" class="hidden border-t border-slate-100 pt-3 mt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Realizada</span>
+                                <span id="valCreada" class="text-[10px] text-slate-600 font-mono font-medium">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Modificada</span>
+                                <span id="valModificada"
+                                    class="text-[10px] text-slate-600 font-mono font-medium">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-red-400">Anulada</span>
+                                <span id="valAnulada" class="text-[10px] text-red-500 font-mono font-bold">-</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Hidden Fields -->

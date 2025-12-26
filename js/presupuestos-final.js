@@ -906,7 +906,11 @@
                         // 2. Restaurante
                         const snapRest = await db.collection("reservas_restaurante").where("presupuestoId", "==", state.editingId).get();
                         snapRest.docs.forEach(doc => {
-                            batch.update(doc.ref, { estado: 'anulada' });
+                            batch.update(doc.ref, {
+                                estado: 'anulada',
+                                cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
                             changesCount++;
                         });
 

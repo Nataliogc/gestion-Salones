@@ -3,6 +3,21 @@
 **Versión del Documento:** 10.0 Updated  
 **Confidencialidad:** Uso Interno Grupo Guadiana & Cumbria  
 **Filosofía:** "Dato que no está en la Matrix, evento que no existe."
+Bienvenida
+PROYECTO MESACHEF
+Bienvenido a MesaChef la suite integral diseñada para la gestión eficiente de hostelería en el Grupo. Esta guía está pensada para facilitar el uso de la versión 10.0, cubriendo sus operaciones principales y las novedades incorporadas.
+
+VERSIÓN MATRIX
+MesaChef nace de una necesidad real: unificar, ordenar y dar coherencia a la gestión operativa de eventos, restauración y espacios en un entorno hotelero cada vez más complejo y dinámico.
+No es solo un software. MesaChef es una herramienta de control, visión y toma de decisiones, diseñada desde la operativa diaria, pensada para quienes están en primera línea y necesitan información clara, accesible y accionable.
+La versión Matrix representa el punto de partida del proyecto. Su objetivo es conectar los distintos elementos clave del negocio —eventos, salones, reservas, menús, participantes, importes y estados— en una única estructura lógica y visual. Una matriz donde cada dato tiene sentido por sí mismo, pero cobra verdadero valor cuando se relaciona con el resto.
+Matrix no busca aún la perfección, sino la solidez de los cimientos:
+•	Centraliza la información dispersa.
+•	Elimina duplicidades y dependencias externas.
+•	Aporta trazabilidad completa desde la creación del evento hasta su cierre económico.
+•	Facilita una lectura rápida del estado real de cada servicio.
+Esta versión inicial está pensada para ordenar el presente, pero sobre todo para preparar el futuro. Cada decisión técnica y funcional se ha tomado con una evolución clara en mente: más automatización, más análisis, más integración y una experiencia cada vez más fluida, también en movilidad.
+MesaChef Matrix es el primer nodo de un sistema vivo, escalable y adaptable, que crecerá al ritmo de la operativa real del hotel. Un proyecto construido desde dentro, para dar soporte al día a día, mejorar el control y anticiparse a lo que viene.
 
 ---
 
