@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>MesaChef Matrix · Salones</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json" />
+    <!-- <link rel="manifest" href="manifest.json" /> -->
     <link rel="icon" type="image/png" href="Img/mesa-chef-192.png" />
     <link rel="apple-touch-icon" href="Img/mesa-chef-192.png" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -192,7 +192,7 @@
                                 </path>
                             </svg>
                         </div>
-                        <input type="date" id="currentDate" onchange="renderGrid()"
+                        <input type="date" id="currentDate" onchange="window.goToDate(this.value)"
                             class="pl-10 pr-3 py-1.5 border border-slate-300 rounded-md text-sm text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none w-40 transition shadow-sm h-8 font-medium cursor-pointer hover:border-blue-400" />
                     </div>
                     <button onclick="changeWeek(1)"

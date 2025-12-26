@@ -338,7 +338,7 @@
             const bgClass = isSC ? "bg-green-50" : "";
 
             const row = document.createElement("div");
-            row.className = `grid grid-cols-[120px_1fr_60px_80px_80px_80px] gap-2 px-4 py-2 items-center text-sm border-b border-slate-50 last:border-0 ${bgClass}`;
+            row.className = `grid grid-cols-[120px_1fr_60px_110px_100px_40px] gap-2 px-4 py-2 items-center text-sm border-b border-slate-50 last:border-0 ${bgClass}`;
             row.innerHTML = `
                 <input type="date" class="border border-slate-200 rounded px-1 py-1 text-xs" value="${line.fecha || ''}" onchange="updateLine(${index}, 'fecha', this.value)">
                 <input type="text" list="charge-options" class="border border-slate-200 rounded px-2 py-1 flex-1 text-xs font-semibold text-slate-700" value="${line.concepto || ''}" onchange="updateLine(${index}, 'concepto', this.value)" placeholder="Concepto">
@@ -346,7 +346,7 @@
                 
                 <!-- Price Input: Disabled if S/C -->
                 <div class="relative w-full">
-                    <input type="text" class="border border-slate-200 rounded pl-1 pr-12 py-1 text-right text-xs w-full ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
+                    <input type="text" style="padding-right: 30px !important;" class="border border-slate-200 rounded pl-1 py-1 text-right text-xs w-full ${isSC ? 'text-green-600 font-bold bg-transparent' : ''}" 
                            value="${window.MesaChef.formatEuroValue(line.precio || 0)}" ${isSC ? 'disabled' : ''} 
                            onfocus="window.MesaChef.unformatEuroInput(this)"
                            onblur="window.MesaChef.formatEuroInput(this)"
@@ -1252,54 +1252,122 @@
 
         try {
             const reservasCol = db.collection("reservas_salones");
-            // Check if exists
+            // 1. Fetch all existing reservations for this budget
             const snap = await reservasCol.where("presupuestoId", "==", presupuestoId).get();
 
-            const reservaPayload = {
-                hotel: pData.hotel,
-                salon: pData.salon,
-                cliente: pData.cliente,
-                fecha: pData.fechaDesde, // Main date
-                estado: 'confirmada',
-                revisado: false, // New from budget, likely needs review
-                presupuestoId: presupuestoId,
-                referenciaPresupuesto: pData.referencia,
-                contact: {
-                    tel: pData.telefono || "",
-                    email: pData.email || ""
-                },
-                detalles: {
-                    jornada: pData.turno || "todo",
-                    montaje: pData.montaje || "",
-                    hora: pData.horaInicio || "",
-                    pax_adultos: pData.paxAdultos || 0,
-                    pax_ninos: pData.paxNinos || 0
-                },
-                notas: {
-                    interna: pData.notas || "",
-                    cliente: pData.notasCliente || ""
-                },
-                servicios: (pData.lines || []).map(l => ({
-                    fecha: l.fecha,
-                    concepto: l.concepto,
-                    uds: l.uds,
-                    precio: l.precio,
-                    total: (l.uds || 0) * (l.precio || 0)
-                })),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                esDePresupuesto: true // [NEW] Flag for 2-way sync
-            };
+            // Map existing docs by Date for easy lookup: { 'YYYY-MM-DD': docSnapshot }
+            const existingMap = new Map();
+            snap.forEach(doc => {
+                const dData = doc.data();
+                if (dData.fecha) existingMap.set(dData.fecha, doc);
+            });
 
-            if (!snap.empty) {
-                // Update first match
-                const resId = snap.docs[0].id;
-                await reservasCol.doc(resId).update(reservaPayload);
-                console.log("Reserva Sincronizada (Actualizada):", resId);
-            } else {
-                // Create
-                reservaPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await reservasCol.add(reservaPayload);
-                console.log("Reserva Sincronizada (Creada)");
+            // 2. Group Budget Lines by Date
+            const servicesByDate = {};
+            (pData.lines || []).forEach(l => {
+                // Use line date or fallback to budget start date
+                const dateStr = l.fecha || pData.fechaDesde;
+                if (!dateStr) return; // Should not happen
+
+                if (!servicesByDate[dateStr]) {
+                    servicesByDate[dateStr] = [];
+                }
+                servicesByDate[dateStr].push(l);
+            });
+
+            // 3. Iterate Groups and Upsert
+            const processedDates = new Set();
+            const batch = db.batch(); // Use batch for atomic consistency if possible (careful with 500 limit)
+            // Or just await sequentially to update current doc IDs if we need output logging. 
+            // Budget usually small -> sequential is fine and safer for feedback.
+
+            for (const [dateStr, services] of Object.entries(servicesByDate)) {
+                processedDates.add(dateStr);
+
+                // [NEW] Infer Shift (Jornada) from "Alquiler" line if present
+                // Map budget values (which are like "½ Jornada Mañana") to Salones keys ("mañana")
+                let specificTurno = "todo"; // Default default
+
+                // 1. Try to map header value first as fallback
+                const headerTurno = (pData.turno || "").toLowerCase();
+                if (headerTurno.includes("mañana")) specificTurno = "mañana";
+                else if (headerTurno.includes("tarde")) specificTurno = "tarde";
+                else if (headerTurno.includes("todo") || headerTurno.includes("día") || headerTurno.includes("dia")) specificTurno = "todo";
+
+                // 2. Override with specific rental line if present
+                const rentalLine = services.find(l => (l.concepto || "").toLowerCase().includes("alquiler"));
+                if (rentalLine) {
+                    const c = rentalLine.concepto.toLowerCase();
+                    if (c.includes("mañana") || c.includes("mjm")) specificTurno = "mañana";
+                    else if (c.includes("tarde") || c.includes("mjt")) specificTurno = "tarde";
+                    else if (c.includes("completa") || c.includes("todo") || c.includes("día") || c.includes("dia")) specificTurno = "todo";
+                }
+
+                const reservaPayload = {
+                    hotel: pData.hotel,
+                    salon: pData.salon,
+                    cliente: pData.cliente,
+                    fecha: dateStr, // Specific Date for this reservation block
+                    estado: 'confirmada',
+                    revisado: false,
+                    presupuestoId: presupuestoId,
+                    referenciaPresupuesto: pData.referencia,
+                    contact: {
+                        tel: pData.telefono || "",
+                        email: pData.email || ""
+                    },
+                    detalles: {
+                        jornada: specificTurno, // Use inferred specific shift
+                        montaje: pData.montaje || "",
+                        // Time applies to all? For multi-day, usually yes, or derived from schedule?
+                        // We use the main budget time for now.
+                        hora: pData.horaInicio || "",
+                        pax_adultos: pData.paxAdultos || 0,
+                        pax_ninos: pData.paxNinos || 0
+                    },
+                    notas: {
+                        interna: pData.notas || "",
+                        cliente: pData.notasCliente || ""
+                    },
+                    servicios: services.map(l => ({
+                        fecha: l.fecha,
+                        concepto: l.concepto,
+                        uds: l.uds,
+                        precio: l.precio,
+                        total: (l.uds || 0) * (l.precio || 0)
+                    })),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    esDePresupuesto: true
+                };
+
+                if (existingMap.has(dateStr)) {
+                    // Update
+                    const doc = existingMap.get(dateStr);
+                    await reservasCol.doc(doc.id).update(reservaPayload);
+                    console.log(`Reserva Salones [${dateStr}] Actualizada: ${doc.id} (Turno: ${specificTurno})`);
+                } else {
+                    // Create
+                    reservaPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    const newDoc = await reservasCol.add(reservaPayload);
+                    console.log(`Reserva Salones [${dateStr}] Creada: ${newDoc.id} (Turno: ${specificTurno})`);
+                }
+            }
+
+            // 4. Cleanup Orphans (Dates that existed but now have no lines)
+            // Or maybe the main budget date has no lines? We should keep reservation if it matches main date?
+            // User requested "distribute services". If a day has NO services, maybe no reservation needed?
+            // "Alquiler Salon" is a service line. If that exists, reservation exists.
+            // If budget spans 3 days but middle day has NO lines (no rental, no food), should we reserve room?
+            // Strictly speaking: No line = No activity defined. 
+            // But usually "Alquiler" line exists for each day if they pay.
+            // If they don't pay (or forgot line), maybe we shouldn't reserve.
+            // We'll proceed with deleting orphans.
+
+            for (const [dateStr, doc] of existingMap) {
+                if (!processedDates.has(dateStr)) {
+                    console.log(`Cleanup: Eliminando reserva obsoleta fecha ${dateStr} (ID: ${doc.id})`);
+                    await reservasCol.doc(doc.id).delete();
+                }
             }
 
         } catch (e) {

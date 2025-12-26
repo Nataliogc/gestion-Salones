@@ -32,6 +32,7 @@
     }
 
     function initFirebase(callback) {
+        console.log("Salones: Initializing Firebase...");
         try {
             const firebaseConfig = {
                 apiKey: "AIzaSyAXv_wKD48EFDe8FBQ-6m0XGUNoxSRiTJY",
@@ -42,24 +43,35 @@
                 appId: "1:43170330072:web:bcdd09e39930ad08bf2ead"
             };
 
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            if (!firebase.apps.length) {
+                console.log("Salones: Firebase.initializeApp...");
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                console.log("Salones: Firebase already initialized.");
+            }
 
             // AUTH LISTENER
             firebase.auth().onAuthStateChanged((user) => {
-                if (user && !appStarted) {
-                    console.log("Salones: Auth Ready", user.uid);
-                    appStarted = true;
-                    callback();
+                if (user) {
+                    if (!appStarted) {
+                        console.log("Salones: Auth Ready (User logged in)", user.uid);
+                        appStarted = true;
+                        callback();
+                    }
+                } else {
+                    console.log("Salones: User not logged in, signing in anonymously...");
+                    // TRIGGER SIGN IN
+                    firebase.auth().signInAnonymously().catch((error) => {
+                        console.error("Auth Error (SignInAnonymously)", error);
+                        alert("Error de autenticación con Firebase: " + error.message);
+                    });
                 }
             });
 
-            // TRIGGER SIGN IN
-            if (!firebase.auth().currentUser) {
-                firebase.auth().signInAnonymously().catch((error) => {
-                    console.error("Auth Error", error);
-                });
-            }
-        } catch (e) { console.error("Firebase Init Error:", e); }
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+            alert("Error crítico iniciando Firebase: " + e.message);
+        }
     }
 
     let db;
@@ -393,17 +405,7 @@
                 if (!cellGroups[key]) cellGroups[key] = [];
 
                 let dailyJornada = res.detalles?.jornada || "todo";
-                if (res.servicios) {
-                    const rentalService = res.servicios.find(s =>
-                        s.fecha === date && s.concepto && s.concepto.toLowerCase().startsWith("alquiler salón")
-                    );
-                    if (rentalService) {
-                        const c = rentalService.concepto.toLowerCase();
-                        if (c.includes("- mañana") || c.includes(" mañana")) dailyJornada = "mañana";
-                        else if (c.includes("- tarde") || c.includes(" tarde")) dailyJornada = "tarde";
-                        else if (c.includes("- todo") || c.includes(" todo")) dailyJornada = "todo";
-                    }
-                }
+                // Removed client-side override to trust DB value (synced correctly from Budget)
 
                 cellGroups[key].push({ ...res, fecha: date, _displayJornada: dailyJornada, _canonicalSalon: canonicalName });
             });
@@ -885,7 +887,7 @@
                             <div class="relative w-full">
                                 <input type="text" onchange="calcTotal()" value="${window.MesaChef.formatEuroValue(s.precio)}" 
                                        onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
-                                       class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                                       class="text-xs text-right row-price w-full rounded border-gray-200" style="padding-right: 30px !important;">
                                 <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
                             </div>
                         </td>
@@ -934,7 +936,7 @@
                 <div class="relative w-full">
                     <input type="text" onchange="calcTotal()" value="0,00" 
                            onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
-                           class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                           class="text-xs text-right row-price w-full rounded border-gray-200" style="padding-right: 30px !important;">
                     <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
                 </div>
             </td>
@@ -1057,7 +1059,7 @@
                     <div class="relative w-full">
                         <input type="text" onchange="calcTotal()" value="${window.MesaChef.formatEuroValue(price)}" 
                                onfocus="window.MesaChef.unformatEuroInput(this)" onblur="window.MesaChef.formatEuroInput(this)"
-                               class="text-xs text-right row-price w-full rounded border-gray-200 pr-6">
+                               class="text-xs text-right row-price w-full rounded border-gray-200" style="padding-right: 30px !important;">
                         <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">€</span>
                     </div>
                 </td>
