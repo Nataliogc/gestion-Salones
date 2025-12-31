@@ -30,9 +30,10 @@
 
   let db;
   let currentWeekStart = new Date();
-  const cleanDay = currentWeekStart.getDay();
-  const diff = currentWeekStart.getDate() - cleanDay + (cleanDay === 0 ? -6 : 1);
-  currentWeekStart.setDate(diff);
+  // [MODIFIED] Do not force to Monday on init, so we keep "Today" as selected
+  // const cleanDay = currentWeekStart.getDay();
+  // const diff = currentWeekStart.getDate() - cleanDay + (cleanDay === 0 ? -6 : 1);
+  // currentWeekStart.setDate(diff);
 
   let loadedReservations = [];
   const STORAGE_KEY = "mesaChef_hotel";
@@ -41,6 +42,11 @@
   const utils = {
     getWeekDates: (d) => {
       const start = new Date(d);
+      // [NEW] Calculate Monday dynamically
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+      start.setDate(diff);
+
       const dates = [];
       for (let i = 0; i < 7; i++) {
         let temp = new Date(start);
@@ -213,7 +219,8 @@
 
       const dates = utils.getWeekDates(currentWeekStart);
       const inputSemana = document.getElementById("inputSemana");
-      if (inputSemana) inputSemana.value = utils.toIsoDate(dates[0]);
+      // [FIX] Show current SELECTED date in input, not just Monday
+      if (inputSemana) inputSemana.value = utils.toIsoDate(currentWeekStart);
 
       console.log("DEBUG: Building HTML...");
 
@@ -512,7 +519,10 @@
 
                     <div class="flex justify-between items-end mt-1">
                         <div class="pointer-events-auto">${notesIcon}</div>
-                        <div class="text-right text-gray-400 font-mono pointer-events-none">${priceDisplay}</div>
+                        <div class="flex flex-col items-end">
+                             ${r.mesa ? `<span class="text-[10px] font-bold text-slate-500 bg-slate-50 px-1 rounded border border-slate-100 mb-0.5" title="Mesa">M.${r.mesa}</span>` : ''}
+                             <div class="text-right text-gray-400 font-mono pointer-events-none">${priceDisplay}</div>
+                        </div>
                     </div>
                 `;
         div.onclick = (e) => { e.stopPropagation(); openBooking(space, rDateStr, turno, r); };
@@ -525,13 +535,11 @@
     const hotel = localStorage.getItem(STORAGE_KEY) || "Guadiana";
     const dates = utils.getWeekDates(currentWeekStart);
     let filterFn;
+    let title; // Declare title here
 
     if (mode === 'dia') {
-      const todayStr = utils.toIsoDate(new Date());
-      const startStr = utils.toIsoDate(dates[0]);
-      const endStr = utils.toIsoDate(dates[6]);
-      let targetDateStr = todayStr;
-      if (todayStr < startStr || todayStr > endStr) targetDateStr = startStr;
+      // [FIX] Use the exact selected date (currentWeekStart now holds the specific date)
+      let targetDateStr = utils.toIsoDate(currentWeekStart);
       const prettyDate = utils.formatDateES(new Date(targetDateStr));
       title = `Informe Diario - ${prettyDate}`;
       filterFn = (r, dateStr) => dateStr === targetDateStr;
@@ -598,9 +606,9 @@
         html += `<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
                     <thead>
                         <tr style="background: #f1f5f9; color: #475569; text-align: left;">
+                            <th style="padding: 6px; width: 40px; border-bottom: 2px solid #ddd;">Mesa</th>
                             <th style="padding: 6px; width: 45px; border-bottom: 2px solid #ddd;">Hora</th>
-                            <th style="padding: 6px; width: 70px; border-bottom: 2px solid #ddd;">Esp.</th>
-                            <th style="padding: 6px; width: 130px; border-bottom: 2px solid #ddd;">Cliente</th>
+                            <th style="padding: 6px; width: 140px; border-bottom: 2px solid #ddd;">Cliente</th>
                             <th style="padding: 6px; width: 30px; border-bottom: 2px solid #ddd; text-align:center;">Pax</th>
                             <th style="padding: 6px; border-bottom: 2px solid #ddd;">Notas / Observaciones</th>
                             <th style="padding: 6px; width: 40px; border-bottom: 2px solid #ddd;">Est.</th>
@@ -627,6 +635,7 @@
           }
           let type = "Esp.";
           let typeFull = "Especial";
+          const mesa = r.mesa || "-"; // [NEW] Get mesa
           const hour = parseInt(time.split(':')[0]);
           if (hour >= 12 && hour <= 15) { type = "Alm."; typeFull = "Almuerzo"; }
           else if (hour >= 20) { type = "Cena"; typeFull = "Cena"; }
@@ -635,8 +644,8 @@
           else countSpecial += pax;
 
           html += `<tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 6px; font-weight:bold; color: #000;">${mesa}</td>
                     <td style="padding: 6px; font-weight:bold;">${time}</td>
-                    <td style="padding: 6px; color:#555;">${spaceAbbr}</td>
                     <td style="padding: 6px; font-weight:600; color:#333;">${clientName.substring(0, 20)}</td>
                     <td style="padding: 6px; text-align:center;">${pax}</td>
                     <td style="padding: 6px; font-style:italic; color:#444;">${notesText}</td>
@@ -810,6 +819,7 @@
       document.getElementById("campoNombre").value = data.nombre || data.cliente || "";
       document.getElementById("campoTelefono").value = data.telefono || "";
       document.getElementById("campoHora").value = data.hora || "";
+      document.getElementById("campoMesa").value = data.mesa || ""; // [NEW] Populate Mesa
       document.getElementById("campoPrecio").value = window.MesaChef.formatEuroValue(data.precio || 0); // [MODIFIED]
       document.getElementById("campoPax").value = data.pax || "";
       document.getElementById("campoNinos").value = data.ninos || 0;
@@ -878,7 +888,7 @@
     const readOnlyElements = [
       "campoNombre", "campoTelefono", "campoHora", "campoPrecio",
       "campoPax", "campoNinos", "campoPrecioNinos", "campoNotas",
-      "campoNotaCliente", "campoEstado", "campoEspacio", "campoTurno",
+      "campoNotaCliente", "campoEstado", "campoEspacio", "campoTurno", "campoMesa",
       "btnAnular", "btnGuardar", "checkServicioIncluido"
     ];
 
@@ -928,6 +938,7 @@
       document.getElementById("campoNombre").value = "";
       document.getElementById("campoTelefono").value = "";
       document.getElementById("campoHora").value = "";
+      document.getElementById("campoMesa").value = ""; // [NEW] Clear Mesa
       document.getElementById("campoPrecio").value = "";
       document.getElementById("campoPax").value = "";
       document.getElementById("campoNinos").value = "";
@@ -1122,6 +1133,7 @@
       nombre: nombre,
       telefono: telefono,
       hora: document.getElementById("campoHora").value,
+      mesa: document.getElementById("campoMesa").value.trim(), // [NEW] Save Mesa
       pax: parseInt(document.getElementById("campoPax").value) || 0,
       ninos: parseInt(document.getElementById("campoNinos").value) || 0,
       precio: precio,
@@ -1378,12 +1390,8 @@
   };
 
   window.goToDate = function (dateObj) {
-    const d = new Date(dateObj);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
-    d.setDate(diff);
-
-    currentWeekStart = d;
+    // [FIX] Just set the date, don't force Monday. getWeekDates handles the view.
+    currentWeekStart = new Date(dateObj);
     renderGridStructure();
   };
 

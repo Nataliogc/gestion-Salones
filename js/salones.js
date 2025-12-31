@@ -1278,12 +1278,9 @@
         let filterFn;
 
         if (mode === 'dia') {
-            const todayStr = utils.toIsoDate(new Date());
-            const startStr = utils.toIsoDate(dates[0]);
-            const endStr = utils.toIsoDate(dates[6]);
-            // If today is in view, use today. Else use start of view.
-            let targetDateStr = todayStr;
-            if (todayStr < startStr || todayStr > endStr) targetDateStr = startStr;
+            // [FIX] Always use the selected date (currentWeekStart represents the date visible/picked)
+            // defaults to Today on load, or whatever the user picked/navigated to.
+            let targetDateStr = utils.toIsoDate(currentWeekStart);
 
             const prettyDate = new Date(targetDateStr).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             title = `Informe Diario - ${prettyDate}`;
