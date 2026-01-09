@@ -37,6 +37,19 @@
 
   let loadedReservations = [];
   const STORAGE_KEY = "mesaChef_hotel";
+
+  // [INTEGRATION] Check for Hotel Context Override (Before App Start)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hotelOverride = urlParams.get('hotel');
+    if (hotelOverride && (hotelOverride === 'Guadiana' || hotelOverride === 'Cumbria')) {
+      console.log("[INTEGRATION] Hotel override detected:", hotelOverride);
+      localStorage.setItem(STORAGE_KEY, hotelOverride);
+    }
+  } catch (e) {
+    console.error("[INTEGRATION] Error reading params:", e);
+  }
+
   const SPACES = ["Restaurante", "Cafeteria"];
 
   const utils = {
@@ -205,7 +218,69 @@
     });
 
     renderGridStructure();
+    renderGridStructure();
     loadReservations();
+
+    // [INTEGRATION] Check for Voucher Params (Gest-Spa Integration)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('source') === 'bono') {
+      console.log("[INTEGRATION] Voucher detected. Auto-opening booking...");
+      setTimeout(() => {
+        const client = params.get('client') || '';
+        const phone = params.get('phone') || '';
+        const voucher = params.get('voucher') || '?';
+        const service = params.get('service') || '';
+        const paxRaw = parseInt(params.get('pax')) || 1;
+
+        // Open Modal (New Booking) - Default to Today, Lunch
+        openBooking('Restaurante', utils.toIsoDate(new Date()), 'almuerzo');
+
+        // VISUAL CUE: Update Modal Title
+        const modalTitle = document.getElementById("modalTitle");
+        if (modalTitle) modalTitle.innerHTML = `<span class="bg-blue-600 text-white px-2 py-0.5 rounded text-sm mr-2">SPA/BONO</span> Nueva Reserva`;
+
+        // Pre-fill fields
+        if (document.getElementById("campoNombre")) document.getElementById("campoNombre").value = client;
+        if (document.getElementById("campoTelefono")) document.getElementById("campoTelefono").value = phone;
+
+        // Pax (Default to Adults)
+        if (document.getElementById("campoPax")) {
+          document.getElementById("campoPax").value = paxRaw;
+        }
+
+        // Set "Servicio Incluido" to TRUE
+        const checkIncluded = document.getElementById("checkServicioIncluido");
+        if (checkIncluded) {
+          checkIncluded.checked = true;
+          checkIncluded.dispatchEvent(new Event('change'));
+        }
+
+        // Notes
+        const notesField = document.getElementById("campoNotas");
+        if (notesField) {
+          const existing = notesField.value;
+          notesField.value = (existing ? existing + "\n" : "") + `[BONO] Código: ${voucher} - Servicio: ${service}`;
+          notesField.rows = 4; // Expand to ensure visibility
+        }
+
+        // FORCE SAVE BUTTON VISIBILITY
+        // Sometimes it might be hidden by ReadOnly logic or CSS z-index
+        const btnGuardar = document.getElementById("btnGuardar");
+        if (btnGuardar) {
+          btnGuardar.classList.remove("hidden");
+          btnGuardar.style.display = "block";
+          btnGuardar.disabled = false;
+        }
+
+        // Ensure Footer is Visible via Scroll
+        const modalBody = document.querySelector(".modal-body") || document.querySelector(".modal-content");
+        if (modalBody) modalBody.scrollTop = modalBody.scrollHeight;
+
+        // Force update totals again just in case
+        updateTotalDisplay();
+
+      }, 1000); // Slight delay to ensure modal logic is ready
+    }
   }
 
   function renderGridStructure() {
@@ -1162,25 +1237,42 @@
     // Fallback: verify if we have budget ID from somewhere else if state is empty? 
     // No, state should be populated on edit.
 
+    let finalId = null;
     try {
       const id = document.getElementById("campoId").value;
       if (id) {
+        finalId = id;
         await db.collection("reservas_restaurante").doc(id).update(payload);
         // [NEW] 2-Way Sync
-        // [NEW] 2-Way Sync
         if (window.state && window.state.currentReserva && window.state.currentReserva.presupuestoId) {
-          // We need to pass the full object with ID
-          // But payload doesn't have ID or budget ID.
-          // We should merge or use window.state.currentReserva.presupuestoId
           payload.presupuestoId = window.state.currentReserva.presupuestoId;
           await syncPresupuestoFromRestaurante(payload);
         }
       } else {
         const ref = await db.collection("reservas_restaurante").add(payload);
-        // If we want to sync NEW reservations that came from nowhere??
-        // Usually creation comes FROM budget.
-        // But if manually linked (future feature), we'd need budget ID in form.
+        finalId = ref.id;
       }
+
+      // [INTEGRATION] PostMessage back to Gest-Spa
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('source') === 'bono' && window.opener) {
+        console.log("[INTEGRATION] Sending callback to Gest-Spa and closing...");
+        window.opener.postMessage({
+          type: 'RESTAURANT_RESERVATION_CREATED',
+          id: finalId,
+          voucher: params.get('voucher'),
+          date: document.getElementById("campoFecha").value, // Use input value directly
+          time: document.getElementById("campoHora").value,
+          pax: payload.pax
+        }, '*');
+
+        // Auto-focus opener and close self
+        setTimeout(() => {
+          window.opener.focus();
+          window.close();
+        }, 300);
+      }
+
       closeModal();
     } catch (err) {
       console.error(err);
